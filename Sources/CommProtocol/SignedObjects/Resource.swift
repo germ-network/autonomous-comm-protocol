@@ -20,9 +20,14 @@ public struct Resource: SignableObject, Sendable, Codable {
     public let identifier: String //base64 decodes to digest of the ciphertext
     public let host: String
     public let symmetricKey: SymmetricKey
-    public var expiration: Date //temporarily var to allow for migration
-    //TODO: handle expiration
-//    [IOS-115 handle expiration of the resource object](https://germnetwork.atlassian.net/browse/IOS-115)
+    public let expiration: Date 
+    
+    public init(identifier: String, host: String, symmetricKey: SymmetricKey, expiration: Date) {
+        self.identifier = identifier
+        self.host = host
+        self.symmetricKey = symmetricKey
+        self.expiration = expiration
+    }
 }
 
 extension SymmetricKey: Codable {
