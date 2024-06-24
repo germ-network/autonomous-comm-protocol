@@ -9,7 +9,7 @@ import Foundation
 import CryptoKit
 
 extension Curve25519.Signing.PrivateKey: @unchecked @retroactive Sendable {}
-extension Curve25519.Signing.PrivateKey: @retroactive TypedKeyMaterialInput {}
+extension Curve25519.Signing.PrivateKey: TypedKeyMaterialInput {}
 extension Curve25519.Signing.PrivateKey: PrivateSigningKey {
     static var signingAlgorithm: SigningKeyAlgorithm = .curve25519
     static public var encodeAlgorithm: TypedKeyMaterial.Algorithms = .Curve25519_Signing
