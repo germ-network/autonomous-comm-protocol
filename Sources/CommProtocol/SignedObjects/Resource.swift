@@ -18,12 +18,14 @@ public struct Resource: SignableObject, Sendable, Codable {
     }
     
     public let identifier: String //base64 decodes to digest of the ciphertext
+    public let plaintextDigest: Data
     public let host: String
     public let symmetricKey: SymmetricKey
     public let expiration: Date 
     
-    public init(identifier: String, host: String, symmetricKey: SymmetricKey, expiration: Date) {
+    public init(identifier: String, plaintextDigest: Data, host: String, symmetricKey: SymmetricKey, expiration: Date) {
         self.identifier = identifier
+        self.plaintextDigest = plaintextDigest
         self.host = host
         self.symmetricKey = symmetricKey
         self.expiration = expiration
