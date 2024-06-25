@@ -37,6 +37,7 @@ extension TypedKeyError: LocalizedError {
 ///or could be specified with additional prefixes if differentiation is required in the wire/persisted format
 public struct TypedKeyMaterial: Equatable, Sendable {
     public enum Algorithms: UInt8, Sendable { //using cryptokit naming conventions
+        case AES_GCM_256 //RFC 7714 (used for webCrypto compatibility )
         case ChaCha20Poly1305 //RFC 8439
         case Curve25519_KeyAgreement //RFC 8041
         case Curve25519_Signing //RFC 8410
@@ -44,6 +45,7 @@ public struct TypedKeyMaterial: Equatable, Sendable {
         
         var keyByteSize: UInt {
             switch self {
+            case .AES_GCM_256: 32
             case .ChaCha20Poly1305: 32
             case .Curve25519_KeyAgreement: 32
             case .Curve25519_Signing: 32
@@ -53,7 +55,7 @@ public struct TypedKeyMaterial: Equatable, Sendable {
         
         var isSymmetric: Bool {
             switch self {
-            case .ChaCha20Poly1305: true
+            case .ChaCha20Poly1305, .AES_GCM_256: true
             default: false
             }
         }
