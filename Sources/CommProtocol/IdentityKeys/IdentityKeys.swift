@@ -45,15 +45,44 @@ public struct IdentityPrivateKey: Codable, Sendable {
         return (
             privateKey,
             coreIdentity,
-            .init(credentialData: coreIdentityData,
-                  signedDigest: .init(body: coreIdentityDigest.data,
-                                      signature: signature))
-            
+            .init(
+                credentialData: coreIdentityData,
+                signedDigest: .init(
+                    bodyType: .identityDigest,
+                    signature: signature,
+                    body: coreIdentityDigest.data
+                )
+            )
         )
     }
     
-    private func signature(for input: Data) throws -> Data {
-        try privateKey.signature(for: input)
+    private func signature(for input: Data) throws -> TypedSignature {
+        .init(
+            signingAlgorithm: type(of: privateKey).signingAlgorithm,
+            signature: try privateKey.signature(for: input)
+        )
+        
+    }
+    
+    public func delegate(
+        to agent: AgentPrivateKey,
+        agentData: AgentData
+    ) throws -> SignedIdentityRelationship {
+        let assertion = IdentityRelationshipAssertion(
+            relationship: .delegateAgent,
+            subject: try publicKey.archive,
+            object: try agent.publicKey.archive,
+            objectData: try agentData.encoded
+        )
+        let assertionData = assertion.wireFormat
+        let subjectSignature = try signature(for: assertionData)
+        let objectSignature = try agent.sign(delegate: assertion)
+        
+        return .init(
+            subjectSignature: subjectSignature,
+            objectSignature: objectSignature,
+            assertion: assertion
+        )
     }
     
     //MARK: Codable
@@ -66,7 +95,7 @@ public struct IdentityPrivateKey: Codable, Sendable {
     public init(from decoder: Decoder) throws {
         let container = try decoder.singleValueContainer()
         let archive = try container.decode(Data.self)
-        let typedArchive: TypedKeyMaterial = try .init(wireformat: archive)
+        let typedArchive: TypedKeyMaterial = try .init(wireFormat: archive)
         
         switch typedArchive.algorithm {
         case .Curve25519_Signing:
@@ -96,7 +125,7 @@ public struct IdentityPublicKey: Codable, Sendable, Hashable {
     }
     
     public init(wireFormat: Data) throws {
-        typedKey = try TypedKeyMaterial(wireformat: wireFormat)
+        typedKey = try TypedKeyMaterial(wireFormat: wireFormat)
         
         switch typedKey.algorithm {
         case .Curve25519_Signing: publicKey = try Curve25519.Signing
@@ -116,11 +145,36 @@ public struct IdentityPublicKey: Codable, Sendable, Hashable {
     public func validate(
         signedDigest: SignedObject<IdentityAssertion>
     ) throws -> IdentityAssertion {
-        guard publicKey.isValidSignature(signedDigest.signature,
+        guard publicKey.isValidSignature(signedDigest.signature.signature,
                                          for: signedDigest.body) else {
             throw ProtocolError.authenticationError
         }
         return try signedDigest.body.decoded()
+    }
+    
+    public func validate(
+        delegation: SignedIdentityRelationship
+    ) throws -> (AgentPublicKey, AgentData) {
+        //check subject signature
+        guard delegation.subjectSignature.signingAlgorithm == type(of: publicKey).signingAlgorithm,
+              publicKey.isValidSignature(
+                delegation.subjectSignature.signature,
+                for: delegation.assertion.wireFormat
+              )
+        else {
+            throw ProtocolError.authenticationError
+        }
+        
+        //then examine the assertion
+        guard delegation.assertion.relationship == .delegateAgent,
+              delegation.assertion.subject == typedKey else {
+            throw ProtocolError.authenticationError
+        }
+        let assertedObject = try AgentPublicKey(archive: delegation.assertion.object)
+        
+        //check it concurs:
+        let data = try assertedObject.validate(delegation: delegation)
+        return (assertedObject, data)
     }
     
     //MARK: Codable
@@ -133,7 +187,7 @@ public struct IdentityPublicKey: Codable, Sendable, Hashable {
     public init(from decoder: Decoder) throws {
         let container = try decoder.singleValueContainer()
         let archive = try container.decode(Data.self)
-        let typedArchive: TypedKeyMaterial = try .init(wireformat: archive)
+        let typedArchive: TypedKeyMaterial = try .init(wireFormat: archive)
         
         switch typedArchive.algorithm {
         case .Curve25519_Signing:

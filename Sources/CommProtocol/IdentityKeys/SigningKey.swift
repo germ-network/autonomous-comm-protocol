@@ -21,6 +21,7 @@ import CryptoKit
 //TODO: type constrain the keys to have the same algorithm.
 protocol PrivateSigningKey: TypedKeyMaterialInput, Sendable {
     associatedtype PublicKey where PublicKey : PublicSigningKey
+    static var signingAlgorithm: SigningKeyAlgorithm { get }
     
     init()
     init<D>(rawRepresentation data: D) throws where D : ContiguousBytes
@@ -31,7 +32,7 @@ protocol PrivateSigningKey: TypedKeyMaterialInput, Sendable {
 }
 
 public protocol PublicSigningKey: TypedKeyMaterialInput, Hashable, Sendable {
-    static var algorithm: SigningKeyAlgorithm { get }
+    static var signingAlgorithm: SigningKeyAlgorithm { get }
     
     init<D>(rawRepresentation data: D) throws where D : ContiguousBytes
     var rawRepresentation: Data { get }
@@ -44,8 +45,15 @@ public protocol PublicSigningKey: TypedKeyMaterialInput, Hashable, Sendable {
 
 
 //use enum to pick keys, but rely on TypedKeyMaterial enum to encode
-public enum SigningKeyAlgorithm: Sendable {
-    case curve25519
+//Do use this to encode prefix when
+public enum SigningKeyAlgorithm: UInt8, Sendable {
+    case curve25519 //RFC 8410
+    
+    var signatureLength: Int {
+        switch self {
+        case .curve25519: 64
+        }
+    }
 }
 
 //used the typed key material format for storing private keys in KeyChain / secrets stores

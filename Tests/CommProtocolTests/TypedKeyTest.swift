@@ -50,7 +50,7 @@ struct TypedKeyTests {
         
         let typed = try TypedKeyMaterial(algorithm: .ChaCha20Poly1305,
                                          symmetricKey: chaChaPolyKey)
-        let received = try TypedKeyMaterial(wireformat: typed.wireFormat)
+        let received = try TypedKeyMaterial(wireFormat: typed.wireFormat)
         
         #expect(received.algorithm == .ChaCha20Poly1305)
         #expect(received.keyData == chaChaPolyKey.rawRepresentation)
@@ -73,7 +73,7 @@ struct TypedKeyTests {
         let encapKey = hpkeSender.encapsulatedKey
         let wireFormat = try TypedKeyMaterial(encapAlgorithm: .HPKE_Encap_Curve25519_SHA256_ChachaPoly,
                                               data: encapKey).wireFormat
-        let receivedFormat = try TypedKeyMaterial(wireformat: wireFormat)
+        let receivedFormat = try TypedKeyMaterial(wireFormat: wireFormat)
         #expect(receivedFormat.algorithm == .HPKE_Encap_Curve25519_SHA256_ChachaPoly)
         let receivedKey = receivedFormat.keyData
         

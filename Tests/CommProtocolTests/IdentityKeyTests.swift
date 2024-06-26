@@ -44,5 +44,20 @@ struct IdentityKeyTests {
         //can't throw within the #require
         #expect(privateKey.publicKey == decodedPublic)
     }
+    
+    @Test func testDelegation() throws {
+        let agentKey = AgentPrivateKey(algorithm: .curve25519)
+        
+        let signedRelationship = try privateKey.delegate(
+            to: agentKey,
+            agentData: .init(version: .init(major: 0, minor: 1, patch: 1),
+                             isAppClip: nil)
+        )
+        
+        let decoded: SignedIdentityRelationship = try .init(wireFormat: signedRelationship.wireFormat)
+        
+        let (decodedAgent, agentData) = try privateKey.publicKey
+            .validate(delegation: decoded)
+    }
 }
 

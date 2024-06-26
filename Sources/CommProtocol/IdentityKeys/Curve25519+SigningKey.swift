@@ -34,7 +34,7 @@ extension Curve25519.Signing.PrivateKey: RawRepresentableKey, Codable {
 
 extension Curve25519.Signing.PublicKey: @unchecked @retroactive Sendable {}
 extension Curve25519.Signing.PublicKey: PublicSigningKey {
-    public static var algorithm: SigningKeyAlgorithm = .curve25519
+    public static var signingAlgorithm: SigningKeyAlgorithm = .curve25519
 }
 
 extension Curve25519.Signing.PublicKey: @retroactive Equatable {

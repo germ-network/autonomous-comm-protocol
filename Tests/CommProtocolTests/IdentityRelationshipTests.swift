@@ -10,8 +10,7 @@ import CryptoKit
 @testable import CommProtocol
 
 struct IdentityRelationshipTests {
-
-    @Test func testWireFormat() async throws {
+    @Test func testInnerWireFormat() async throws {
         let firstAgent = AgentPrivateKey(algorithm: .curve25519)
         let firstAgentKey = try firstAgent.publicKey.archive
         let secondAgent = AgentPrivateKey(algorithm: .curve25519)

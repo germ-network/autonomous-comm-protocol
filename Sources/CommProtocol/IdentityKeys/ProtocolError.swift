@@ -12,6 +12,7 @@ public enum ProtocolError: Error {
     case typedKeyArchiveWireFormat
     case authenticationError
     case mismatchedDigest
+    case signatureDisallowed
 //    case missingData
 //    case incorrectKeyPackage
 //    case incorrectSignedBodyType
@@ -25,6 +26,7 @@ extension ProtocolError: LocalizedError {
         case .typedKeyArchiveWireFormat: "Couldn't create a typed key archive from wire format"
         case .authenticationError: "Signature validation failed"
         case .mismatchedDigest: "mismatched digest"
+        case .signatureDisallowed: "Tried to use a signing key to sign an incorrect payload"
 //        case .missingData:
 //            "ProtocolError: Missing data"
 //        case .incorrectKeyPackage:

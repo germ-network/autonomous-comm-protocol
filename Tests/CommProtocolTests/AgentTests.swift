@@ -30,6 +30,5 @@ struct AgentKeyTests {
         
         let decodedPublic = try AgentPublicKey(wireFormat: publicWireFormat)
         #expect(privateKey.publicKey == decodedPublic)
-        
     }
 }

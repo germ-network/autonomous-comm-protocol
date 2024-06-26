@@ -36,6 +36,20 @@ public struct AgentPrivateKey: Codable {
     }
     
     //MARK: signing methods
+    public func sign(
+        delegate: IdentityRelationshipAssertion
+    ) throws -> TypedSignature {
+        let myKey = try publicKey.archive
+        guard delegate.relationship == .delegateAgent,
+              delegate.object == myKey else {
+            throw ProtocolError.signatureDisallowed
+        }
+        return .init(
+            signingAlgorithm: type(of: privateKey).signingAlgorithm,
+            signature: try privateKey.signature(for: delegate.wireFormat)
+        )
+    }
+    
     //    public func sign(resource: Resource)
     //    throws -> SignedObject<Resource> {
     //        let data = try resource.encoded
@@ -91,7 +105,7 @@ public struct AgentPrivateKey: Codable {
     public init(from decoder: Decoder) throws {
         let container = try decoder.singleValueContainer()
         let archive = try container.decode(Data.self)
-        let typedArchive: TypedKeyMaterial = try .init(wireformat: archive)
+        let typedArchive: TypedKeyMaterial = try .init(wireFormat: archive)
         
         switch typedArchive.algorithm {
         case .Curve25519_Signing:
@@ -117,14 +131,36 @@ public struct AgentPublicKey: Codable {
     }
     
     public init(wireFormat: Data) throws {
-        let typedArchive = try TypedKeyMaterial(wireformat: wireFormat)
+        let typedArchive = try TypedKeyMaterial(wireFormat: wireFormat)
         
-        switch typedArchive.algorithm {
+        try self.init(archive: typedArchive)
+    }
+    
+    public init(archive: TypedKeyMaterial) throws {
+        switch archive.algorithm {
         case .Curve25519_Signing: publicKey = try Curve25519.Signing
-                .PublicKey(rawRepresentation: typedArchive.keyData )
+                .PublicKey(rawRepresentation: archive.keyData )
         default:
             throw ProtocolError.typedKeyArchiveMismatch
         }
+    }
+    
+    //presume subject (identity) key will separately verify
+    public func validate(
+        delegation: SignedIdentityRelationship
+    ) throws -> AgentData {
+        guard delegation.subjectSignature.signingAlgorithm == type(of: publicKey).signingAlgorithm,
+            publicKey.isValidSignature(
+                delegation.objectSignature.signature,
+            for: delegation.assertion.wireFormat
+        ) else {
+            throw TypedKeyError.invalidTypedKey
+        }
+        
+        guard let agentData = delegation.assertion.objectData else {
+            throw ProtocolError.authenticationError
+        }
+        return try agentData.decoded()
     }
     
     public var wireFormat: Data {
@@ -143,7 +179,7 @@ public struct AgentPublicKey: Codable {
     public init(from decoder: Decoder) throws {
         let container = try decoder.singleValueContainer()
         let archive = try container.decode(Data.self)
-        let typedArchive: TypedKeyMaterial = try .init(wireformat: archive)
+        let typedArchive: TypedKeyMaterial = try .init(wireFormat: archive)
         
         switch typedArchive.algorithm {
         case .Curve25519_Signing:
@@ -160,7 +196,7 @@ public struct AgentPublicKey: Codable {
 
 extension AgentPublicKey: Equatable {
     static public func == (lhs: Self, rhs: Self) -> Bool {
-        type(of: lhs.publicKey).algorithm == type(of: rhs.publicKey).algorithm
+        type(of: lhs.publicKey).signingAlgorithm == type(of: rhs.publicKey).signingAlgorithm
         && lhs.id == rhs.id
     }
 }
