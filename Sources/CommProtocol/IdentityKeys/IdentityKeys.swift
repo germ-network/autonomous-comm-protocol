@@ -87,7 +87,7 @@ public struct IdentityPrivateKey: Sendable {
     //for local storage
     public var archive: TypedKeyMaterial { .init(typedKey: privateKey) }
     
-    init(archive: TypedKeyMaterial) throws {
+    public init(archive: TypedKeyMaterial) throws {
         switch archive.algorithm {
         case .Curve25519_Signing:
             self.init(
