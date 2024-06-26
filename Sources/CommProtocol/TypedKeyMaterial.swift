@@ -43,7 +43,7 @@ public struct TypedKeyMaterial: Equatable, Sendable {
         case Curve25519_Signing //RFC 8410
         case HPKE_Encap_Curve25519_SHA256_ChachaPoly //RFC 9180
         
-        var keyByteSize: UInt {
+        var keyByteSize: Int {
             switch self {
             case .AES_GCM_256: 32
             case .ChaCha20Poly1305: 32
@@ -126,6 +126,23 @@ public struct TypedKeyMaterial: Equatable, Sendable {
     
     public var wireFormat: Data {
         [algorithm.rawValue] + keyData
+    }
+    
+    static func readPrefix(data: Data) throws(TypedKeyError) -> (TypedKeyMaterial, Data?) {
+        let prefixAlgo = try Algorithms(bytes: data)
+        let prefixLength = prefixAlgo.keyByteSize + 1
+        switch data.count {
+        case (..<prefixLength):
+            throw TypedKeyError.invalidTypedKey
+        case prefixLength:
+            return (try .init(wireformat: data), nil)
+        case ((prefixLength + 1)...):
+            return (
+                try .init(wireformat: Data(data.prefix(prefixLength)) ) ,
+                Data(data[prefixLength...])
+            )
+        default: throw TypedKeyError.invalidTypedKey
+        }
     }
 }
 
