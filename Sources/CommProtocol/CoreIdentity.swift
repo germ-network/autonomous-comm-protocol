@@ -8,36 +8,26 @@
 import Foundation
 import CryptoKit
 
-/*
-CoreIdentity keys are bound to card associated data at creation time (name, image, recovery, etc)
- This object stores all the associated data as a signed object:
- [CardAssociatedData][KeyPackage][Signature over the previous two]
- 
-  - A digest of [CardAssociatedData][KeyPackage] + Singature are stored along with the keys in keychain
-  -  this full data representation is stored in Core Data and decoded on access
- */
-
 ///CoreIdentity is an identity key that asserts a user-facing representation:
 /// - name (assert once)
 /// - image (hash, assert once)
 /// - pronouns
 /// - bindings to other identities
 ///
-
 public struct CoreIdentity: Codable, Sendable {
     struct Constants {
         //previously, 0.0.1
         static let currentVersion = SemanticVersion(major: 1, minor: 0, patch: 0)
     }
     
-    public let id: IdentityPublicKey
+    public let id: Data //WireFormat for IdentityPublicKey
     public let name: String
     public let describedImage: DescribedImage
     public let version: SemanticVersion
     public let nonce: Data
     
     init(id: IdentityPublicKey, name: String, describedImage: DescribedImage) {
-        self.id = id
+        self.id = id.id.wireFormat
         self.name = name
         self.describedImage = describedImage
         self.version = Constants.currentVersion
@@ -56,30 +46,66 @@ public struct DescribedImage: Equatable, Codable, Sendable{
 }
 
 //MARK: Signed identity
-//sign the digest
-public struct IdentityAssertion: SignableObject {
-    public static let type: SignableObjectTypes = .identityDigest
-    public var type: SignableObjectTypes = .identityDigest
-    public let digest: Data
-}
-
 ///Bundles the encoded CoreIdentity
-public struct SignedIdentity: Codable, Sendable {
-    public let credentialData: Data
+///The CoreIdentity contains two variable-length strings, and we expect it to grow, so we leave it JSON-encoded for flexibility
+///Because JSON encoding does not produce a stable output, we have to store and exchange the particular encoding that we sign
+///
+///However, since signedDigest is a predictable width, we can be a bit more efficient by leaving the signedDigest
+///in raw bytes and not base64 encoding it
+public struct SignedIdentity: Sendable {
     public let signedDigest: SignedObject<IdentityAssertion>
+    public let credentialData: Data
     
     public func verifiedIdentity() throws -> CoreIdentity {
         //have to decode the credentialData to get the public key
         let coreIdentity: CoreIdentity = try credentialData.decoded()
         
         //remainder of credential is not valid until we validate the signature
-        let identityDigest = try coreIdentity.id.validate(signedDigest: signedDigest)
+        let identityKey: IdentityPublicKey = try .init(wireFormat: coreIdentity.id)
+        let identityDigest = try identityKey.validate(signedDigest: signedDigest)
         
         guard SHA256.hash(data: credentialData).data == identityDigest.digest else {
             throw ProtocolError.mismatchedDigest
         }
             
         return coreIdentity
+    }
+}
+
+//sign the digest
+public struct IdentityAssertion: SignableObject, DefinedWidthBinary {
+    public typealias Prefix = HashAlgorithms
+    public static let type: SignableObjectTypes = .identityDigest
+
+    public let hashAlgorithm: HashAlgorithms
+    public let digest: Data
+    
+    public var wireFormat: Data {
+        [hashAlgorithm.rawValue] + digest
+    }
+    
+    public init(prefix: Prefix, checkedData: Data) throws {
+        guard prefix.contentByteSize == checkedData.count else {
+            throw DefinedWidthError.incorrectDataLength
+        }
+        self.init(hashAlgorithm: prefix, digest: checkedData)
+    }
+    
+    init(hashAlgorithm: HashAlgorithms, digest: Data) {
+        self.hashAlgorithm = hashAlgorithm
+        self.digest = digest
+    }
+}
+
+public enum HashAlgorithms: UInt8, DefinedWidthPrefix {
+    case sha256 //RFC 6234
+    
+    public var contentByteSize: Int { digestWidth }
+    
+    private var digestWidth: Int {
+        switch self {
+        case .sha256: 32
+        }
     }
 }
 

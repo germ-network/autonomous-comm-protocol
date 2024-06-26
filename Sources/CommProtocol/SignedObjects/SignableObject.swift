@@ -15,14 +15,18 @@ public enum SignableObjectTypes: UInt8, Codable, Sendable {
 }
 
 //ensure signed objects state their type
-public protocol SignableObject: Codable {
+public protocol SignableObject {
     static var type: SignableObjectTypes { get }
 }
 
-public struct SignedObject<SignableObject: Codable>: Codable, Sendable {
+///Encodes a wireformat of:
+///[Byte indicating body type]
+///[Byte indicating signature width][Signature bytes]
+///[Body data]
+public struct SignedObject<SignableObject>: Sendable {
     public let bodyType: SignableObjectTypes
     public let signature: TypedSignature
-    public let body: Data //siganture is over this particular encoding of SignableObject
+    public let body: Data //signature is over this particular encoding of SignableObject
     
     init(bodyType: SignableObjectTypes, signature: TypedSignature, body: Data) {
         self.bodyType = bodyType
@@ -34,43 +38,45 @@ public struct SignedObject<SignableObject: Codable>: Codable, Sendable {
         [bodyType.rawValue] + signature.wireFormat + body
     }
     
-    init(wireFormat: Data) throws(TypedKeyError) {
+    init(wireFormat: Data) throws {
         guard let first = wireFormat.first,
               let bodyType = SignableObjectTypes(rawValue: first),
               wireFormat.count > 1 else {
-            throw .invalidTypedSignature
+            throw DefinedWidthError.invalidTypedSignature
         }
         let (signature, body) = try TypedSignature
-            .readPrefix(data: Data( wireFormat[1...] ))
-        guard let body else { throw .invalidTypedSignature }
+            .parse(wireFormat: Data( wireFormat[1...] ))
+        guard let body else { throw DefinedWidthError.invalidTypedSignature }
         self.bodyType = bodyType
         self.signature = signature
         self.body = body
     }
     
-    //MARK: Codable
-    public func encode(to encoder: any Encoder) throws {
-        var container = encoder.singleValueContainer()
-        try container.encode(wireFormat)
-    }
-    
-    public init(from decoder: any Decoder) throws {
-        let container = try decoder.singleValueContainer()
-        let wireFormat: Data = try container.decode(Data.self)
-        try self.init(wireFormat: wireFormat)
-    }
-    
-    public func validate(
-        for signer: Curve25519.Signing.PublicKey
-    )throws -> SignableObject {
-        guard signature.signingAlgorithm == .curve25519 else {
-            throw TypedKeyError.invalidTypedKey
+    func validate(
+        for signer: any PublicSigningKey
+    ) throws -> Data {
+        guard signature.signingAlgorithm == type(of: signer).signingAlgorithm else {
+            throw DefinedWidthError.invalidTypedKey
         }
-        
-        guard signer.isValidSignature(signature.signature,
-                                      for: body) else {
+        guard signer.isValidSignature(signature.signature, for: body) else {
             throw ProtocolError.authenticationError
         }
-        return try body.decoded()
+        return body
+    }
+}
+
+extension SignedObject where SignableObject: Decodable {
+    public func validate(
+        for signer: any PublicSigningKey
+    ) throws -> SignableObject {
+        try validate(for: signer).decoded()
+    }
+}
+
+extension SignedObject where SignableObject: WireFormat {
+    public func validate(
+        for signer: any PublicSigningKey
+    ) throws -> SignableObject {
+        try .init(wireFormat: validate(for: signer))
     }
 }

@@ -27,18 +27,17 @@ struct IdentityKeyTests {
     }
     
     @Test func testCreation() async throws {
-        let encoded = try privateKey.encoded
-        let decoded: IdentityPrivateKey = try encoded.decoded()
-        #expect(privateKey.publicKey.id == decoded.publicKey.id )
+
+        let rehydrated: IdentityPrivateKey = try .init(archive: privateKey.archive)
+        #expect(privateKey.archive == rehydrated.archive)
         
         let publicKey = privateKey.publicKey
-        let encodedPublicKey = try publicKey.encoded
-        let decodedPublicKey: IdentityPublicKey = try encodedPublicKey.decoded()
-        #expect(publicKey.id == decodedPublicKey.id)
+        let rehydratedPublic: IdentityPublicKey = try .init(archive: publicKey.id)
+        #expect(publicKey == rehydratedPublic)
     }
     
     @Test func testWireFormat() throws {
-        let publicWireFormat = try privateKey.publicKey.wireFormat
+        let publicWireFormat = privateKey.publicKey.id.wireFormat
         
         let decodedPublic = try IdentityPublicKey(wireFormat: publicWireFormat)
         //can't throw within the #require

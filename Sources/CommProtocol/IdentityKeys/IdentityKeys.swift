@@ -11,16 +11,15 @@ import CryptoKit
 ///- To permit cryptographic flexibility, we use 2 layers of abstraction:
 /// - unify the interface in a protocol
 /// - contain the protocol in a concrete object for storage
-public struct IdentityPrivateKey: Codable, Sendable {
+public struct IdentityPrivateKey: Sendable {
     private let privateKey: any PrivateSigningKey
-    public var publicKey: IdentityPublicKey //store public key for efficiency
+    public let publicKey: IdentityPublicKey //store public key for efficiency
     
     private init(algorithm: SigningKeyAlgorithm) throws {
         switch algorithm {
         case .curve25519:
-            let (privateKey, publicKey) = Curve25519.Signing.PrivateKey.newKeyPair()
-            self.privateKey = privateKey
-            self.publicKey = try .init(concrete: publicKey)
+            self.privateKey = Curve25519.Signing.PrivateKey()
+            self.publicKey = .init(concrete: privateKey.publicKey)
         }
     }
     
@@ -36,9 +35,10 @@ public struct IdentityPrivateKey: Codable, Sendable {
         
         let coreIdentityData = try JSONEncoder().encode(coreIdentity)
         let coreIdentityDigest = SHA256.hash(data: coreIdentityData)
-        let identityAssertionData = try IdentityAssertion(
+        let identityAssertionData = IdentityAssertion(
+            hashAlgorithm: .sha256,
             digest: coreIdentityDigest.data
-        ).encoded
+        ).wireFormat
         
         let signature = try privateKey.signature(for: identityAssertionData)
         
@@ -46,12 +46,12 @@ public struct IdentityPrivateKey: Codable, Sendable {
             privateKey,
             coreIdentity,
             .init(
-                credentialData: coreIdentityData,
                 signedDigest: .init(
                     bodyType: .identityDigest,
                     signature: signature,
                     body: coreIdentityDigest.data
-                )
+                ),
+                credentialData: coreIdentityData
             )
         )
     }
@@ -61,7 +61,6 @@ public struct IdentityPrivateKey: Codable, Sendable {
             signingAlgorithm: type(of: privateKey).signingAlgorithm,
             signature: try privateKey.signature(for: input)
         )
-        
     }
     
     public func delegate(
@@ -70,8 +69,8 @@ public struct IdentityPrivateKey: Codable, Sendable {
     ) throws -> SignedIdentityRelationship {
         let assertion = IdentityRelationshipAssertion(
             relationship: .delegateAgent,
-            subject: try publicKey.archive,
-            object: try agent.publicKey.archive,
+            subject: publicKey.id,
+            object: agent.publicKey.id,
             objectData: try agentData.encoded
         )
         let assertionData = assertion.wireFormat
@@ -85,59 +84,48 @@ public struct IdentityPrivateKey: Codable, Sendable {
         )
     }
     
-    //MARK: Codable
-    private var archive: TypedKeyMaterial {
-        get throws {
-            try .init(typedKey: privateKey)
-        }
-    }
+    //for local storage
+    public var archive: TypedKeyMaterial { .init(typedKey: privateKey) }
     
-    public init(from decoder: Decoder) throws {
-        let container = try decoder.singleValueContainer()
-        let archive = try container.decode(Data.self)
-        let typedArchive: TypedKeyMaterial = try .init(wireFormat: archive)
-        
-        switch typedArchive.algorithm {
+    init(archive: TypedKeyMaterial) throws {
+        switch archive.algorithm {
         case .Curve25519_Signing:
-            privateKey = try Curve25519.Signing.PrivateKey(rawRepresentation: typedArchive.keyData)
-            publicKey = try .init(concrete: privateKey.publicKey)
-        default: throw ProtocolError.typedKeyArchiveMismatch
+            self.init(
+                concrete: try Curve25519.Signing.PrivateKey(rawRepresentation: archive.keyData)
+            )
+        default: throw DefinedWidthError.invalidTypedKey
         }
     }
     
-    public func encode(to encoder: Encoder) throws {
-        var container = encoder.singleValueContainer()
-        try container.encode(archive.wireFormat)
+    init(concrete: any PrivateSigningKey) {
+        privateKey = concrete
+        publicKey = .init(concrete: concrete.publicKey)
     }
 }
 
-public struct IdentityPublicKey: Codable, Sendable, Hashable {
+public struct IdentityPublicKey: Sendable {
     private let publicKey: any PublicSigningKey
-    private let typedKey: TypedKeyMaterial
+    public let id: TypedKeyMaterial
     
-    init(concrete: any PublicSigningKey) throws {
+    init(concrete: any PublicSigningKey) {
         publicKey = concrete
-        typedKey = try .init(typedKey: concrete)
-    }
-    
-    var id: Data {
-        typedKey.wireFormat
+        id = .init(typedKey: concrete)
     }
     
     public init(wireFormat: Data) throws {
-        typedKey = try TypedKeyMaterial(wireFormat: wireFormat)
-        
-        switch typedKey.algorithm {
-        case .Curve25519_Signing: publicKey = try Curve25519.Signing
-                .PublicKey(rawRepresentation: typedKey.keyData )
-        default:
-            throw ProtocolError.typedKeyArchiveMismatch
-        }
+        let typedArchive = try TypedKeyMaterial(wireFormat: wireFormat)
+        try self.init(archive: typedArchive)
     }
     
-    public var wireFormat: Data {
-        get throws {
-            try archive.wireFormat
+    public init(archive: TypedKeyMaterial) throws {
+        switch archive.algorithm {
+        case .Curve25519_Signing:
+            self.init(
+                concrete: try Curve25519.Signing
+                    .PublicKey(rawRepresentation: archive.keyData )
+            )
+        default:
+            throw ProtocolError.typedKeyArchiveMismatch
         }
     }
     
@@ -145,11 +133,7 @@ public struct IdentityPublicKey: Codable, Sendable, Hashable {
     public func validate(
         signedDigest: SignedObject<IdentityAssertion>
     ) throws -> IdentityAssertion {
-        guard publicKey.isValidSignature(signedDigest.signature.signature,
-                                         for: signedDigest.body) else {
-            throw ProtocolError.authenticationError
-        }
-        return try signedDigest.body.decoded()
+        try signedDigest.validate(for: publicKey)
     }
     
     public func validate(
@@ -167,7 +151,7 @@ public struct IdentityPublicKey: Codable, Sendable, Hashable {
         
         //then examine the assertion
         guard delegation.assertion.relationship == .delegateAgent,
-              delegation.assertion.subject == typedKey else {
+              delegation.assertion.subject == id else {
             throw ProtocolError.authenticationError
         }
         let assertedObject = try AgentPublicKey(archive: delegation.assertion.object)
@@ -176,45 +160,19 @@ public struct IdentityPublicKey: Codable, Sendable, Hashable {
         let data = try assertedObject.validate(delegation: delegation)
         return (assertedObject, data)
     }
-    
-    //MARK: Codable
-    public var archive: TypedKeyMaterial {
-        get throws {
-            try .init(typedKey: publicKey)
-        }
-    }
-    
-    public init(from decoder: Decoder) throws {
-        let container = try decoder.singleValueContainer()
-        let archive = try container.decode(Data.self)
-        let typedArchive: TypedKeyMaterial = try .init(wireFormat: archive)
-        
-        switch typedArchive.algorithm {
-        case .Curve25519_Signing:
-            publicKey = try Curve25519.Signing.PublicKey(rawRepresentation: typedArchive.keyData)
-            typedKey = try .init(typedKey: publicKey)
-        default: throw ProtocolError.typedKeyArchiveMismatch
-        }
-    }
-    
-    public func encode(to encoder: Encoder) throws {
-        var container = encoder.singleValueContainer()
-        try container.encode(archive.wireFormat)
-    }
-    
+}
+
+extension IdentityPublicKey: Hashable {
     //MARK: Hashable
     public func hash(into hasher: inout Hasher) {
-        hasher.combine(publicKey.hashValue)
+        hasher.combine("Identity Public Key")
+        hasher.combine(id)
     }
 }
 
 extension IdentityPublicKey: Equatable {
     static public func == (lhs: Self, rhs: Self) -> Bool {
-        do {
-            return try lhs.archive == rhs.archive
-        } catch {
-            return false
-        }
+        lhs.id == rhs.id
     }
 }
 

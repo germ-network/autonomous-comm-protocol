@@ -13,35 +13,44 @@ import CryptoKit
 /// - use a concrete roled type that contains a type conforming to the signing key protocol
 
 //MARK: Concrete object
-public struct AgentPrivateKey: Codable {
+public struct AgentPrivateKey {
     private let privateKey: any PrivateSigningKey
-    private let storedPublicKey: any PublicSigningKey //store public key for efficiency
-    
-    public var publicKey: AgentPublicKey {
-        .init(concrete: storedPublicKey)
-    }
+    public let publicKey: AgentPublicKey //store public key for efficiency
 
-    public var id: Data { storedPublicKey.rawRepresentation }
+    public var id: TypedKeyMaterial { publicKey.id }
     
     public init(algorithm: SigningKeyAlgorithm) {
         switch algorithm {
         case .curve25519: 
-            (self.privateKey, self.storedPublicKey) = Curve25519.Signing.PrivateKey.newKeyPair()
+            self.privateKey = Curve25519.Signing.PrivateKey()
+            self.publicKey = .init(concrete: privateKey.publicKey)
+        }
+    }
+    
+    //for local storage
+    public var archive: TypedKeyMaterial { .init(typedKey: privateKey) }
+    
+    init(archive: TypedKeyMaterial) throws {
+        switch archive.algorithm {
+        case .Curve25519_Signing:
+            self.init(
+                concrete: try Curve25519.Signing.PrivateKey(rawRepresentation: archive.keyData)
+            )
+        default: throw DefinedWidthError.invalidTypedKey
         }
     }
     
     init(concrete: any PrivateSigningKey) {
         privateKey = concrete
-        storedPublicKey = concrete.publicKey
+        publicKey = .init(concrete: concrete.publicKey)
     }
     
     //MARK: signing methods
     public func sign(
         delegate: IdentityRelationshipAssertion
     ) throws -> TypedSignature {
-        let myKey = try publicKey.archive
         guard delegate.relationship == .delegateAgent,
-              delegate.object == myKey else {
+              delegate.object == publicKey.id else {
             throw ProtocolError.signatureDisallowed
         }
         return .init(
@@ -94,52 +103,30 @@ public struct AgentPrivateKey: Codable {
     //                     signature: signature,
     //                     signerArchive: publicTypedKey.stablePublicArchive)
     //    }
-    
-    //MARK: Codable
-    private var archive: TypedKeyMaterial {
-        get throws {
-            try .init(typedKey: privateKey)
-        }
-    }
-    
-    public init(from decoder: Decoder) throws {
-        let container = try decoder.singleValueContainer()
-        let archive = try container.decode(Data.self)
-        let typedArchive: TypedKeyMaterial = try .init(wireFormat: archive)
-        
-        switch typedArchive.algorithm {
-        case .Curve25519_Signing:
-            privateKey = try Curve25519.Signing.PrivateKey(rawRepresentation: typedArchive.keyData)
-            storedPublicKey = privateKey.publicKey
-        default: throw ProtocolError.typedKeyArchiveMismatch
-        }
-    }
-    
-    public func encode(to encoder: Encoder) throws {
-        var container = encoder.singleValueContainer()
-        try container.encode(archive.wireFormat)
-    }
+
 }
 
-public struct AgentPublicKey: Codable {
+public struct AgentPublicKey {
     private let publicKey: any PublicSigningKey
-    
-    public var id: Data { publicKey.rawRepresentation }
+    public let id: TypedKeyMaterial
     
     init(concrete: any PublicSigningKey) {
         publicKey = concrete
+        id = .init(typedKey: publicKey)
     }
     
     public init(wireFormat: Data) throws {
         let typedArchive = try TypedKeyMaterial(wireFormat: wireFormat)
-        
         try self.init(archive: typedArchive)
     }
     
     public init(archive: TypedKeyMaterial) throws {
         switch archive.algorithm {
-        case .Curve25519_Signing: publicKey = try Curve25519.Signing
-                .PublicKey(rawRepresentation: archive.keyData )
+        case .Curve25519_Signing:
+            self.init(
+                concrete: try Curve25519.Signing
+                    .PublicKey(rawRepresentation: archive.keyData )
+            )
         default:
             throw ProtocolError.typedKeyArchiveMismatch
         }
@@ -154,7 +141,7 @@ public struct AgentPublicKey: Codable {
                 delegation.objectSignature.signature,
             for: delegation.assertion.wireFormat
         ) else {
-            throw TypedKeyError.invalidTypedKey
+            throw DefinedWidthError.invalidTypedKey
         }
         
         guard let agentData = delegation.assertion.objectData else {
@@ -163,40 +150,19 @@ public struct AgentPublicKey: Codable {
         return try agentData.decoded()
     }
     
-    public var wireFormat: Data {
-        get throws {
-            try archive.wireFormat
-        }
-    }
-    
-    //MARK: Codable
-    public var archive: TypedKeyMaterial {
-        get throws {
-            try .init(typedKey: publicKey)
-        }
-    }
-    
-    public init(from decoder: Decoder) throws {
-        let container = try decoder.singleValueContainer()
-        let archive = try container.decode(Data.self)
-        let typedArchive: TypedKeyMaterial = try .init(wireFormat: archive)
-        
-        switch typedArchive.algorithm {
-        case .Curve25519_Signing:
-            publicKey = try Curve25519.Signing.PublicKey(rawRepresentation: typedArchive.keyData)
-        default: throw ProtocolError.typedKeyArchiveMismatch
-        }
-    }
-    
-    public func encode(to encoder: Encoder) throws {
-        var container = encoder.singleValueContainer()
-        try container.encode(archive.wireFormat)
+    public var wireFormat: Data { id.wireFormat }
+}
+
+extension AgentPublicKey: Hashable {
+    //MARK: Hashable
+    public func hash(into hasher: inout Hasher) {
+        hasher.combine("Agent Public Key")
+        hasher.combine(id)
     }
 }
 
 extension AgentPublicKey: Equatable {
     static public func == (lhs: Self, rhs: Self) -> Bool {
-        type(of: lhs.publicKey).signingAlgorithm == type(of: rhs.publicKey).signingAlgorithm
-        && lhs.id == rhs.id
+        lhs.id == rhs.id
     }
 }

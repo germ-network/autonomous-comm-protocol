@@ -37,64 +37,40 @@ public struct IdentityRelationshipAssertion {
         self.objectData = objectData
     }
     
-    init(wireformat: Data) throws(TypedKeyError) {
+    init(wireformat: Data) throws {
         guard let first = wireformat.first,
               let relationshipType = IdentityRelationshipTypes(rawValue: first) else {
-            throw .invalidTypedKey
+            throw DefinedWidthError.invalidTypedKey
         }
         self.relationship = relationshipType
         let (subject, remainder) = try TypedKeyMaterial
-            .readPrefix(data: Data(wireformat[1...]) )
+            .parse(wireFormat: Data(wireformat[1...]) )
         self.subject = subject
-        guard let remainder else { throw .invalidTypedKey }
-        (object, objectData) = try TypedKeyMaterial.readPrefix(data: remainder)
+        guard let remainder else { throw DefinedWidthError.invalidTypedKey }
+        (object, objectData) = try TypedKeyMaterial.parse(wireFormat: remainder)
     }
 }
 
 //like TypedKeyMaterial, prepend a byte that indicates length of the body
-public struct TypedSignature: Sendable {
+public struct TypedSignature: DefinedWidthBinary, Sendable {
+    public typealias Prefix = SigningKeyAlgorithm
     let signingAlgorithm: SigningKeyAlgorithm
     let signature: Data
     
-    var wireFormat: Data {
+    public var wireFormat: Data {
         [signingAlgorithm.rawValue] + signature
+    }
+    
+    public init(prefix: SigningKeyAlgorithm, checkedData: Data) throws {
+        guard prefix.contentByteSize == checkedData.count else {
+            throw DefinedWidthError.incorrectDataLength
+        }
+        self.init(signingAlgorithm: prefix, signature: checkedData)
     }
     
     init(signingAlgorithm: SigningKeyAlgorithm, signature: Data) {
         self.signingAlgorithm = signingAlgorithm
         self.signature = signature
-    }
-    
-    init(wireFormat: Data) throws(TypedKeyError) {
-        guard let first = wireFormat.first,
-              let signingAlgorithm = SigningKeyAlgorithm(rawValue: first),
-              wireFormat.count == signingAlgorithm.signatureLength + 1 else {
-            throw .invalidTypedSignature
-        }
-        self.signingAlgorithm = signingAlgorithm
-        self.signature = Data( wireFormat[1...] )
-    }
-    
-    static func readPrefix(
-        data: Data
-    ) throws(TypedKeyError) -> (TypedSignature, Data?) {
-        guard let first = data.first,
-              let prefixAlgo = SigningKeyAlgorithm(rawValue: first) else {
-            throw .invalidTypedSignature
-        }
-        let prefixLength = prefixAlgo.signatureLength + 1
-        switch data.count {
-        case (..<prefixLength):
-            throw TypedKeyError.invalidTypedKey
-        case prefixLength:
-            return (try .init(wireFormat: data), nil)
-        case ((prefixLength + 1)...):
-            return (
-                try .init(wireFormat: Data(data.prefix(prefixLength)) ) ,
-                Data(data[prefixLength...])
-            )
-        default: throw TypedKeyError.invalidTypedKey
-        }
     }
 }
 
@@ -110,16 +86,16 @@ public struct SignedIdentityRelationship {
         + assertion.wireFormat
     }
     
-    public init(wireFormat: Data) throws(TypedKeyError) {
+    public init(wireFormat: Data) throws {
         let (subjectSignature, remainder) = try TypedSignature
-            .readPrefix(data: wireFormat)
+            .parse(wireFormat: wireFormat)
         self.subjectSignature = subjectSignature
         
-        guard let remainder else { throw .invalidTypedSignature }
+        guard let remainder else { throw DefinedWidthError.invalidTypedSignature }
         let (objectSignature, assertionData) = try TypedSignature
-            .readPrefix(data: remainder)
+            .parse(wireFormat: remainder)
         
-        guard let assertionData else { throw .invalidTypedSignature }
+        guard let assertionData else { throw DefinedWidthError.invalidTypedSignature }
         self.objectSignature = objectSignature
         
         self.assertion = try .init(wireformat: assertionData)

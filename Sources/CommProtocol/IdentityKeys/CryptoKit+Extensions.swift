@@ -15,45 +15,5 @@ public protocol RawRepresentableKey {
 }
 
 //all of these are RawRepresentable, could combine extensions
-extension Curve25519.KeyAgreement.PrivateKey: RawRepresentableKey, Codable {
-    public init(from decoder: Decoder) throws {
-        let container = try decoder.singleValueContainer()
-        let data = try container.decode(Data.self)
-        try self.init(rawRepresentation: data)
-    }
-    
-    public func encode(to encoder: Encoder) throws {
-        var container = encoder.singleValueContainer()
-        try container.encode(rawRepresentation)
-    }
-}
-
-
-
-extension Curve25519.KeyAgreement.PublicKey: RawRepresentableKey, Codable {
-    public init(from decoder: Decoder) throws {
-        let container = try decoder.singleValueContainer()
-        let data = try container.decode(Data.self)
-        try self.init(rawRepresentation: data)
-    }
-    
-    public func encode(to encoder: Encoder) throws {
-        var container = encoder.singleValueContainer()
-        try container.encode(rawRepresentation)
-    }
-}
-
-extension Curve25519.Signing.PublicKey: RawRepresentableKey, Codable {
-    public init(from decoder: Decoder) throws {
-        let container = try decoder.singleValueContainer()
-        let data = try container.decode(Data.self)
-        try self.init(rawRepresentation: data)
-    }
-    
-    public func encode(to encoder: Encoder) throws {
-        var container = encoder.singleValueContainer()
-        try container.encode(rawRepresentation)
-    }
-}
-
-
+extension Curve25519.KeyAgreement.PublicKey: RawRepresentableKey {}
+extension Curve25519.Signing.PublicKey: RawRepresentableKey {}

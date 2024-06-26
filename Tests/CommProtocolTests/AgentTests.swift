@@ -14,19 +14,17 @@ struct AgentKeyTests {
     @Test func testCoding() throws {
         let privateKey = AgentPrivateKey(algorithm: .curve25519)
         
-        let encoded = try privateKey.encoded
-        let decoded: AgentPrivateKey = try encoded.decoded()
-        #expect(privateKey.id == decoded.id )
+        let rehydrated: AgentPrivateKey = try .init(archive: privateKey.archive)
+        #expect(privateKey.archive == rehydrated.archive )
         
         let publicKey = privateKey.publicKey
-        let encodedPublicKey = try publicKey.encoded
-        let decodedPublicKey: AgentPublicKey = try encodedPublicKey.decoded()
-        #expect(publicKey.id == decodedPublicKey.id)
+        let rehydratedPublic: AgentPublicKey = try .init(archive: publicKey.id)
+        #expect(publicKey.id == rehydratedPublic.id)
     }
     
     @Test func testWireFormat() throws {
         let privateKey = AgentPrivateKey(algorithm: .curve25519)
-        let publicWireFormat = try privateKey.publicKey.wireFormat
+        let publicWireFormat = privateKey.publicKey.wireFormat
         
         let decodedPublic = try AgentPublicKey(wireFormat: publicWireFormat)
         #expect(privateKey.publicKey == decodedPublic)

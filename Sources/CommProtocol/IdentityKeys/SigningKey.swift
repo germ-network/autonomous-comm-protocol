@@ -46,10 +46,12 @@ public protocol PublicSigningKey: TypedKeyMaterialInput, Hashable, Sendable {
 
 //use enum to pick keys, but rely on TypedKeyMaterial enum to encode
 //Do use this to encode prefix when
-public enum SigningKeyAlgorithm: UInt8, Sendable {
+public enum SigningKeyAlgorithm: UInt8, DefinedWidthPrefix, Sendable {
     case curve25519 //RFC 8410
+
+    public var contentByteSize: Int { signatureLength }
     
-    var signatureLength: Int {
+    private var signatureLength: Int {
         switch self {
         case .curve25519: 64
         }
