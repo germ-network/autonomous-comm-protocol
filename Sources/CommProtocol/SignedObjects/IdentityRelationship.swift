@@ -18,15 +18,23 @@ public struct IdentityRelationshipAssertion {
     let relationship: IdentityRelationshipTypes
     let subject: TypedKeyMaterial
     let object: TypedKeyMaterial
+    let objectData: Data? //additional data about the object
+    //we can use this to assert the object version and if it is an app clip
     
     var wireFormat: Data {
-        [relationship.rawValue] + subject.wireFormat + object.wireFormat
+        [relationship.rawValue] + subject.wireFormat + object.wireFormat + (objectData ?? Data())
     }
     
-    init(relationship: IdentityRelationshipTypes, subject: TypedKeyMaterial, object: TypedKeyMaterial) {
+    init(
+        relationship: IdentityRelationshipTypes,
+        subject: TypedKeyMaterial,
+        object: TypedKeyMaterial,
+        objectData: Data?
+    ) {
         self.relationship = relationship
         self.subject = subject
         self.object = object
+        self.objectData = objectData
     }
     
     init(wireformat: Data) throws(TypedKeyError) {
@@ -35,11 +43,11 @@ public struct IdentityRelationshipAssertion {
             throw .invalidTypedKey
         }
         self.relationship = relationshipType
-        let (firstKey, remainder) = try TypedKeyMaterial
+        let (subject, remainder) = try TypedKeyMaterial
             .readPrefix(data: Data(wireformat[1...]) )
-        self.subject = firstKey
+        self.subject = subject
         guard let remainder else { throw .invalidTypedKey }
-        self.object = try .init(wireformat: remainder)
+        (object, objectData) = try TypedKeyMaterial.readPrefix(data: remainder)
     }
 }
 
