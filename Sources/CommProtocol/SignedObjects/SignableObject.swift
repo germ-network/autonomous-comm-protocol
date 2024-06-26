@@ -34,7 +34,7 @@ public struct SignedObject<SignableObject>: Sendable {
         self.body = body
     }
     
-    var wireFormat: Data {
+    public var wireFormat: Data {
         [bodyType.rawValue] + signature.wireFormat + body
     }
     
