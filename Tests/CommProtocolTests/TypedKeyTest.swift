@@ -17,7 +17,7 @@ struct TypedKeyTests {
         let privateSigningKey = Curve25519.Signing.PrivateKey()
         
         let publicKey = privateSigningKey.publicKey
-        let typedPublic = try TypedKeyMaterial(typedKey: publicKey)
+        let typedPublic = TypedKeyMaterial(typedKey: publicKey)
         let decodedPublic: Curve25519.Signing.PublicKey = try .init(wireFormat: typedPublic.wireFormat)
         #expect(publicKey.rawRepresentation == decodedPublic.rawRepresentation)
         
@@ -30,7 +30,7 @@ struct TypedKeyTests {
         let privateSigningKey = Curve25519.KeyAgreement.PrivateKey()
         
         let publicKey = privateSigningKey.publicKey
-        let typedPublic = try TypedKeyMaterial(typedKey: publicKey)
+        let typedPublic = TypedKeyMaterial(typedKey: publicKey)
         let decodedPublic: Curve25519.KeyAgreement.PublicKey = try .init(wireFormat: typedPublic.wireFormat)
         #expect(publicKey.rawRepresentation == decodedPublic.rawRepresentation)
         

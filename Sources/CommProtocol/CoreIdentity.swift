@@ -52,9 +52,35 @@ public struct DescribedImage: Equatable, Codable, Sendable{
 ///
 ///However, since signedDigest is a predictable width, we can be a bit more efficient by leaving the signedDigest
 ///in raw bytes and not base64 encoding it
-public struct SignedIdentity: Sendable {
+public struct SignedIdentity: WireFormat, Sendable {
     public let signedDigest: SignedObject<IdentityAssertion>
     public let credentialData: Data
+    
+    public var wireFormat: Data {
+        signedDigest.wireFormat + credentialData
+    }
+    
+    init(signedDigest: SignedObject<IdentityAssertion>, credentialData: Data) {
+        self.signedDigest = signedDigest
+        self.credentialData = credentialData
+    }
+    
+    public init(wireFormat: Data) throws {
+        let (signedObjectType, signature, suffix) = try SignedObject<IdentityAssertion>.parse(
+            wireFormat: wireFormat
+        )
+        guard signedObjectType == .identityDigest else {
+            throw ProtocolError.authenticationError
+        }
+        let (identityAssertion, credentialData) = try IdentityAssertion
+            .parse(wireFormat: suffix)
+        guard let credentialData else { throw ProtocolError.authenticationError }
+        
+        signedDigest = .init(bodyType: signedObjectType,
+                             signature: signature,
+                             body: identityAssertion.wireFormat)
+        self.credentialData = credentialData
+    }
     
     public func verifiedIdentity() throws -> CoreIdentity {
         //have to decode the credentialData to get the public key

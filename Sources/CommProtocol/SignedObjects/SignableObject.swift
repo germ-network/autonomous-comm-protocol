@@ -38,7 +38,11 @@ public struct SignedObject<SignableObject>: Sendable {
         [bodyType.rawValue] + signature.wireFormat + body
     }
     
-    init(wireFormat: Data) throws {
+    //this parses the bodyType and typedSignature, leaving the caller to
+    //use bodyType to determine how to parse the remainder
+    static func parse(
+        wireFormat: Data
+    ) throws -> (SignableObjectTypes, TypedSignature, Data) {
         guard let first = wireFormat.first,
               let bodyType = SignableObjectTypes(rawValue: first),
               wireFormat.count > 1 else {
@@ -47,9 +51,8 @@ public struct SignedObject<SignableObject>: Sendable {
         let (signature, body) = try TypedSignature
             .parse(wireFormat: Data( wireFormat[1...] ))
         guard let body else { throw DefinedWidthError.invalidTypedSignature }
-        self.bodyType = bodyType
-        self.signature = signature
-        self.body = body
+        
+        return (bodyType, signature, body)
     }
     
     func validate(
