@@ -62,23 +62,27 @@ public struct IdentityPrivateKey: Sendable {
     }
     
     public func delegate(
-        to agent: AgentPrivateKey,
         agentData: AgentData
-    ) throws -> SignedIdentityRelationship {
+    ) throws -> (AgentPrivateKey, SignedIdentityRelationship) {
+        let newAgent = AgentPrivateKey(algorithm: .curve25519)
+        
         let assertion = IdentityRelationshipAssertion(
             relationship: .delegateAgent,
             subject: publicKey.id,
-            object: agent.publicKey.id,
+            object: newAgent.publicKey.id,
             objectData: try agentData.encoded
         )
         let assertionData = assertion.wireFormat
         let subjectSignature = try signature(for: assertionData)
-        let objectSignature = try agent.sign(delegate: assertion)
+        let objectSignature = try newAgent.sign(delegate: assertion)
         
-        return .init(
-            subjectSignature: subjectSignature,
-            objectSignature: objectSignature,
-            assertion: assertion
+        return (
+            newAgent,
+            .init(
+                subjectSignature: subjectSignature,
+                objectSignature: objectSignature,
+                assertion: assertion
+            )
         )
     }
     

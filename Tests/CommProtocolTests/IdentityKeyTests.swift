@@ -45,10 +45,7 @@ struct IdentityKeyTests {
     }
     
     @Test func testDelegation() throws {
-        let agentKey = AgentPrivateKey(algorithm: .curve25519)
-        
-        let signedRelationship = try privateKey.delegate(
-            to: agentKey,
+        let (agentKey, signedRelationship) = try privateKey.delegate(
             agentData: .init(version: .init(major: 0, minor: 1, patch: 1),
                              isAppClip: nil)
         )
@@ -57,6 +54,10 @@ struct IdentityKeyTests {
         
         let (decodedAgent, agentData) = try privateKey.publicKey
             .validate(delegation: decoded)
+        
+        #expect(decodedAgent.id == agentKey.id)
+        #expect(agentData.isAppClip == nil)
+        #expect(agentData.version == .init(major: 0, minor: 1, patch: 1))
     }
 }
 
