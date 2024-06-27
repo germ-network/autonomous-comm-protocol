@@ -12,6 +12,7 @@ public enum SignableObjectTypes: UInt8, Codable, Sendable {
     case identityDigest
     case identityMutableData
     case encryptedResource
+    case addresses
 }
 
 //ensure signed objects state their type
@@ -65,6 +66,19 @@ public struct SignedObject<SignableObject>: Sendable {
             throw ProtocolError.authenticationError
         }
         return body
+    }
+}
+
+extension SignedObject: Codable {
+    public init(from decoder: any Decoder) throws {
+        let container = try decoder.singleValueContainer()
+        let data = try container.decode(Data.self)
+        (bodyType, signature, body) = try Self.parse(wireFormat: data)
+    }
+    
+    public func encode(to encoder: any Encoder) throws {
+        var container = encoder.singleValueContainer()
+        try container.encode(wireFormat)
     }
 }
 

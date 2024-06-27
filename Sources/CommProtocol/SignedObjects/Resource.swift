@@ -17,7 +17,7 @@ public struct Resource: SignableObject, Sendable, Codable {
         public static let minExpiration = TimeInterval(24 * 3600)
     }
     
-    public let identifier: String //base64 decodes to digest of the ciphertext
+    public let identifier: String //base64url decodes to digest of the ciphertext
     public let plaintextDigest: Data
     public let host: String
     public let symmetricKey: SymmetricKey

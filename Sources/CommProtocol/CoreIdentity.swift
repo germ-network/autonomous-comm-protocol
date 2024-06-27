@@ -135,11 +135,11 @@ public enum HashAlgorithms: UInt8, DefinedWidthPrefix {
     }
 }
 
-public struct IdentityMutableData: SignableObject, Sendable{
+public struct IdentityMutableData: SignableObject, Codable, Sendable{
     public static var type: SignableObjectTypes = .identityMutableData
     public var type: SignableObjectTypes = .identityMutableData
     public let counter: UInt16 //for predecence defined by the sender/signer
-    public let identityPublicKey: IdentityPublicKey //identifier of the core card this updates/is in reference to
+    public let identityPublicKeyData: Data //wireformat of the identity public key
     public let pronouns: [String]?
     public let aboutText: String?
 }
