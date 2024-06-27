@@ -11,16 +11,16 @@ import Foundation
 //send optional data as a follow-up message
 //TODO: Sha2 hashable
 public struct IdentityFollowup: Codable, Sendable {
-    public let agentId: String
+    public let agentId: Data //typedkeyMaterial wireformat
     public let imageResource: Resource?
     public var signedMutableFields: SignedObject<IdentityMutableData>?
     public var addresses: SignedObject<Addresses>? //if dropped, can use rendezvous to reply
     
-    public init(agentId: String,
+    public init(agentKey: AgentPublicKey,
                 imageResource: Resource?,
                 signedMutableFields: SignedObject<IdentityMutableData>?,
                 addresses: SignedObject<Addresses>?) {
-        self.agentId = agentId
+        self.agentId = agentKey.wireFormat
         self.imageResource = imageResource
         self.signedMutableFields = signedMutableFields
 //        self.addresses = addresses
