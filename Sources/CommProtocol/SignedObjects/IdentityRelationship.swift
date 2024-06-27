@@ -113,6 +113,11 @@ public struct SignedIdentityRelationship {
 }
 
 public struct AgentData: Codable {
-    let version: SemanticVersion
-    let isAppClip: Bool? //omitted if false
+    public let version: SemanticVersion
+    public let isAppClip: Bool? //omitted if false
+    
+    public init(version: SemanticVersion, isAppClip: Bool?) {
+        self.version = version
+        self.isAppClip = isAppClip
+    }
 }
