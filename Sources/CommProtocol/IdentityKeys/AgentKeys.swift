@@ -13,7 +13,7 @@ import CryptoKit
 /// - use a concrete roled type that contains a type conforming to the signing key protocol
 
 //MARK: Concrete object
-public struct AgentPrivateKey {
+public struct AgentPrivateKey: Sendable {
     private let privateKey: any PrivateSigningKey
     public let publicKey: AgentPublicKey //store public key for efficiency
 
@@ -106,7 +106,7 @@ public struct AgentPrivateKey {
 
 }
 
-public struct AgentPublicKey {
+public struct AgentPublicKey: Sendable {
     private let publicKey: any PublicSigningKey
     public let id: TypedKeyMaterial
     
