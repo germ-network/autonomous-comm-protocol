@@ -44,10 +44,6 @@ struct IdentityKeyTests {
         #expect(privateKey.publicKey == decodedPublic)
     }
     
-    @Test func testSignedIdentityWire() throws {
-        let decoded = try SignedIdentity(wireFormat: signedIdentity.wireFormat)
-    }
-    
     @Test func testDelegation() throws {
         let (agentKey, signedRelationship) = try privateKey.delegate(
             agentData: .init(version: .init(major: 0, minor: 1, patch: 1),
@@ -62,6 +58,14 @@ struct IdentityKeyTests {
         #expect(decodedAgent.id == agentKey.id)
         #expect(agentData.isAppClip == nil)
         #expect(agentData.version == .init(major: 0, minor: 1, patch: 1))
+    }
+    
+    @Test func testHashDomainSeparation() throws {
+        let baseKey = Curve25519.Signing.PrivateKey().publicKey
+        let agentKey = AgentPublicKey(concrete: baseKey)
+        let identityKey = IdentityPublicKey(concrete: baseKey)
+        
+        #expect(agentKey.hashValue != identityKey.hashValue)
     }
     
     @Test func testAgentHello() throws {

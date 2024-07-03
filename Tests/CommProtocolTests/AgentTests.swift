@@ -61,4 +61,62 @@ struct AgentKeyTests {
         
         #expect(validated.first == address)
     }
+    
+    @Test func testHash() throws {
+        let firstKey = privateKey.publicKey
+        let secondKey = AgentPrivateKey(algorithm: .curve25519).publicKey
+
+        #expect(firstKey.hashValue == firstKey.hashValue)
+        #expect(firstKey.hashValue != secondKey.hashValue)
+    }
+    
+    @Test func testSignDelegateError() throws {
+        let identityKey = IdentityPublicKey(concrete: Curve25519.Signing.PrivateKey().publicKey)
+        let agentPubKey = privateKey.publicKey
+        
+        let agentData = AgentData(
+            version: .init(major: 0, minor: 0, patch: 1),
+            isAppClip: nil
+        )
+        
+        let wrongAssertion = IdentityRelationshipAssertion(
+            relationship: .successorAgent,
+            subject: identityKey.id,
+            object: agentPubKey.id,
+            objectData: try JSONEncoder().encode(agentData)
+        )
+        #expect(throws: ProtocolError.signatureDisallowed) {
+            let _ = try privateKey.sign(delegate: wrongAssertion)
+        }
+        
+        let wrongIdAssertion = IdentityRelationshipAssertion(
+            relationship: .delegateAgent,
+            subject: identityKey.id,
+            object: AgentPrivateKey(algorithm: .curve25519).publicKey.id,
+            objectData: try JSONEncoder().encode(agentData)
+        )
+        #expect(throws: ProtocolError.signatureDisallowed) {
+            let _ = try privateKey.sign(delegate: wrongIdAssertion)
+        }
+        
+        let nilDataAssertion = IdentityRelationshipAssertion(
+            relationship: .delegateAgent,
+            subject: identityKey.id,
+            object: agentPubKey.id,
+            objectData: nil
+        )
+        #expect(throws: ProtocolError.signatureDisallowed) {
+            let _ = try privateKey.sign(delegate: nilDataAssertion)
+        }
+        
+        let falseData = IdentityRelationshipAssertion(
+            relationship: .delegateAgent,
+            subject: identityKey.id,
+            object: agentPubKey.id,
+            objectData: SymmetricKey(size: .bits128).rawRepresentation
+        )
+        #expect(throws: DecodingError.self) {
+            let _ = try privateKey.sign(delegate: falseData)
+        }
+    }
 }

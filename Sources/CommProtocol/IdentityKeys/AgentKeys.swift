@@ -50,9 +50,13 @@ public struct AgentPrivateKey: Sendable {
         delegate: IdentityRelationshipAssertion
     ) throws -> TypedSignature {
         guard delegate.relationship == .delegateAgent,
-              delegate.object == publicKey.id else {
+              delegate.object == publicKey.id,
+              let agentData = delegate.objectData else {
             throw ProtocolError.signatureDisallowed
         }
+        
+        let _ = try JSONDecoder().decode(AgentData.self, from: agentData)
+        
         return .init(
             signingAlgorithm: type(of: privateKey).signingAlgorithm,
             signature: try privateKey.signature(for: delegate.wireFormat)
