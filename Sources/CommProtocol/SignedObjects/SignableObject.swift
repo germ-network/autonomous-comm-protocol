@@ -13,6 +13,7 @@ public enum SignableObjectTypes: UInt8, Codable, Sendable {
     case identityMutableData
     case encryptedResource
     case addresses
+    case keyPackageChoices
 }
 
 //ensure signed objects state their type

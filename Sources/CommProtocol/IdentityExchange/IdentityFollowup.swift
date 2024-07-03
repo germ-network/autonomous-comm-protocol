@@ -14,12 +14,12 @@ public struct IdentityFollowup: Codable, Sendable {
     public let agentId: Data //typedkeyMaterial wireformat
     public let imageResource: Resource?
     public var signedMutableFields: SignedObject<IdentityMutableData>?
-    public var addresses: SignedObject<Addresses>? //if dropped, can use rendezvous to reply
+    public var addresses: SignedObject<[ProtocolAddress]>? //if dropped, can use rendezvous to reply
     
     public init(agentKey: AgentPublicKey,
                 imageResource: Resource?,
                 signedMutableFields: SignedObject<IdentityMutableData>?,
-                addresses: SignedObject<Addresses>?) {
+                addresses: SignedObject<[ProtocolAddress]>?) {
         self.agentId = agentKey.wireFormat
         self.imageResource = imageResource
         self.signedMutableFields = signedMutableFields

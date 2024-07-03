@@ -1,5 +1,5 @@
 //
-//  File.swift
+//  SignedAddresses.swift
 //  
 //
 //  Created by Mark @ Germ on 6/27/24.
@@ -7,8 +7,7 @@
 
 import Foundation
 
-public struct Addresses: SignableObject, Codable {
+extension [ProtocolAddress]: SignableObject {
     public static let type: SignableObjectTypes = .addresses
-    public var type: SignableObjectTypes = .addresses
-    public let addresses: [ProtocolAddress]
+    public var type: SignableObjectTypes { .addresses }
 }

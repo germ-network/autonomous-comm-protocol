@@ -49,6 +49,8 @@ extension ProtocolAddress: Identifiable {
     public var id: String { serviceHost + identifier }
 }
 
+
+
 //extension ProtocolAddress: SHA2Hashable {
 //    public func sha2Hash(into hasher: inout SHA256) {
 //        identifier.sha2Hash(into: &hasher)

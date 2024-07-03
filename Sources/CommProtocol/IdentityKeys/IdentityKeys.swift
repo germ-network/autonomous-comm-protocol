@@ -162,6 +162,16 @@ public struct IdentityPublicKey: Sendable {
         let data = try assertedObject.validate(delegation: delegation)
         return (assertedObject, data)
     }
+    
+    func validate(
+        signedMutableData: SignedObject<IdentityMutableData>?
+    ) throws -> IdentityMutableData? {
+        guard let signedMutableData else { return nil }
+        return try JSONDecoder().decode(
+            IdentityMutableData.self,
+            from: signedMutableData.validate(for: publicKey)
+        )
+    }
 }
 
 extension IdentityPublicKey: Hashable {

@@ -110,6 +110,8 @@ public struct AgentPublicKey: Sendable {
     private let publicKey: any PublicSigningKey
     public let id: TypedKeyMaterial
     
+    public var wireFormat: Data { id.wireFormat }
+    
     init(concrete: any PublicSigningKey) {
         publicKey = concrete
         id = .init(typedKey: publicKey)
@@ -150,7 +152,35 @@ public struct AgentPublicKey: Sendable {
         return try agentData.decoded()
     }
     
-    public var wireFormat: Data { id.wireFormat }
+    //Enumerate the agent signable types instead of a generic validation of any signable object
+    func validate(
+        signedKeyPackages: SignedObject<KeyPackageChoices>
+    ) throws -> KeyPackageChoices {
+        try JSONDecoder().decode(
+            KeyPackageChoices.self,
+            from: signedKeyPackages.validate(for: publicKey)
+        )
+    }
+    
+    func validate(
+        signedAddresses: SignedObject<[ProtocolAddress]>
+    ) throws -> [ProtocolAddress] {
+        try JSONDecoder().decode(
+            [ProtocolAddress].self,
+            from: signedAddresses.validate(for: publicKey)
+        )
+    }
+    
+    func validate(
+        signedResource: SignedObject<Resource>?
+    ) throws -> Resource? {
+        guard let signedResource else { return nil }
+        return try JSONDecoder().decode(
+            Resource.self,
+            from: signedResource.validate(for: publicKey)
+        )
+    }
+    
 }
 
 extension AgentPublicKey: Hashable {

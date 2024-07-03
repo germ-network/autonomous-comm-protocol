@@ -8,13 +8,13 @@
 
 import Foundation
 
-public enum IdentityRelationshipTypes: UInt8, Codable {
+public enum IdentityRelationshipTypes: UInt8, Codable, Sendable {
     case delegateAgent
     case successorIdentity
     case successorAgent
 }
 
-public struct IdentityRelationshipAssertion {
+public struct IdentityRelationshipAssertion: Sendable {
     let relationship: IdentityRelationshipTypes
     let subject: TypedKeyMaterial
     let object: TypedKeyMaterial
@@ -75,7 +75,7 @@ public struct TypedSignature: DefinedWidthBinary, Sendable {
 }
 
 
-public struct SignedIdentityRelationship {
+public struct SignedIdentityRelationship: Sendable {
     let subjectSignature: TypedSignature
     let objectSignature: TypedSignature
     let assertion: IdentityRelationshipAssertion
@@ -112,7 +112,7 @@ public struct SignedIdentityRelationship {
     }
 }
 
-public struct AgentData: Codable {
+public struct AgentData: Codable, Sendable {
     public let version: SemanticVersion
     public let isAppClip: Bool? //omitted if false
     
