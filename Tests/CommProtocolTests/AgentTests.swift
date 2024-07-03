@@ -28,6 +28,19 @@ struct AgentKeyTests {
         
         let decodedPublic = try AgentPublicKey(wireFormat: publicWireFormat)
         #expect(privateKey.publicKey == decodedPublic)
+        
+        let symmetricKey = try TypedKeyMaterial(
+            algorithm: .ChaCha20Poly1305,
+            symmetricKey: SymmetricKey(size: .bits256)
+        )
+        
+        #expect(throws: ProtocolError.typedKeyArchiveMismatch) {
+            let _ = try AgentPrivateKey(archive: symmetricKey)
+        }
+        
+        #expect(throws: ProtocolError.typedKeyArchiveMismatch) {
+            let _ = try AgentPublicKey(archive: symmetricKey)
+        }
     }
     
     @Test func testResourceSigning() throws {
@@ -117,6 +130,49 @@ struct AgentKeyTests {
         )
         #expect(throws: DecodingError.self) {
             let _ = try privateKey.sign(delegate: falseData)
+        }
+    }
+    
+    @Test func testSigningEarlyExit() {
+        let identityData = IdentityMutableData(
+            counter: 1,
+            identityPublicKeyData: SymmetricKey(size: .bits256).rawRepresentation,
+            pronouns: ["he/him"],
+            aboutText: "test content"
+        )
+        #expect(throws: ProtocolError.incorrectSigner) {
+            let _ = try privateKey.sign(agentSignableObject: identityData)
+        }
+    }
+    
+    @Test func testValidationDelegationErrors() throws {
+        let agentData = AgentData(
+            version: .init(major: 0, minor: 0, patch: 1),
+            isAppClip: nil
+        )
+        
+        let identity = try IdentityPrivateKey(algorithm: .curve25519)
+        let (agentKey, referenceDelegation) = try identity.delegate(
+            agentData: agentData
+        )
+        
+        let incorrectSignature = try TypedSignature(
+            prefix: .curve25519,
+            checkedData: SymmetricKey(size: .bits256).rawRepresentation +  SymmetricKey(size: .bits256).rawRepresentation
+        )
+        
+        #expect(throws: ProtocolError.authenticationError) {
+            let invalidSignature = SignedIdentityRelationship(
+                subjectSignature: referenceDelegation.objectSignature,
+                objectSignature: incorrectSignature,
+                assertion: referenceDelegation.assertion
+            )
+            
+            let _ = try agentKey.publicKey.validate(delegation: invalidSignature)
+        }
+        
+        #expect(throws: ProtocolError.authenticationError) {
+            let _ = try privateKey.publicKey.validate(delegation: referenceDelegation)
         }
     }
 }

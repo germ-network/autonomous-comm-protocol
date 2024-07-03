@@ -78,7 +78,7 @@ public extension DefinedWidthBinary {
 }
 
 
-public enum DefinedWidthError: Error {
+public enum DefinedWidthError: Error, Equatable {
     case mismatchedAlgorithms(expected: TypedKeyMaterial.Algorithms,
                               found: TypedKeyMaterial.Algorithms)
     case unknownTypedKeyAlgorithm(UInt8)

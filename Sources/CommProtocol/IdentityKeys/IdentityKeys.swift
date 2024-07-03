@@ -15,7 +15,7 @@ public struct IdentityPrivateKey: Sendable {
     private let privateKey: any PrivateSigningKey
     public let publicKey: IdentityPublicKey //store public key for efficiency
     
-    private init(algorithm: SigningKeyAlgorithm) throws {
+    init(algorithm: SigningKeyAlgorithm) throws {
         switch algorithm {
         case .curve25519:
             self.privateKey = Curve25519.Signing.PrivateKey()

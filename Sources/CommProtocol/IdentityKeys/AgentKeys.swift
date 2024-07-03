@@ -36,7 +36,7 @@ public struct AgentPrivateKey: Sendable {
             self.init(
                 concrete: try Curve25519.Signing.PrivateKey(rawRepresentation: archive.keyData)
             )
-        default: throw DefinedWidthError.invalidTypedKey
+        default: throw ProtocolError.typedKeyArchiveMismatch
         }
     }
     
@@ -152,7 +152,11 @@ public struct AgentPublicKey: Sendable {
                 delegation.objectSignature.signature,
                 for: delegation.assertion.wireFormat
               ) else {
-            throw DefinedWidthError.invalidTypedKey
+            throw ProtocolError.authenticationError
+        }
+        
+        guard delegation.assertion.object == id else {
+            throw ProtocolError.authenticationError
         }
         
         guard let agentData = delegation.assertion.objectData else {
