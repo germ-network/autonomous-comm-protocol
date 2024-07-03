@@ -112,7 +112,7 @@ public struct SignedIdentityRelationship: Sendable {
     }
 }
 
-public struct AgentData: Codable, Sendable {
+public struct AgentData: Codable, Sendable, Equatable {
     public let version: SemanticVersion
     public let isAppClip: Bool? //omitted if false
     

@@ -44,6 +44,10 @@ struct IdentityKeyTests {
         #expect(privateKey.publicKey == decodedPublic)
     }
     
+    @Test func testSignedIdentityWire() throws {
+        let decoded = try SignedIdentity(wireFormat: signedIdentity.wireFormat)
+    }
+    
     @Test func testDelegation() throws {
         let (agentKey, signedRelationship) = try privateKey.delegate(
             agentData: .init(version: .init(major: 0, minor: 1, patch: 1),
@@ -59,5 +63,99 @@ struct IdentityKeyTests {
         #expect(agentData.isAppClip == nil)
         #expect(agentData.version == .init(major: 0, minor: 1, patch: 1))
     }
+    
+    @Test func testAgentHello() throws {
+        let mutableFields = IdentityMutableData(
+            counter: 2,
+            identityPublicKeyData: privateKey.publicKey.id.wireFormat,
+            pronouns: ["they/them"],
+            aboutText: UUID().uuidString
+        )
+        
+        let agentData = AgentData(
+            version: .init(major: 0, minor: 1, patch: 1),
+            isAppClip: nil
+        )
+        let (agentKey, signedDelegation) = try privateKey.delegate(
+            agentData: agentData
+        )
+        
+        //TODO: fill in a key package
+        let keyPackageChoices = KeyPackageChoices()
+        let address = ProtocolAddress(
+            identifier: UUID().uuidString,
+            serviceHost: "example.com",
+            expiration: Date.distantFuture
+        )
+        
+        let resource = Resource(
+            identifier: UUID().uuidString,
+            plaintextDigest: SymmetricKey(size: .bits256).rawRepresentation,
+            host: "example.com",
+            symmetricKey: SymmetricKey(size: .bits256),
+            expiration: Date.distantFuture
+        )
+        
+        let agentHello = AgentHello(
+            signedIdentity: signedIdentity,
+            signedMutableFields: try privateKey.sign(mutableData: mutableFields),
+            agentDelegation: signedDelegation,
+            keyPackages: try agentKey.sign(
+                agentSignableObject: keyPackageChoices
+            ),
+            addresses: try agentKey.sign(agentSignableObject: [address]),
+            imageResource: try agentKey.sign(agentSignableObject: resource),
+            expiration: Date.distantFuture
+        )
+        
+        let validatedHello = try agentHello.validated()
+        
+        #expect(validatedHello.coreIdentity == coreIdentity)
+        #expect(validatedHello.signedIdentity.wireFormat == signedIdentity.wireFormat)
+        #expect(validatedHello.mutableData == mutableFields)
+        #expect(validatedHello.agentKey.id == agentKey.id)
+        #expect(validatedHello.agentData == agentData)
+        #expect(validatedHello.keyPackages.isEmpty)
+        #expect(validatedHello.addresses.first == address)
+        #expect(validatedHello.imageResource == resource)
+        #expect(validatedHello.assertedExpiration == Date.distantFuture)
+        
+    }
 }
 
+struct IdentityRelationshipTests {
+    @Test func testInnerWireFormat() async throws {
+        let firstAgent = AgentPrivateKey(algorithm: .curve25519)
+        let firstAgentKey = firstAgent.publicKey
+        
+        let secondAgent = AgentPrivateKey(algorithm: .curve25519)
+        let secondAgentKey = secondAgent.publicKey
+        let objectData = SymmetricKey(size: .bits128).rawRepresentation
+        
+        let assertion = IdentityRelationshipAssertion(
+            relationship: .successorIdentity,
+            subject: firstAgentKey.id,
+            object: secondAgentKey.id,
+            objectData: objectData
+        )
+        
+        let decoded = try IdentityRelationshipAssertion(wireformat: assertion.wireFormat)
+        #expect(decoded.relationship == .successorIdentity)
+        #expect(decoded.subject == firstAgentKey.id)
+        #expect(decoded.object == secondAgentKey.id)
+        #expect(decoded.objectData == objectData)
+        
+        let nilAssertion = IdentityRelationshipAssertion(
+            relationship: .successorIdentity,
+            subject: firstAgentKey.id,
+            object: secondAgentKey.id,
+            objectData: nil
+        )
+        let nilDecoded = try IdentityRelationshipAssertion(wireformat: nilAssertion.wireFormat)
+        #expect(nilDecoded.relationship == .successorIdentity)
+        #expect(nilDecoded.subject == firstAgentKey.id)
+        #expect(nilDecoded.object == secondAgentKey.id)
+        #expect(nilDecoded.objectData == nil)
+    }
+
+}

@@ -32,6 +32,8 @@ public struct Resource: SignableObject, Sendable, Codable {
     }
 }
 
+extension Resource: Equatable {}
+
 extension SymmetricKey: Codable {
     public init(from decoder: Decoder) throws {
         let value = try decoder.singleValueContainer()
@@ -44,3 +46,5 @@ extension SymmetricKey: Codable {
         try value.encode(self.rawRepresentation)
     }
 }
+
+

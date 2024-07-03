@@ -59,12 +59,24 @@ public struct AgentPrivateKey: Sendable {
         )
     }
     
-    //    public func sign(resource: Resource)
-    //    throws -> SignedObject<Resource> {
-    //        let data = try resource.encoded
-    //        let signature = try key.signature(for: data)
-    //        return .init(body: data, signature: signature)
-    //    }
+    public func sign<T>(
+        agentSignableObject: T
+    ) throws -> SignedObject<T> where T: SignableObject, T: Codable  {
+        guard T.type.signer == .agent else {
+            throw ProtocolError.incorrectSigner
+        }
+        let body = try agentSignableObject.encoded
+        let signature = try privateKey.signature(for: body)
+        return .init(
+            bodyType: .encryptedResource,
+            signature: .init(
+                signingAlgorithm: type(of: privateKey).signingAlgorithm,
+                signature: signature
+            ),
+            body: body
+        )
+    }
+    
     //
     //    public func sign(transition: SignedAgentTransition.Transition)
     //    throws -> (encoded: Data, signature: Data) {
@@ -79,14 +91,7 @@ public struct AgentPrivateKey: Sendable {
     //                     signature: signature)
     //    }
     //
-    //    //still used for legacy actor, which sends the complete signed address
-    //    public func sign(addresses: [ProtocolAddress]) throws -> CompleteSignedObject<AddressBody> {
-    //        let data = try AddressBody(addresses: addresses).encoded
-    //        let signature = try key.signature(for: data)
-    //        return .init(body: data,
-    //                     signature: signature,
-    //                     signerArchive: publicTypedKey.stablePublicArchive)
-    //    }
+
     //
     //    public func sign(preSessionMap: TypedPreSessionMap) throws -> SignedObject<TypedPreSessionMap> {
     //        let data = try preSessionMap.encoded
@@ -139,10 +144,10 @@ public struct AgentPublicKey: Sendable {
         delegation: SignedIdentityRelationship
     ) throws -> AgentData {
         guard delegation.subjectSignature.signingAlgorithm == type(of: publicKey).signingAlgorithm,
-            publicKey.isValidSignature(
+              publicKey.isValidSignature(
                 delegation.objectSignature.signature,
-            for: delegation.assertion.wireFormat
-        ) else {
+                for: delegation.assertion.wireFormat
+              ) else {
             throw DefinedWidthError.invalidTypedKey
         }
         
@@ -152,32 +157,28 @@ public struct AgentPublicKey: Sendable {
         return try agentData.decoded()
     }
     
-    //Enumerate the agent signable types instead of a generic validation of any signable object
-    func validate(
-        signedKeyPackages: SignedObject<KeyPackageChoices>
-    ) throws -> KeyPackageChoices {
-        try JSONDecoder().decode(
-            KeyPackageChoices.self,
-            from: signedKeyPackages.validate(for: publicKey)
-        )
-    }
-    
-    func validate(
-        signedAddresses: SignedObject<[ProtocolAddress]>
-    ) throws -> [ProtocolAddress] {
-        try JSONDecoder().decode(
-            [ProtocolAddress].self,
-            from: signedAddresses.validate(for: publicKey)
-        )
-    }
-    
-    func validate(
-        signedResource: SignedObject<Resource>?
-    ) throws -> Resource? {
-        guard let signedResource else { return nil }
+    func validate<T>(
+        signedObject: SignedObject<T>
+    ) throws -> T where T:SignableObject, T: Codable{
+        guard T.type.signer == .agent else {
+            throw ProtocolError.incorrectSigner
+        }
         return try JSONDecoder().decode(
-            Resource.self,
-            from: signedResource.validate(for: publicKey)
+            T.self,
+            from: signedObject.validate(for: publicKey)
+        )
+    }
+    
+    func validate<T>(
+        signedObject: SignedObject<T>?
+    ) throws -> T? where T:SignableObject, T: Codable{
+        guard let signedObject else { return nil }
+        guard T.type.signer == .agent else {
+            throw ProtocolError.incorrectSigner
+        }
+        return try JSONDecoder().decode(
+            T.self,
+            from: signedObject.validate(for: publicKey)
         )
     }
     

@@ -11,11 +11,9 @@ public enum SessionEncryptionSuites: UInt8, Codable, Sendable {
     case MLS_Curve25519_ChaChaPoly
 }
 
-public struct KeyPackageChoices: Codable, Sendable {
-    let selection: [SessionEncryptionSuites: Data]
-    // for MLS, is an encoded MLS KeyPackage message
-}
+public typealias KeyPackageChoices = [SessionEncryptionSuites: Data]
+// for MLS, data value is an encoded MLS KeyPackage message
 
 extension KeyPackageChoices: SignableObject {
-    public static var type: SignableObjectTypes = .keyPackageChoices    
+    public static var type: SignableObjectTypes = .keyPackageChoices
 }

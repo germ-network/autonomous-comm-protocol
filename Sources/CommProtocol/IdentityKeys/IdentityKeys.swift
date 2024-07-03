@@ -49,7 +49,7 @@ public struct IdentityPrivateKey: Sendable {
                 signedDigest: .init(bodyType: .identityDigest,
                                     signature: signature,
                                     body: coreIdentityDigest.data),
-                credentialData: coreIdentityData
+                identityData: coreIdentityData
             )
         )
     }
@@ -83,6 +83,23 @@ public struct IdentityPrivateKey: Sendable {
                 objectSignature: objectSignature,
                 assertion: assertion
             )
+        )
+    }
+    
+    public func sign(
+        mutableData: IdentityMutableData?
+    ) throws -> SignedObject<IdentityMutableData>? {
+        guard let mutableData else { return nil }
+        guard mutableData.identityPublicKeyData == publicKey.id.wireFormat else {
+            throw ProtocolError.incorrectSigner
+        }
+        
+        let encoded = try mutableData.encoded
+        
+        return .init(
+            bodyType: .identityMutableData,
+            signature: try signature(for: encoded),
+            body: encoded
         )
     }
     

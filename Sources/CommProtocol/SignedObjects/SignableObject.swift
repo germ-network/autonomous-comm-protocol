@@ -8,12 +8,24 @@
 import Foundation
 import CryptoKit
 
+public enum Signers{
+    case identity
+    case agent
+}
+
 public enum SignableObjectTypes: UInt8, Codable, Sendable {
     case identityDigest
     case identityMutableData
     case encryptedResource
     case addresses
     case keyPackageChoices
+    
+    var signer: Signers {
+        switch self {
+        case .identityDigest, .identityMutableData: .identity
+        case .encryptedResource, .addresses, .keyPackageChoices: .agent
+        }
+    }
 }
 
 //ensure signed objects state their type

@@ -9,5 +9,4 @@ import Foundation
 
 extension [ProtocolAddress]: SignableObject {
     public static let type: SignableObjectTypes = .addresses
-    public var type: SignableObjectTypes { .addresses }
 }

@@ -14,7 +14,7 @@ import CryptoKit
 /// - pronouns
 /// - bindings to other identities
 ///
-public struct CoreIdentity: Codable, Sendable {
+public struct CoreIdentity: Codable, Sendable, Equatable {
     struct Constants {
         //previously, 0.0.1
         static let currentVersion = SemanticVersion(major: 1, minor: 0, patch: 0)
@@ -54,15 +54,15 @@ public struct DescribedImage: Equatable, Codable, Sendable{
 ///in raw bytes and not base64 encoding it
 public struct SignedIdentity: WireFormat, Sendable {
     public let signedDigest: SignedObject<IdentityAssertion>
-    public let credentialData: Data
+    public let identityData: Data
     
     public var wireFormat: Data {
-        signedDigest.wireFormat + credentialData
+        signedDigest.wireFormat + identityData
     }
     
-    init(signedDigest: SignedObject<IdentityAssertion>, credentialData: Data) {
+    init(signedDigest: SignedObject<IdentityAssertion>, identityData: Data) {
         self.signedDigest = signedDigest
-        self.credentialData = credentialData
+        self.identityData = identityData
     }
     
     public init(wireFormat: Data) throws {
@@ -72,25 +72,25 @@ public struct SignedIdentity: WireFormat, Sendable {
         guard signedObjectType == .identityDigest else {
             throw ProtocolError.authenticationError
         }
-        let (identityAssertion, credentialData) = try IdentityAssertion
+        let (identityAssertion, identityData) = try IdentityAssertion
             .parse(wireFormat: suffix)
-        guard let credentialData else { throw ProtocolError.authenticationError }
+        guard let identityData else { throw ProtocolError.authenticationError }
         
         signedDigest = .init(bodyType: signedObjectType,
                              signature: signature,
                              body: identityAssertion.wireFormat)
-        self.credentialData = credentialData
+        self.identityData = identityData
     }
     
     public func verifiedIdentity() throws -> CoreIdentity {
         //have to decode the credentialData to get the public key
-        let coreIdentity: CoreIdentity = try credentialData.decoded()
+        let coreIdentity: CoreIdentity = try identityData.decoded()
         
         //remainder of credential is not valid until we validate the signature
         let identityKey: IdentityPublicKey = try .init(wireFormat: coreIdentity.id)
         let identityDigest = try identityKey.validate(signedDigest: signedDigest)
         
-        guard SHA256.hash(data: credentialData).data == identityDigest.digest else {
+        guard SHA256.hash(data: identityData).data == identityDigest.digest else {
             throw ProtocolError.mismatchedDigest
         }
             
@@ -135,7 +135,7 @@ public enum HashAlgorithms: UInt8, DefinedWidthPrefix {
     }
 }
 
-public struct IdentityMutableData: SignableObject, Codable, Sendable{
+public struct IdentityMutableData: SignableObject, Codable, Sendable, Equatable{
     public static var type: SignableObjectTypes = .identityMutableData
     public var type: SignableObjectTypes = .identityMutableData
     public let counter: UInt16 //for predecence defined by the sender/signer

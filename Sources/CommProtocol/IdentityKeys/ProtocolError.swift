@@ -14,6 +14,7 @@ public enum ProtocolError: Error {
     case mismatchedDigest
     case signatureDisallowed
     case incorrectAssertionType
+    case incorrectSigner
 //    case missingData
 //    case incorrectKeyPackage
 //    case incorrectSignedBodyType
@@ -29,6 +30,7 @@ extension ProtocolError: LocalizedError {
         case .mismatchedDigest: "mismatched digest"
         case .signatureDisallowed: "Tried to use a signing key to sign an incorrect payload"
         case .incorrectAssertionType: "Incorrect identity relationship type"
+        case .incorrectSigner: "Incorrect signing key type"
 //        case .missingData:
 //            "ProtocolError: Missing data"
 //        case .incorrectKeyPackage:

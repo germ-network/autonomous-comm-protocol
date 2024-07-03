@@ -80,9 +80,9 @@ public struct AgentHello: Codable, Sendable {
             mutableData: try identityKey.validate(signedMutableData: identityMutable),
             agentKey: agentKey,
             agentData: agentData,
-            keyPackages: try agentKey.validate(signedKeyPackages: keyPackages),
-            addresses: try agentKey.validate(signedAddresses: addresses),
-            imageResource: try agentKey.validate(signedResource: imageResource),
+            keyPackages: try agentKey.validate(signedObject: keyPackages),
+            addresses: try agentKey.validate(signedObject: addresses),
+            imageResource: try agentKey.validate(signedObject: imageResource),
             assertedExpiration: expiration
         )
     }
