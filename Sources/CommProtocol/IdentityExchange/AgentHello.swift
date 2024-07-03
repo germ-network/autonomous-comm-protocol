@@ -23,7 +23,7 @@ public struct AgentHello: Codable, Sendable {
     public let imageResource: SignedObject<Resource>?
     public let expiration: Date
     
-    init(
+    public init(
         signedIdentity: SignedIdentity,
         signedMutableFields: SignedObject<IdentityMutableData>?,
         agentDelegation: SignedIdentityRelationship,
