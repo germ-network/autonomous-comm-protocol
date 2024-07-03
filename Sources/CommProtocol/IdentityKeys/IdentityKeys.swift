@@ -48,7 +48,7 @@ public struct IdentityPrivateKey: Sendable {
             .init(
                 signedDigest: .init(bodyType: .identityDigest,
                                     signature: signature,
-                                    body: coreIdentityDigest.data),
+                                    body: identityAssertionData),
                 identityData: coreIdentityData
             )
         )
