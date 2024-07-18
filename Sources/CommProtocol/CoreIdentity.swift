@@ -136,7 +136,7 @@ public enum HashAlgorithms: UInt8, DefinedWidthPrefix {
 }
 
 public struct IdentityMutableData: SignableObject, Codable, Sendable, Equatable{
-    public static var type: SignableObjectTypes = .identityMutableData
+    public static let type: SignableObjectTypes = .identityMutableData
     public var type: SignableObjectTypes = .identityMutableData
     public let counter: UInt16 //for predecence defined by the sender/signer
     public let identityPublicKeyData: Data //wireformat of the identity public key

@@ -15,5 +15,5 @@ public typealias KeyPackageChoices = [SessionEncryptionSuites: Data]
 // for MLS, data value is an encoded MLS KeyPackage message
 
 extension KeyPackageChoices: SignableObject {
-    public static var type: SignableObjectTypes = .keyPackageChoices
+    public static let type: SignableObjectTypes = .keyPackageChoices
 }
