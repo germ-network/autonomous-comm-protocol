@@ -12,7 +12,7 @@ extension Curve25519.Signing.PrivateKey: @retroactive @unchecked Sendable {}
 extension Curve25519.Signing.PrivateKey: PrivateSigningKey {
     public static let encodeAlgorithm: TypedKeyMaterial.Algorithms = .Curve25519_Signing
     
-    static var signingAlgorithm: SigningKeyAlgorithm = .curve25519
+    static let signingAlgorithm: SigningKeyAlgorithm = .curve25519
 }
 
 extension Curve25519.Signing.PublicKey: @retroactive @unchecked Sendable {}
