@@ -7,8 +7,8 @@
 
 import Foundation
 
-public enum SessionEncryptionSuites: Codable, Equatable, Sendable, CaseIterable {
-    case MLS_Curve25519_ChaChaPoly
+public enum SessionEncryptionSuites: UInt8, Codable, Equatable, Sendable, CaseIterable {
+    case MLS_Curve25519_ChaChaPoly = 1
     
     //match the RFC 9420 cipher suite
     var fixedWidth: Data {
