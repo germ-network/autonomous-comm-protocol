@@ -7,8 +7,8 @@
 
 import Foundation
 
-public enum SessionEncryptionSuites: Codable, Equatable, Sendable, CaseIterable {
-    case MLS_Curve25519_ChaChaPoly
+public enum SessionEncryptionSuites: UInt8, Codable, Equatable, Sendable, CaseIterable {
+    case MLS_Curve25519_ChaChaPoly = 1
     
     //match the RFC 9420 cipher suite
     var fixedWidth: Data {
@@ -34,5 +34,5 @@ public typealias KeyPackageChoices = [SessionEncryptionSuites: Data]
 // for MLS, data value is an encoded MLS KeyPackage message
 
 extension KeyPackageChoices: SignableObject {
-    public static var type: SignableObjectTypes = .keyPackageChoices
+    public static let type: SignableObjectTypes = .keyPackageChoices
 }
