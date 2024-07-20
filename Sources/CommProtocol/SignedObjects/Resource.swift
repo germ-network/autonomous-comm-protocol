@@ -7,6 +7,7 @@
 
 import Foundation
 @preconcurrency import CryptoKit
+
 //local representation of the resource
 //signed to prevent wire injection of a malicious URI
 public struct Resource: SignableObject, Sendable, Codable {
@@ -29,6 +30,15 @@ public struct Resource: SignableObject, Sendable, Codable {
         self.host = host
         self.symmetricKey = symmetricKey
         self.expiration = expiration
+    }
+    
+    public var url: URL? {
+        var urlComponents = URLComponents()
+        urlComponents.host = host
+        urlComponents.scheme = "https"
+        urlComponents.path = "/api/card/fetch/" + identifier
+        urlComponents.fragment = symmetricKey.rawRepresentation.base64URLEncodedString()
+        return urlComponents.url
     }
 }
 
