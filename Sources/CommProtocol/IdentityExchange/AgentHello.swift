@@ -36,7 +36,13 @@ public struct AgentHello: Sendable {
         }
     }
     
-    init(signedIdentity: SignedObject<CoreIdentity>, identityMutable: SignedObject<IdentityMutableData>, agentDelegate: SignedObject<AgentPublicKey>, agentSignedData: Data, agentSignature: Data) {
+    init(
+        signedIdentity: SignedObject<CoreIdentity>,
+        identityMutable: SignedObject<IdentityMutableData>,
+        agentDelegate: SignedObject<AgentPublicKey>,
+        agentSignedData: Data,
+        agentSignature: Data
+    ) {
         self.signedIdentity = signedIdentity
         self.identityMutable = identityMutable
         self.agentDelegate = agentDelegate
