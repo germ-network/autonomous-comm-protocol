@@ -30,10 +30,6 @@ public struct AgentHello: Sendable {
         public let keyChoices: KeyPackageChoices
         public let imageResource: Resource?
         public let expiration: Date
-        
-        func encodedForSigning(identity: IdentityPublicKey) throws -> Data {
-            try identity.id.wireFormat + encoded
-        }
     }
     
     init(
@@ -41,7 +37,7 @@ public struct AgentHello: Sendable {
         identityMutable: SignedObject<IdentityMutableData>,
         agentDelegate: SignedObject<AgentPublicKey>,
         agentSignedData: Data,
-        agentSignature: Data
+        agentSignature: Data //bare signature, not typed signature
     ) {
         self.signedIdentity = signedIdentity
         self.identityMutable = identityMutable
@@ -118,6 +114,9 @@ extension AgentHello: Codable {
         try values.encode(agentSignature, forKey: .agentSignature)
     }
 }
+
+//mainly for testability
+extension AgentHello.AgentTBS: Equatable {}
 
 /*
  public struct AgentHelloReply: Codable, Sendable {

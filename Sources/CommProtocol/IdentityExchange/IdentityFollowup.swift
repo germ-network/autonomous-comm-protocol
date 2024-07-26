@@ -45,9 +45,14 @@ public struct IdentityFollowup: Sendable {
 }
 
 //we staple this to every message
+//send this as a SignedObject<AttachedData>
 enum AttachedData: Codable {
     case agentUpdate(AgentUpdate) //same agent
     case agentProposal(AgentProposal, IdentityUpdate)
+}
+
+extension AttachedData: SignableObject {
+    static let type: SignableObjectTypes = .agentAttached
 }
 
 //Stapled to every message as a

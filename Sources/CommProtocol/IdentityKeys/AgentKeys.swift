@@ -45,15 +45,30 @@ public struct AgentPrivateKey: Sendable {
         publicKey = .init(concrete: concrete.publicKey)
     }
     
-    //MARK: signing methods
-    public func sign(
-        identityKey: IdentityPublicKey,
+    public func createAgentHello(
+        signedIdentity: SignedObject<CoreIdentity>,
+        identityMutable: SignedObject<IdentityMutableData>,
+        agentDelegate: SignedObject<AgentPublicKey>,
         agentTBS: AgentHello.AgentTBS
-    ) throws -> Data {
-        try privateKey.signature(
-            for: try agentTBS.encodedForSigning(identity: identityKey)
+    ) throws -> AgentHello {
+        let identityKey = try signedIdentity.verifiedIdentity().identityKey
+        
+        let encodedTBS = try agentTBS.encoded
+        let signature = try privateKey.signature(
+            for: identityKey.id.wireFormat + encodedTBS
+        )
+        
+        return .init(
+            signedIdentity: signedIdentity,
+            identityMutable: identityMutable,
+            agentDelegate: agentDelegate,
+            agentSignedData: encodedTBS,
+            agentSignature: signature
         )
     }
+    
+    //MARK: signing methods
+    
     
    
     //

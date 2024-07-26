@@ -23,17 +23,19 @@ public enum SignableObjectTypes: UInt8, Codable, Sendable {
     case agentHello
     case agentPropose
     case agentSuccession
-    case agentUpdate //new addresses, etc
+    case agentAttached //new addresses, etc
     
     var signer: Signers {
         switch self {
         case .identityRepresentation, .identityDelegate, .identityMutableData, .identityPropose, .identitySuccessor: .identity
-        case .agentHello, .agentPropose, .agentSuccession, .agentUpdate: .agent
+        case .agentHello, .agentPropose, .agentSuccession, .agentAttached: .agent
         }
     }
 }
 
 //like TypedKeyMaterial, prepend a byte that indicates length of the body
+
+
 public struct TypedSignature: DefinedWidthBinary, Sendable {
     public typealias Prefix = SigningKeyAlgorithm
     let signingAlgorithm: SigningKeyAlgorithm

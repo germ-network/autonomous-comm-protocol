@@ -33,6 +33,12 @@ public struct CoreIdentity: Codable, Sendable, Equatable {
         self.version = Constants.currentVersion
         self.nonce = SymmetricKey(size: .bits128).rawRepresentation
     }
+    
+    var identityKey: IdentityPublicKey {
+        get throws {
+            try .init(wireFormat: id)
+        }
+    }
 }
 
 public struct DescribedImage: Equatable, Codable, Sendable{
