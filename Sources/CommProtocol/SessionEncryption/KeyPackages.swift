@@ -32,7 +32,3 @@ public enum SessionEncryptionSuites: UInt8, Codable, Equatable, Sendable, CaseIt
 
 public typealias KeyPackageChoices = [SessionEncryptionSuites: Data]
 // for MLS, data value is an encoded MLS KeyPackage message
-
-extension KeyPackageChoices: SignableObject {
-    public static let type: SignableObjectTypes = .keyPackageChoices
-}

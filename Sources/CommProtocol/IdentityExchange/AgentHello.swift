@@ -25,7 +25,7 @@ public struct AgentHello: Sendable {
     public struct AgentTBS: Codable, Sendable {
         //prepend the identity key when signing
         public let version: SemanticVersion
-        public let isAppClip: Bool?
+        public let isAppClip: Bool? //ommitted when false
         public let addresses: [ProtocolAddress]
         public let keyChoices: KeyPackageChoices
         public let imageResource: Resource?

@@ -7,23 +7,34 @@
 
 import Foundation
 
-//generically useful as an identity follow-on
-//send optional data as a follow-up message
+//Stripped nonessential data out of the helloReply / Welcome and send it in a second message within the newly constructed group / session
 //TODO: Sha2 hashable
 public struct IdentityFollowup: Sendable {
-    public let agentKey: AgentPublicKey
-    public let imageResource: Resource?
     public var signedMutableFields: SignedObject<IdentityMutableData>?
-    public var addresses: SignedObject<[ProtocolAddress]>? //if dropped, can use rendezvous to reply
+    public let imageResource: Resource?
+    public let agentSignedData: Data //AgentTBS encoded
+    public let agentSignature: Data
     
-    public init(agentKey: AgentPublicKey,
-                imageResource: Resource?,
-                signedMutableFields: SignedObject<IdentityMutableData>?,
-                addresses: SignedObject<[ProtocolAddress]>?) {
-        self.agentKey = agentKey
-        self.imageResource = imageResource
+    public var addresses: [ProtocolAddress]? //if dropped, can use rendezvous to reply
+    
+    struct AgentTBS {
+        public let version: SemanticVersion //update agent client version
+        public let isAppClip: Bool?
+        public let addresses: [ProtocolAddress]
+    }
+    
+    public init(
+        signedMutableFields: SignedObject<IdentityMutableData>? = nil,
+        imageResource: Resource?,
+        agentSignedData: Data,
+        agentSignature: Data,
+        addresses: [ProtocolAddress]? = nil
+    ) {
         self.signedMutableFields = signedMutableFields
-//        self.addresses = addresses
+        self.imageResource = imageResource
+        self.agentSignedData = agentSignedData
+        self.agentSignature = agentSignature
+        self.addresses = addresses
     }
     
 //    public func sha2Hash(into hasher: inout SHA256) {
@@ -31,4 +42,28 @@ public struct IdentityFollowup: Sendable {
 //        signedMutableFields?.sha2Hash(into: &hasher)
 //        addresses?.sha2Hash(into: &hasher)
 //    }
+}
+
+//we staple this to every message
+enum AttachedData: Codable {
+    case agentUpdate(AgentUpdate) //same agent
+    case agentProposal(AgentProposal, IdentityUpdate)
+}
+
+//Stapled to every message as a
+public struct AgentUpdate: Codable, Sendable {
+    public let version: SemanticVersion?
+    public let isAppClip: Bool? //ommitted when false
+    public let addresses: [ProtocolAddress]
+    public let update: Data //MLS update proposal message
+    public let imageResource: Resource?
+    public let expiration: Date
+}
+
+public struct AgentProposal: Codable {
+    
+}
+
+public struct IdentityUpdate: Codable {
+    
 }

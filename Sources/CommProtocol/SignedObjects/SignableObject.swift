@@ -25,16 +25,10 @@ public enum SignableObjectTypes: UInt8, Codable, Sendable {
     case agentSuccession
     case agentUpdate //new addresses, etc
     
-    //deprecate these by member
-    case encryptedResource
-    case addresses
-    case keyPackageChoices
-    
     var signer: Signers {
         switch self {
-        case .identityRepresentation, .identityMutableData, .identityPropose, .identitySuccessor: .identity
+        case .identityRepresentation, .identityDelegate, .identityMutableData, .identityPropose, .identitySuccessor: .identity
         case .agentHello, .agentPropose, .agentSuccession, .agentUpdate: .agent
-        default: .agent //deprecate
         }
     }
 }

@@ -10,10 +10,7 @@ import Foundation
 
 //local representation of the resource
 //signed to prevent wire injection of a malicious URI
-public struct Resource: SignableObject, Sendable, Codable {
-    public static let type: SignableObjectTypes = .encryptedResource
-    public var type: SignableObjectTypes = .encryptedResource
-    
+public struct Resource: Sendable, Codable {    
     public struct Constants {
         public static let minExpiration = TimeInterval(24 * 3600)
     }
