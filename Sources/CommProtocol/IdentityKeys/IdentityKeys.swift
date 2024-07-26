@@ -27,29 +27,21 @@ public struct IdentityPrivateKey: Sendable {
         name: String,
         describedImage: DescribedImage,
         algorithm: SigningKeyAlgorithm = .curve25519
-    ) throws -> (IdentityPrivateKey, CoreIdentity, SignedIdentity) {
+    ) throws -> (IdentityPrivateKey, CoreIdentity, SignedObject<CoreIdentity>) {
         let privateKey = try IdentityPrivateKey(algorithm: algorithm)
         let coreIdentity = CoreIdentity(id: privateKey.publicKey,
                                         name: name,
                                         describedImage: describedImage)
         
         let coreIdentityData = try JSONEncoder().encode(coreIdentity)
-        let coreIdentityDigest = SHA256.hash(data: coreIdentityData)
-        let identityAssertionData = IdentityAssertion(
-            hashAlgorithm: .sha256,
-            digest: coreIdentityDigest.data
-        ).wireFormat
-        
-        let signature = try privateKey.signature(for: identityAssertionData)
+        let signature = try privateKey.signature(for: coreIdentityData)
         
         return (
             privateKey,
             coreIdentity,
             .init(
-                signedDigest: .init(bodyType: .identityDigest,
-                                    signature: signature,
-                                    body: identityAssertionData),
-                identityData: coreIdentityData
+                signature: signature,
+                body: coreIdentityData
             )
         )
     }
@@ -61,28 +53,17 @@ public struct IdentityPrivateKey: Sendable {
         )
     }
     
-    public func delegate(
-        agentData: AgentData
-    ) throws -> (AgentPrivateKey, SignedIdentityRelationship) {
+    public func agentHelloDelegate() throws -> (
+        AgentPrivateKey,
+        SignedObject<AgentPublicKey>
+    ) {
         let newAgent = AgentPrivateKey(algorithm: .curve25519)
-        
-        let assertion = IdentityRelationshipAssertion(
-            relationship: .delegateAgent,
-            subject: publicKey.id,
-            object: newAgent.publicKey.id,
-            objectData: try agentData.encoded
-        )
-        let assertionData = assertion.wireFormat
-        let subjectSignature = try signature(for: assertionData)
-        let objectSignature = try newAgent.sign(delegate: assertion)
+        let newAgentPubKey = newAgent.publicKey
+        let signature = try signature(for: newAgentPubKey.wireFormat)
         
         return (
             newAgent,
-            .init(
-                subjectSignature: subjectSignature,
-                objectSignature: objectSignature,
-                assertion: assertion
-            )
+            .init(signature: signature, body: newAgentPubKey.wireFormat)
         )
     }
     
@@ -90,14 +71,10 @@ public struct IdentityPrivateKey: Sendable {
         mutableData: IdentityMutableData?
     ) throws -> SignedObject<IdentityMutableData>? {
         guard let mutableData else { return nil }
-        guard mutableData.identityPublicKeyData == publicKey.id.wireFormat else {
-            throw ProtocolError.incorrectSigner
-        }
         
         let encoded = try mutableData.encoded
         
         return .init(
-            bodyType: .identityMutableData,
             signature: try signature(for: encoded),
             body: encoded
         )
@@ -123,7 +100,7 @@ public struct IdentityPrivateKey: Sendable {
 }
 
 public struct IdentityPublicKey: Sendable {
-    private let publicKey: any PublicSigningKey
+    let publicKey: any PublicSigningKey
     public let id: TypedKeyMaterial
     
     init(concrete: any PublicSigningKey) {
@@ -146,48 +123,6 @@ public struct IdentityPublicKey: Sendable {
         default:
             throw ProtocolError.typedKeyArchiveMismatch
         }
-    }
-    
-    //MARK: Methods
-    public func validate(
-        signedDigest: SignedObject<IdentityAssertion>
-    ) throws -> IdentityAssertion {
-        try signedDigest.validate(for: publicKey)
-    }
-    
-    public func validate(
-        delegation: SignedIdentityRelationship
-    ) throws -> (AgentPublicKey, AgentData) {
-        //check subject signature
-        guard delegation.subjectSignature.signingAlgorithm == type(of: publicKey).signingAlgorithm,
-              publicKey.isValidSignature(
-                delegation.subjectSignature.signature,
-                for: delegation.assertion.wireFormat
-              )
-        else {
-            throw ProtocolError.authenticationError
-        }
-        
-        //then examine the assertion
-        guard delegation.assertion.relationship == .delegateAgent,
-              delegation.assertion.subject == id else {
-            throw ProtocolError.authenticationError
-        }
-        let assertedObject = try AgentPublicKey(archive: delegation.assertion.object)
-        
-        //check it concurs:
-        let data = try assertedObject.validate(delegation: delegation)
-        return (assertedObject, data)
-    }
-    
-    func validate(
-        signedMutableData: SignedObject<IdentityMutableData>?
-    ) throws -> IdentityMutableData? {
-        guard let signedMutableData else { return nil }
-        return try JSONDecoder().decode(
-            IdentityMutableData.self,
-            from: signedMutableData.validate(for: publicKey)
-        )
     }
 }
 

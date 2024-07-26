@@ -8,6 +8,8 @@
 import Foundation
 
 public enum ProtocolError: Error {
+    case mismatchedSignedObjectType
+    
     case typedKeyArchiveMismatch
     case typedKeyArchiveWireFormat
     case authenticationError
@@ -25,6 +27,7 @@ public enum ProtocolError: Error {
 extension ProtocolError: LocalizedError {
     public var errorDescription: String? {
         switch self {
+        case .mismatchedSignedObjectType: "Mismatched signed object type"
         case .typedKeyArchiveMismatch: "Mismatched values for typed key archive"
         case .typedKeyArchiveWireFormat: "Couldn't create a typed key archive from wire format"
         case .authenticationError: "Signature validation failed"

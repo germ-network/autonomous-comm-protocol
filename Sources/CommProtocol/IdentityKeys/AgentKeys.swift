@@ -47,40 +47,15 @@ public struct AgentPrivateKey: Sendable {
     
     //MARK: signing methods
     public func sign(
-        delegate: IdentityRelationshipAssertion
-    ) throws -> TypedSignature {
-        guard delegate.relationship == .delegateAgent,
-              delegate.object == publicKey.id,
-              let agentData = delegate.objectData else {
-            throw ProtocolError.signatureDisallowed
-        }
-        
-        let _ = try JSONDecoder().decode(AgentData.self, from: agentData)
-        
-        return .init(
-            signingAlgorithm: type(of: privateKey).signingAlgorithm,
-            signature: try privateKey.signature(for: delegate.wireFormat)
+        identityKey: IdentityPublicKey,
+        agentTBS: AgentHello.AgentTBS
+    ) throws -> Data {
+        try privateKey.signature(
+            for: try agentTBS.encodedForSigning(identity: identityKey)
         )
     }
     
-    public func sign<T>(
-        agentSignableObject: T
-    ) throws -> SignedObject<T> where T: SignableObject, T: Codable  {
-        guard T.type.signer == .agent else {
-            throw ProtocolError.incorrectSigner
-        }
-        let body = try agentSignableObject.encoded
-        let signature = try privateKey.signature(for: body)
-        return .init(
-            bodyType: .encryptedResource,
-            signature: .init(
-                signingAlgorithm: type(of: privateKey).signingAlgorithm,
-                signature: signature
-            ),
-            body: body
-        )
-    }
-    
+   
     //
     //    public func sign(transition: SignedAgentTransition.Transition)
     //    throws -> (encoded: Data, signature: Data) {
@@ -116,7 +91,7 @@ public struct AgentPrivateKey: Sendable {
 }
 
 public struct AgentPublicKey: Sendable {
-    private let publicKey: any PublicSigningKey
+    let publicKey: any PublicSigningKey
     public let id: TypedKeyMaterial
     
     public var wireFormat: Data { id.wireFormat }
@@ -143,27 +118,8 @@ public struct AgentPublicKey: Sendable {
         }
     }
     
+    //Deprecate?
     //presume subject (identity) key will separately verify
-    public func validate(
-        delegation: SignedIdentityRelationship
-    ) throws -> AgentData {
-        guard delegation.subjectSignature.signingAlgorithm == type(of: publicKey).signingAlgorithm,
-              publicKey.isValidSignature(
-                delegation.objectSignature.signature,
-                for: delegation.assertion.wireFormat
-              ) else {
-            throw ProtocolError.authenticationError
-        }
-        
-        guard delegation.assertion.object == id else {
-            throw ProtocolError.authenticationError
-        }
-        
-        guard let agentData = delegation.assertion.objectData else {
-            throw ProtocolError.authenticationError
-        }
-        return try agentData.decoded()
-    }
     
     func validate<T>(
         signedObject: SignedObject<T>
@@ -205,3 +161,10 @@ extension AgentPublicKey: Equatable {
         lhs.id == rhs.id
     }
 }
+
+//Signable directly by the identity key for initial exchange only
+extension AgentPublicKey: SignableObject {
+    static public let type: SignableObjectTypes = .identityDelegate
+}
+
+extension AgentPublicKey: WireFormat {}

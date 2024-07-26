@@ -14,19 +14,54 @@ public enum Signers{
 }
 
 public enum SignableObjectTypes: UInt8, Codable, Sendable {
-    case identityDigest
+    case identityRepresentation
+    case identityDelegate
     case identityMutableData
+    case identityPropose //designate a successor
+    case identitySuccessor //designate
+    
+    case agentHello
+    case agentPropose
+    case agentSuccession
+    case agentUpdate //new addresses, etc
+    
+    //deprecate these by member
     case encryptedResource
     case addresses
     case keyPackageChoices
     
     var signer: Signers {
         switch self {
-        case .identityDigest, .identityMutableData: .identity
-        case .encryptedResource, .addresses, .keyPackageChoices: .agent
+        case .identityRepresentation, .identityMutableData, .identityPropose, .identitySuccessor: .identity
+        case .agentHello, .agentPropose, .agentSuccession, .agentUpdate: .agent
+        default: .agent //deprecate
         }
     }
 }
+
+//like TypedKeyMaterial, prepend a byte that indicates length of the body
+public struct TypedSignature: DefinedWidthBinary, Sendable {
+    public typealias Prefix = SigningKeyAlgorithm
+    let signingAlgorithm: SigningKeyAlgorithm
+    let signature: Data
+    
+    public var wireFormat: Data {
+        [signingAlgorithm.rawValue] + signature
+    }
+    
+    public init(prefix: SigningKeyAlgorithm, checkedData: Data) throws {
+        guard prefix.contentByteSize == checkedData.count else {
+            throw DefinedWidthError.incorrectDataLength
+        }
+        self.init(signingAlgorithm: prefix, signature: checkedData)
+    }
+    
+    init(signingAlgorithm: SigningKeyAlgorithm, signature: Data) {
+        self.signingAlgorithm = signingAlgorithm
+        self.signature = signature
+    }
+}
+
 
 //ensure signed objects state their type
 public protocol SignableObject {
@@ -37,36 +72,33 @@ public protocol SignableObject {
 ///[Byte indicating body type]
 ///[Byte indicating signature width][Signature bytes]
 ///[Body data]
-public struct SignedObject<SignableObject>: Sendable {
-    public let bodyType: SignableObjectTypes
+public struct SignedObject<S: SignableObject>: Sendable {
     public let signature: TypedSignature
     public let body: Data //signature is over this particular encoding of SignableObject
     
-    init(bodyType: SignableObjectTypes, signature: TypedSignature, body: Data) {
-        self.bodyType = bodyType
+    init(signature: TypedSignature, body: Data) {
         self.signature = signature
         self.body = body
     }
     
     public var wireFormat: Data {
-        [bodyType.rawValue] + signature.wireFormat + body
+        [S.type.rawValue] + signature.wireFormat + body
     }
     
-    //this parses the bodyType and typedSignature, leaving the caller to
-    //use bodyType to determine how to parse the remainder
-    static func parse(
-        wireFormat: Data
-    ) throws -> (SignableObjectTypes, TypedSignature, Data) {
+    init(wireFormat: Data) throws {
         guard let first = wireFormat.first,
-              let bodyType = SignableObjectTypes(rawValue: first),
+              let readBodyType = SignableObjectTypes(rawValue: first),
               wireFormat.count > 1 else {
             throw DefinedWidthError.invalidTypedSignature
+        }
+        guard readBodyType == S.type else {
+            throw DefinedWidthError.invalidTypedKey
         }
         let (signature, body) = try TypedSignature
             .parse(wireFormat: Data( wireFormat[1...] ))
         guard let body else { throw DefinedWidthError.invalidTypedSignature }
-        
-        return (bodyType, signature, body)
+        self.signature = signature
+        self.body = body
     }
     
     func validate(
@@ -82,31 +114,18 @@ public struct SignedObject<SignableObject>: Sendable {
     }
 }
 
-extension SignedObject: Codable {
-    public init(from decoder: any Decoder) throws {
-        let container = try decoder.singleValueContainer()
-        let data = try container.decode(Data.self)
-        (bodyType, signature, body) = try Self.parse(wireFormat: data)
-    }
-    
-    public func encode(to encoder: any Encoder) throws {
-        var container = encoder.singleValueContainer()
-        try container.encode(wireFormat)
-    }
-}
-
-extension SignedObject where SignableObject: Decodable {
+extension SignedObject where S: Decodable {
     public func validate(
         for signer: any PublicSigningKey
-    ) throws -> SignableObject {
+    ) throws -> S {
         try validate(for: signer).decoded()
     }
 }
 
-extension SignedObject where SignableObject: WireFormat {
+extension SignedObject where S: WireFormat {
     public func validate(
         for signer: any PublicSigningKey
-    ) throws -> SignableObject {
+    ) throws -> S {
         try .init(wireFormat: validate(for: signer))
     }
 }

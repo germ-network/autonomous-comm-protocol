@@ -11,80 +11,105 @@ import Foundation
 import CryptoKit
 
 ///Format for a card that gets symmetrically encrypted and exchanged
-public struct AgentHello: Codable, Sendable {
+public struct AgentHello: Sendable {
     //Identity
-    public let identity: Data //SignedIdentity.wireformat
-    public let identityMutable: SignedObject<IdentityMutableData>?
+    public let signedIdentity: SignedObject<CoreIdentity>
+    public let identityMutable: SignedObject<IdentityMutableData>
     
     //Agent
-    public let agentDelegate: Data //SignedIdentityRelationship.wireformat
-    public let keyPackages: SignedObject<KeyPackageChoices>
-    public let addresses: SignedObject<[ProtocolAddress]>
-    public let imageResource: SignedObject<Resource>?
-    public let expiration: Date
+    public let agentDelegate: SignedObject<AgentPublicKey>
+    public let agentSignedData: Data //AgentTBS encoded
+    public let agentSignature: Data
     
-    public init(
-        signedIdentity: SignedIdentity,
-        signedMutableFields: SignedObject<IdentityMutableData>?,
-        agentDelegation: SignedIdentityRelationship,
-        keyPackages: SignedObject<KeyPackageChoices>,
-        addresses: SignedObject<[ProtocolAddress]>,
-        imageResource: SignedObject<Resource>?,
-        expiration: Date
-    ) {
-        self.identity = signedIdentity.wireFormat
-        self.identityMutable = signedMutableFields
-        self.agentDelegate = agentDelegation.wireFormat
-        self.keyPackages = keyPackages
-        self.addresses = addresses
-        self.imageResource = imageResource
-        self.expiration = expiration
+    //what the agent signs
+    public struct AgentTBS: Codable, Sendable {
+        //prepend the identity key when signing
+        public let version: SemanticVersion
+        public let isAppClip: Bool?
+        public let addresses: [ProtocolAddress]
+        public let keyChoices: KeyPackageChoices
+        public let imageResource: Resource?
+        public let expiration: Date
+        
+        func encodedForSigning(identity: IdentityPublicKey) throws -> Data {
+            try identity.id.wireFormat + encoded
+        }
+    }
+    
+    init(signedIdentity: SignedObject<CoreIdentity>, identityMutable: SignedObject<IdentityMutableData>, agentDelegate: SignedObject<AgentPublicKey>, agentSignedData: Data, agentSignature: Data) {
+        self.signedIdentity = signedIdentity
+        self.identityMutable = identityMutable
+        self.agentDelegate = agentDelegate
+        self.agentSignedData = agentSignedData
+        self.agentSignature = agentSignature
     }
     
     public struct Validated: Sendable {
         public let coreIdentity: CoreIdentity //from the SignedIdentity
-        public let signedIdentity: SignedIdentity
-        public let mutableData: IdentityMutableData?
+        public let signedIdentity: SignedObject<CoreIdentity>
+        public let mutableData: IdentityMutableData
         public let agentKey: AgentPublicKey
-        public let agentData: AgentData
-        public let keyPackages: KeyPackageChoices
-        public let addresses: [ProtocolAddress]
-        public let imageResource: Resource?
-        public let assertedExpiration: Date
+        public let agentData: AgentTBS
         
-        init(coreIdentity: CoreIdentity, signedIdentity: SignedIdentity, mutableData: IdentityMutableData?, agentKey: AgentPublicKey, agentData: AgentData, keyPackages: KeyPackageChoices, addresses: [ProtocolAddress], imageResource: Resource?, assertedExpiration: Date) {
+        init(coreIdentity: CoreIdentity, signedIdentity: SignedObject<CoreIdentity>, mutableData: IdentityMutableData, agentKey: AgentPublicKey, agentData: AgentTBS) {
             self.coreIdentity = coreIdentity
             self.signedIdentity = signedIdentity
             self.mutableData = mutableData
             self.agentKey = agentKey
             self.agentData = agentData
-            self.keyPackages = keyPackages
-            self.addresses = addresses
-            self.imageResource = imageResource
-            self.assertedExpiration = assertedExpiration
         }
     }
         
     public func validated() throws -> Validated {
-        let signedIdentity = try SignedIdentity(wireFormat: identity)
         let identity = try signedIdentity.verifiedIdentity()
         let identityKey = try IdentityPublicKey(wireFormat: identity.id)
-        
-        let signedRelationship = try SignedIdentityRelationship(wireFormat: agentDelegate)
-        
-        let (agentKey, agentData) = try identityKey.validate(delegation: signedRelationship)
+        let agentKey = try agentDelegate.validate(for: identityKey.publicKey)
+
+        guard agentKey.publicKey.isValidSignature(
+            agentSignature,
+            for: identityKey.id.wireFormat + agentSignedData
+        ) else { throw ProtocolError.authenticationError }
         
         return .init(
             coreIdentity: identity,
             signedIdentity: signedIdentity,
-            mutableData: try identityKey.validate(signedMutableData: identityMutable),
+            mutableData: try identityMutable.validate(for: identityKey.publicKey),
             agentKey: agentKey,
-            agentData: agentData,
-            keyPackages: try agentKey.validate(signedObject: keyPackages),
-            addresses: try agentKey.validate(signedObject: addresses),
-            imageResource: try agentKey.validate(signedObject: imageResource),
-            assertedExpiration: expiration
+            agentData: try agentSignedData.decoded()
         )
+    }
+}
+
+extension AgentHello: Codable {
+    public enum CodingKeys: CodingKey {
+        case signedIdentity, identityMutable, agentDelegate, agentSignedData, agentSignature
+    }
+    
+    public init(from decoder: Decoder) throws {
+        let values = try decoder.container(keyedBy: CodingKeys.self)
+        self.signedIdentity = try .init(
+            wireFormat: values.decode(Data.self, forKey: .signedIdentity)
+        )
+        self.identityMutable = try .init(
+            wireFormat:  values.decode(Data.self, forKey: .identityMutable)
+        )
+        self.agentDelegate = try .init(
+            wireFormat:  values.decode(Data.self, forKey: .agentDelegate)
+        )
+        self.agentSignedData = try values.decode(Data.self,
+                                                 forKey: .agentSignedData)
+        self.agentSignature = try values.decode(Data.self,
+                                                forKey: .agentSignature)
+        
+    }
+    
+    public func encode(to encoder: Encoder) throws {
+        var values = encoder.container(keyedBy: CodingKeys.self)
+        try values.encode(signedIdentity.wireFormat, forKey: .signedIdentity)
+        try values.encode(identityMutable.wireFormat, forKey: .identityMutable)
+        try values.encode(agentDelegate.wireFormat, forKey: .agentDelegate)
+        try values.encode(agentSignedData, forKey: .agentSignedData)
+        try values.encode(agentSignature, forKey: .agentSignature)
     }
 }
 

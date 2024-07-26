@@ -10,8 +10,8 @@ import Foundation
 //generically useful as an identity follow-on
 //send optional data as a follow-up message
 //TODO: Sha2 hashable
-public struct IdentityFollowup: Codable, Sendable {
-    public let agentId: Data //typedkeyMaterial wireformat
+public struct IdentityFollowup: Sendable {
+    public let agentKey: AgentPublicKey
     public let imageResource: Resource?
     public var signedMutableFields: SignedObject<IdentityMutableData>?
     public var addresses: SignedObject<[ProtocolAddress]>? //if dropped, can use rendezvous to reply
@@ -20,7 +20,7 @@ public struct IdentityFollowup: Codable, Sendable {
                 imageResource: Resource?,
                 signedMutableFields: SignedObject<IdentityMutableData>?,
                 addresses: SignedObject<[ProtocolAddress]>?) {
-        self.agentId = agentKey.wireFormat
+        self.agentKey = agentKey
         self.imageResource = imageResource
         self.signedMutableFields = signedMutableFields
 //        self.addresses = addresses

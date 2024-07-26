@@ -45,6 +45,10 @@ public struct DescribedImage: Equatable, Codable, Sendable{
     }
 }
 
+extension CoreIdentity: SignableObject {
+    public static let type: SignableObjectTypes = .identityRepresentation
+}
+
 //MARK: Signed identity
 ///Bundles the encoded CoreIdentity
 ///The CoreIdentity contains two variable-length strings, and we expect it to grow, so we leave it JSON-encoded for flexibility
@@ -52,76 +56,92 @@ public struct DescribedImage: Equatable, Codable, Sendable{
 ///
 ///However, since signedDigest is a predictable width, we can be a bit more efficient by leaving the signedDigest
 ///in raw bytes and not base64 encoding it
-public struct SignedIdentity: WireFormat, Sendable {
-    public let signedDigest: SignedObject<IdentityAssertion>
-    public let identityData: Data
-    
-    public var wireFormat: Data {
-        signedDigest.wireFormat + identityData
-    }
-    
-    init(signedDigest: SignedObject<IdentityAssertion>, identityData: Data) {
-        self.signedDigest = signedDigest
-        self.identityData = identityData
-    }
-    
-    public init(wireFormat: Data) throws {
-        let (signedObjectType, signature, suffix) = try SignedObject<IdentityAssertion>.parse(
-            wireFormat: wireFormat
-        )
-        guard signedObjectType == .identityDigest else {
-            throw ProtocolError.authenticationError
-        }
-        let (identityAssertion, identityData) = try IdentityAssertion
-            .parse(wireFormat: suffix)
-        guard let identityData else { throw ProtocolError.authenticationError }
-        
-        signedDigest = .init(bodyType: signedObjectType,
-                             signature: signature,
-                             body: identityAssertion.wireFormat)
-        self.identityData = identityData
-    }
-    
+extension SignedObject<CoreIdentity> {
     public func verifiedIdentity() throws -> CoreIdentity {
         //have to decode the credentialData to get the public key
-        let coreIdentity: CoreIdentity = try identityData.decoded()
+        let coreIdentity: CoreIdentity = try body.decoded()
         
         //remainder of credential is not valid until we validate the signature
         let identityKey: IdentityPublicKey = try .init(wireFormat: coreIdentity.id)
-        let identityDigest = try identityKey.validate(signedDigest: signedDigest)
-        
-        guard SHA256.hash(data: identityData).data == identityDigest.digest else {
-            throw ProtocolError.mismatchedDigest
-        }
-            
-        return coreIdentity
+        let verifiedIdentity = try validate(for: identityKey.publicKey)  
+        assert(verifiedIdentity == coreIdentity)
+
+        return verifiedIdentity
     }
 }
+///
+//public struct SignedIdentity: WireFormat, Sendable {
+//    public let signedDigest: SignedObject<CoreIdentity>
+//    public let identityData: Data
+//    
+//    public var wireFormat: Data {
+//        signedDigest.wireFormat + identityData
+//    }
+//    
+//    init(signedDigest: SignedObject<CoreIdentity>, identityData: Data) {
+//        self.signedDigest = signedDigest
+//        self.identityData = identityData
+//    }
+//    
+//    public init(wireFormat: Data) throws {
+//        l
+//        
+//        let (signedObjectType, signature, suffix) = try SignedObject<CoreIdentity>.parse(
+//            wireFormat: wireFormat
+//        )
+//        guard signedObjectType == .identityRepresentation else {
+//            throw ProtocolError.authenticationError
+//        }
+//        let ( ) = try SignedObject<CoreIdentity>
+//            .parse(wireFormat: suffix)
+//        guard let identityData else { throw ProtocolError.authenticationError }
+//        
+//        signedDigest = .init(bodyType: signedObjectType,
+//                             signature: signature,
+//                             body: identityAssertion.wireFormat)
+//        self.identityData = identityData
+//    }
+//    
+//    public func verifiedIdentity() throws -> CoreIdentity {
+//        //have to decode the credentialData to get the public key
+//        let coreIdentity: CoreIdentity = try identityData.decoded()
+//        
+//        //remainder of credential is not valid until we validate the signature
+//        let identityKey: IdentityPublicKey = try .init(wireFormat: coreIdentity.id)
+//        let identityDigest = try identityKey.validate(signedDigest: signedDigest)
+//        
+//        guard SHA256.hash(data: identityData).data == identityDigest.digest else {
+//            throw ProtocolError.mismatchedDigest
+//        }
+//            
+//        return coreIdentity
+//    }
+//}
 
 //sign the digest
-public struct IdentityAssertion: SignableObject, DefinedWidthBinary {
-    public typealias Prefix = HashAlgorithms
-    public static let type: SignableObjectTypes = .identityDigest
-
-    public let hashAlgorithm: HashAlgorithms
-    public let digest: Data
-    
-    public var wireFormat: Data {
-        [hashAlgorithm.rawValue] + digest
-    }
-    
-    public init(prefix: Prefix, checkedData: Data) throws {
-        guard prefix.contentByteSize == checkedData.count else {
-            throw DefinedWidthError.incorrectDataLength
-        }
-        self.init(hashAlgorithm: prefix, digest: checkedData)
-    }
-    
-    init(hashAlgorithm: HashAlgorithms, digest: Data) {
-        self.hashAlgorithm = hashAlgorithm
-        self.digest = digest
-    }
-}
+//public struct IdentityAssertion: SignableObject, DefinedWidthBinary {
+//    public typealias Prefix = HashAlgorithms
+//    public static let type: SignableObjectTypes = .identityDigest
+//
+//    public let hashAlgorithm: HashAlgorithms
+//    public let digest: Data
+//    
+//    public var wireFormat: Data {
+//        [hashAlgorithm.rawValue] + digest
+//    }
+//    
+//    public init(prefix: Prefix, checkedData: Data) throws {
+//        guard prefix.contentByteSize == checkedData.count else {
+//            throw DefinedWidthError.incorrectDataLength
+//        }
+//        self.init(hashAlgorithm: prefix, digest: checkedData)
+//    }
+//    
+//    init(hashAlgorithm: HashAlgorithms, digest: Data) {
+//        self.hashAlgorithm = hashAlgorithm
+//        self.digest = digest
+//    }
+//}
 
 public enum HashAlgorithms: UInt8, DefinedWidthPrefix {
     case sha256 //RFC 6234
@@ -139,7 +159,6 @@ public struct IdentityMutableData: SignableObject, Codable, Sendable, Equatable{
     public static let type: SignableObjectTypes = .identityMutableData
     public var type: SignableObjectTypes = .identityMutableData
     public let counter: UInt16 //for predecence defined by the sender/signer
-    public let identityPublicKeyData: Data //wireformat of the identity public key
     public let pronouns: [String]?
     public let aboutText: String?
 }
