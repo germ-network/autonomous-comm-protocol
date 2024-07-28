@@ -15,6 +15,11 @@ struct DeclaredWidthTests {
         let value = UInt32.random(in: UInt32.min...UInt32.max)
         let reencoded = try UInt32(dataRepresentation: value.dataRepresentation)
         #expect(value == reencoded)
+        
+        let prefix = Data(value.dataRepresentation.prefix(3))
+        #expect(throws: DefinedWidthError.incorrectDataLength) {
+            let _ = try UInt32(dataRepresentation: prefix)
+        }
     }
     
     @Test func testDeclaredWidth() throws {
@@ -26,5 +31,17 @@ struct DeclaredWidthTests {
         let decoded = try Data(declaredWidthWire: encoded)
         
         #expect(data == decoded)
+        
+        #expect(throws: DefinedWidthError.incorrectDataLength) {
+            let _ = try Data(
+                declaredWidthWire:  Data(encoded.prefix(3))
+            )
+        }
+        
+        #expect(throws: DefinedWidthError.incorrectDataLength) {
+            let _ = try Data(
+                declaredWidthWire: Data(encoded.prefix(encoded.count - 1))
+            )
+        }
     }
 }
