@@ -44,31 +44,14 @@ public struct IdentityFollowup: Sendable {
 //    }
 }
 
-//we staple this to every message
-//send this as a SignedObject<AttachedData>
-enum AttachedData: Codable {
-    case agentUpdate(AgentUpdate) //same agent
-    case agentProposal(AgentProposal, IdentityUpdate)
-}
 
-extension AttachedData: SignableObject {
-    static let type: SignableObjectTypes = .agentAttached
-}
-
-//Stapled to every message as a
+//Stapled to every message
 public struct AgentUpdate: Codable, Sendable {
     public let version: SemanticVersion?
     public let isAppClip: Bool? //ommitted when false
     public let addresses: [ProtocolAddress]
-    public let update: Data //MLS update proposal message
     public let imageResource: Resource?
     public let expiration: Date
 }
 
-public struct AgentProposal: Codable {
-    
-}
 
-public struct IdentityUpdate: Codable {
-    
-}

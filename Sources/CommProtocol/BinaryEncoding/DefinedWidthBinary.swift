@@ -1,6 +1,6 @@
 //
-//  File.swift
-//  
+//  DefinedWidthBinary.swift
+//
 //
 //  Created by Mark @ Germ on 6/26/24.
 //
