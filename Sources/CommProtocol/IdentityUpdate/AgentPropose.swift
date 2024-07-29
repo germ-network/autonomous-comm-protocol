@@ -48,11 +48,7 @@ enum CommProposal {
         case sameIdentity
         case newIdentity
     }
-    
-    
 }
-
-
 
 public struct AgentHandoff {
     let newAgentKey: AgentPublicKey

@@ -105,7 +105,7 @@ public struct SignedObject<S: SignableObject>: Sendable {
         guard signer.isValidSignature(signature.signature, for: body) else {
             throw ProtocolError.authenticationError
         }
-        return Data(body) //strangely this returns a slice all of a sudden
+        return body
     }
 }
 

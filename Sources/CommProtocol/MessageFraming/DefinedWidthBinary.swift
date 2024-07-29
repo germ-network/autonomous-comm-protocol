@@ -43,7 +43,7 @@ public extension DefinedWidthBinary {
         }
         try self.init(
             prefix: prefixType,
-            checkedData: Data( wireFormat.suffix(from: 1) )
+            checkedData: wireFormat.suffix(from: wireFormat.startIndex + 1)
         )
     }
     
