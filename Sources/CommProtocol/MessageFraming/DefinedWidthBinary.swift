@@ -11,11 +11,12 @@ import Foundation
 ///that is prepended
 ///
 ///Allows us to keep binary data in binary format as an alternative to JSON encoding
-public protocol DefinedWidthBinary: WireFormat {
+public protocol DefinedWidthBinary: WireFormat, LinearEncoding {
     associatedtype Prefix: DefinedWidthPrefix
     var wireFormat: Data { get }
     //where checkedData has the expected width
-    init(prefix: Prefix, checkedData: Data) throws
+    init(prefix: Prefix, checkedData: Data) throws(LinearEncodingError)
+    static func parse(_ input: Data) throws -> (Self, Data?)
 }
 
 public protocol DefinedWidthPrefix: RawRepresentable<UInt8> {
@@ -32,13 +33,13 @@ public protocol WireFormat {
 }
 
 public extension DefinedWidthBinary {
-    init(wireFormat: Data) throws {
+    init(wireFormat: Data) throws(LinearEncodingError) {
         guard let prefix = wireFormat.first,
               let prefixType = Prefix(rawValue: prefix) else {
-            throw DefinedWidthError.invalidPrefix
+            throw .invalidPrefix
         }
         guard wireFormat.count == prefixType.contentByteSize + 1 else {
-            throw DefinedWidthError.incorrectDataLength
+            throw .incorrectDataLength
         }
         try self.init(
             prefix: prefixType,
@@ -46,16 +47,21 @@ public extension DefinedWidthBinary {
         )
     }
     
+    //defaut implementation of LinearEncoding conformance
+    static func parse(_ input: Data) throws -> (Self, Data?) {
+        try parse(wireFormat: input)
+    }
+    
     static func parse(wireFormat: Data)
-    throws -> (Self, Data?) {
+    throws(LinearEncodingError) -> (Self, Data?) {
         guard let prefix = wireFormat.first,
               let prefixType = Prefix(rawValue: prefix) else {
-            throw DefinedWidthError.invalidPrefix
+            throw .invalidPrefix
         }
         let knownWidth = 1 + prefixType.contentByteSize
         switch wireFormat.count {
         case (..<knownWidth):
-            throw DefinedWidthError.incorrectDataLength
+            throw .incorrectDataLength
         case knownWidth:
             return (
                 try .init(
@@ -72,33 +78,7 @@ public extension DefinedWidthBinary {
                 ),
                 Data( wireFormat[knownWidth...] )
             )
-        default: throw DefinedWidthError.incorrectDataLength
-        }
-    }
-}
-
-
-public enum DefinedWidthError: Error, Equatable {
-    case mismatchedAlgorithms(expected: TypedKeyMaterial.Algorithms,
-                              found: TypedKeyMaterial.Algorithms)
-    case unknownTypedKeyAlgorithm(UInt8)
-    case invalidTypedKey
-    case invalidTypedSignature
-    case invalidPrefix
-    case incorrectDataLength
-}
-
-extension DefinedWidthError: LocalizedError {
-    public var errorDescription: String? {
-        switch self{
-        case .mismatchedAlgorithms(let expected, let found):
-            "Mismatched key algorithm, expected \(expected), found \(found)"
-        case .unknownTypedKeyAlgorithm(let index):
-            "Unknown Typed Key Algorithm \(index)"
-        case .invalidTypedKey: "Invalid typed key"
-        case .invalidTypedSignature: "Invalid typed signature"
-        case .invalidPrefix: "Invalid prefix"
-        case .incorrectDataLength: "Incorrect Data Length"
+        default: throw .incorrectDataLength
         }
     }
 }

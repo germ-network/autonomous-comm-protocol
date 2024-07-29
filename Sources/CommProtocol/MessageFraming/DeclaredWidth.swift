@@ -13,9 +13,9 @@ extension UInt32 {
         return Data(bytes: &endian, count: MemoryLayout<UInt32>.size)
     }
     
-    init(dataRepresentation: Data) throws {
+    init(dataRepresentation: Data) throws(LinearEncodingError) {
         guard dataRepresentation.count == MemoryLayout<UInt32>.size else {
-            throw DefinedWidthError.incorrectDataLength
+            throw .incorrectDataLength
         }
         
         let bigEndian = dataRepresentation.withUnsafeBytes { rawBuffer in
@@ -27,23 +27,23 @@ extension UInt32 {
 }
 
 extension Data {
-    init(declaredWidthWire: Data) throws {
+    init(declaredWidthWire: Data) throws(LinearEncodingError) {
         guard declaredWidthWire.count > MemoryLayout<UInt32>.size else {
-            throw DefinedWidthError.incorrectDataLength
+            throw .incorrectDataLength
         }
         
         let prefix = Data(declaredWidthWire.prefix(MemoryLayout<UInt32>.size ))
         let expectedWidth = try Int(UInt32(dataRepresentation: prefix)) + MemoryLayout<UInt32>.size
         guard declaredWidthWire.count == expectedWidth else {
-            throw DefinedWidthError.incorrectDataLength
+            throw .incorrectDataLength
         }
         self.init(declaredWidthWire.suffix(from: MemoryLayout<UInt32>.size))
     }
     
     var declaredWidthWire: Data {
-        get throws {
+        get throws(LinearEncodingError) {
             guard count <= UInt32.max, count >= UInt32.min else {
-                throw DefinedWidthError.incorrectDataLength
+                throw .incorrectDataLength
             }
             let count32 = UInt32(count)
             return count32.dataRepresentation + self

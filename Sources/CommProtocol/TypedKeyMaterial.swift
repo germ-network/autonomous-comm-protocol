@@ -59,9 +59,9 @@ public struct TypedKeyMaterial: DefinedWidthBinary, Equatable, Hashable, Sendabl
         [algorithm.rawValue] + keyData
     }
     
-    public init(prefix: Prefix, checkedData: Data) throws{
+    public init(prefix: Prefix, checkedData: Data) throws(LinearEncodingError) {
         guard prefix.contentByteSize == checkedData.count else {
-            throw DefinedWidthError.incorrectDataLength
+            throw .incorrectDataLength
         }
         self.algorithm = prefix
         self.keyData = checkedData
@@ -71,7 +71,7 @@ public struct TypedKeyMaterial: DefinedWidthBinary, Equatable, Hashable, Sendabl
     public init(
         algorithm: Algorithms,
         symmetricKey: SymmetricKey
-    ) throws(DefinedWidthError) {
+    ) throws(LinearEncodingError) {
         guard algorithm.isSymmetric,
               algorithm.contentByteSize == symmetricKey.rawRepresentation.count else {
             throw .invalidTypedKey
@@ -84,7 +84,7 @@ public struct TypedKeyMaterial: DefinedWidthBinary, Equatable, Hashable, Sendabl
     public init(
         encapAlgorithm: Algorithms,
         data: Data
-    ) throws(DefinedWidthError) {
+    ) throws(LinearEncodingError) {
         guard encapAlgorithm.isEncapsulated,
               encapAlgorithm.contentByteSize == data.count else {
             throw .invalidTypedKey
@@ -111,7 +111,7 @@ extension TypedKeyMaterialInput {
     init(wireFormat: Data) throws {
         let typedWireFormat = try TypedKeyMaterial(wireFormat: wireFormat)
         guard typedWireFormat.algorithm == Self.encodeAlgorithm else {
-            throw DefinedWidthError
+            throw LinearEncodingError
                 .mismatchedAlgorithms(expected: Self.encodeAlgorithm,
                                       found: typedWireFormat.algorithm)
         }

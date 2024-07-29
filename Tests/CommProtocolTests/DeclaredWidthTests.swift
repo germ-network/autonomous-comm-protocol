@@ -17,7 +17,7 @@ struct DeclaredWidthTests {
         #expect(value == reencoded)
         
         let prefix = Data(value.dataRepresentation.prefix(3))
-        #expect(throws: DefinedWidthError.incorrectDataLength) {
+        #expect(throws: LinearEncodingError.incorrectDataLength) {
             let _ = try UInt32(dataRepresentation: prefix)
         }
     }
@@ -32,13 +32,13 @@ struct DeclaredWidthTests {
         
         #expect(data == decoded)
         
-        #expect(throws: DefinedWidthError.incorrectDataLength) {
+        #expect(throws: LinearEncodingError.incorrectDataLength) {
             let _ = try Data(
                 declaredWidthWire:  Data(encoded.prefix(3))
             )
         }
         
-        #expect(throws: DefinedWidthError.incorrectDataLength) {
+        #expect(throws: LinearEncodingError.incorrectDataLength) {
             let _ = try Data(
                 declaredWidthWire: Data(encoded.prefix(encoded.count - 1))
             )

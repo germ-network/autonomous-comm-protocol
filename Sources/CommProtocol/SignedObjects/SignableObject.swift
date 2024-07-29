@@ -45,9 +45,9 @@ public struct TypedSignature: DefinedWidthBinary, Sendable {
         [signingAlgorithm.rawValue] + signature
     }
     
-    public init(prefix: SigningKeyAlgorithm, checkedData: Data) throws {
+    public init(prefix: SigningKeyAlgorithm, checkedData: Data) throws(LinearEncodingError) {
         guard prefix.contentByteSize == checkedData.count else {
-            throw DefinedWidthError.incorrectDataLength
+            throw .incorrectDataLength
         }
         self.init(signingAlgorithm: prefix, signature: checkedData)
     }
@@ -85,14 +85,14 @@ public struct SignedObject<S: SignableObject>: Sendable {
         guard let first = wireFormat.first,
               let readBodyType = SignableObjectTypes(rawValue: first),
               wireFormat.count > 1 else {
-            throw DefinedWidthError.invalidTypedSignature
+            throw LinearEncodingError.invalidTypedSignature
         }
         guard readBodyType == S.type else {
-            throw DefinedWidthError.invalidTypedKey
+            throw LinearEncodingError.invalidTypedKey
         }
         let (signature, body) = try TypedSignature
             .parse(wireFormat: Data( wireFormat[1...] ))
-        guard let body else { throw DefinedWidthError.invalidTypedSignature }
+        guard let body else { throw LinearEncodingError.invalidTypedSignature }
         self.signature = signature
         self.body = body
     }
@@ -101,7 +101,7 @@ public struct SignedObject<S: SignableObject>: Sendable {
         for signer: any PublicSigningKey
     ) throws -> Data {
         guard signature.signingAlgorithm == type(of: signer).signingAlgorithm else {
-            throw DefinedWidthError.invalidTypedKey
+            throw LinearEncodingError.invalidTypedKey
         }
         guard signer.isValidSignature(signature.signature, for: body) else {
             throw ProtocolError.authenticationError

@@ -21,7 +21,7 @@ struct TypedKeyTests {
         let decodedPublic: Curve25519.Signing.PublicKey = try .init(wireFormat: typedPublic.wireFormat)
         #expect(publicKey.rawRepresentation == decodedPublic.rawRepresentation)
         
-        #expect(throws: DefinedWidthError.self) {
+        #expect(throws: LinearEncodingError.self) {
             let _ = try Curve25519.KeyAgreement.PublicKey(wireFormat: typedPublic.wireFormat)
         }
     }
@@ -34,7 +34,7 @@ struct TypedKeyTests {
         let decodedPublic: Curve25519.KeyAgreement.PublicKey = try .init(wireFormat: typedPublic.wireFormat)
         #expect(publicKey.rawRepresentation == decodedPublic.rawRepresentation)
         
-        #expect(throws: DefinedWidthError.self) {
+        #expect(throws: LinearEncodingError.self) {
             let _ = try Curve25519.Signing.PublicKey(wireFormat: typedPublic.wireFormat)
         }
     }
@@ -43,7 +43,7 @@ struct TypedKeyTests {
         let chaChaPolyKey = SymmetricKey(size: .bits256)
         let shortKey = SymmetricKey(size: .bits128)
         
-        #expect(throws: DefinedWidthError.self) {
+        #expect(throws: LinearEncodingError.self) {
             let _ = try TypedKeyMaterial(algorithm: .ChaCha20Poly1305,
                                          symmetricKey: shortKey)
         }

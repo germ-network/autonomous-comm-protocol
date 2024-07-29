@@ -96,7 +96,7 @@ public struct IdentityPrivateKey: Sendable {
             self.init(
                 concrete: try Curve25519.Signing.PrivateKey(rawRepresentation: archive.keyData)
             )
-        default: throw DefinedWidthError.invalidTypedKey
+        default: throw LinearEncodingError.invalidTypedKey
         }
     }
     

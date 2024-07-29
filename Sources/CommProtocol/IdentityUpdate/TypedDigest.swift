@@ -15,7 +15,7 @@ struct TypedDigest: DefinedWidthBinary {
     init(
         prefix: Prefix,
         checkedData: Data
-    ) throws(DefinedWidthError) {
+    ) throws(LinearEncodingError) {
         guard checkedData.count == prefix.contentByteSize else {
             throw.incorrectDataLength
         }
