@@ -91,8 +91,7 @@ public struct SignedObject<S: SignableObject>: Sendable {
             throw LinearEncodingError.invalidTypedKey
         }
         let (signature, body) = try TypedSignature
-            .parse(wireFormat: Data( wireFormat[1...] ))
-        guard let body else { throw LinearEncodingError.invalidTypedSignature }
+            .continuingParse( Data( wireFormat[1...] ) )
         self.signature = signature
         self.body = body
     }
@@ -106,7 +105,7 @@ public struct SignedObject<S: SignableObject>: Sendable {
         guard signer.isValidSignature(signature.signature, for: body) else {
             throw ProtocolError.authenticationError
         }
-        return body
+        return Data(body) //strangely this returns a slice all of a sudden
     }
 }
 
@@ -122,6 +121,7 @@ extension SignedObject where S: WireFormat {
     public func validate(
         for signer: any PublicSigningKey
     ) throws -> S {
-        try .init(wireFormat: validate(for: signer))
+        let value: Data = try validate(for: signer)
+        return try .init(wireFormat: value)
     }
 }

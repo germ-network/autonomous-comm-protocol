@@ -7,7 +7,7 @@
 
 import Foundation
 
-struct TypedDigest: DefinedWidthBinary {
+struct TypedDigest: DefinedWidthBinary {    
     typealias Prefix = DigestTypes
     let type: DigestTypes
     let digest: Data

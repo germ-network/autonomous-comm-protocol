@@ -16,7 +16,7 @@ public protocol DefinedWidthBinary: WireFormat, LinearEncoding {
     var wireFormat: Data { get }
     //where checkedData has the expected width
     init(prefix: Prefix, checkedData: Data) throws(LinearEncodingError)
-    static func parse(_ input: Data) throws -> (Self, Data?)
+    static func parse(_ input: Data) throws -> (Self, Int)
 }
 
 public protocol DefinedWidthPrefix: RawRepresentable<UInt8> {
@@ -43,17 +43,17 @@ public extension DefinedWidthBinary {
         }
         try self.init(
             prefix: prefixType,
-            checkedData: .init( wireFormat[1...] )
+            checkedData: Data( wireFormat.suffix(from: 1) )
         )
     }
     
     //defaut implementation of LinearEncoding conformance
-    static func parse(_ input: Data) throws -> (Self, Data?) {
-        try parse(wireFormat: input)
+    static func parse(_ input: Data) throws -> (Self, Int) {
+        return try parse(wireFormat: input)
     }
     
     static func parse(wireFormat: Data)
-    throws(LinearEncodingError) -> (Self, Data?) {
+    throws(LinearEncodingError) -> (Self, Int) {
         guard let prefix = wireFormat.first,
               let prefixType = Prefix(rawValue: prefix) else {
             throw .invalidPrefix
@@ -62,23 +62,14 @@ public extension DefinedWidthBinary {
         switch wireFormat.count {
         case (..<knownWidth):
             throw .incorrectDataLength
-        case knownWidth:
+        default:
             return (
                 try .init(
                     prefix: prefixType,
                     checkedData: Data( wireFormat[1..<knownWidth] )
                 ),
-                nil
+                knownWidth
             )
-        case ((knownWidth+1)...):
-            return (
-                try .init(
-                    prefix: prefixType,
-                    checkedData: Data( wireFormat[1..<knownWidth] )
-                ),
-                Data( wireFormat[knownWidth...] )
-            )
-        default: throw .incorrectDataLength
         }
     }
 }

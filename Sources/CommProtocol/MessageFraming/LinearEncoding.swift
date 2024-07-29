@@ -8,18 +8,22 @@
 import Foundation
 
 ///A format for consuming a stream of binary data into a known structure, with some branch points
-///
-///
 
 public protocol LinearEncoding  {
-    static func parse(_ input: Data) throws -> (Self, Data?)
+    static func parse(_ input: Data) throws -> (Self, Int)
 }
 
 public extension LinearEncoding {
     static func continuingParse(_ input: Data) throws -> (Self, Data) {
-        let (result, remainder) = try parse(input)
+        let (result, remainder) = try optionalParse(input)
         guard let remainder else { throw LinearEncodingError.unexpectedEOF }
         return (result, remainder)
+    }
+    
+    static func optionalParse(_ input: Data) throws -> (Self, Data?) {
+        let (result, consumed) = try parse(input)
+        guard input.count > consumed else { return (result, nil) }
+        return (result, .init(input.suffix(from: consumed)) )
     }
 }
 
@@ -60,5 +64,18 @@ extension LinearEncodingError: LocalizedError {
         case .incorrectDataLength: "Incorrect Data Length"
         case .unexpectedEOF: "Unexpected end of input"
         }
+    }
+}
+
+public protocol LinearEnum: RawRepresentable<UInt8>, LinearEncoding {}
+
+extension LinearEnum {
+    static func parse(
+        _ input: Data
+    ) throws(LinearEncodingError) -> (Self, Int) {
+        guard let prefix = input.first, let value = Self(rawValue: prefix) else {
+            throw .unexpectedEOF
+        }
+        return (value, 1)
     }
 }

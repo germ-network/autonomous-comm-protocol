@@ -7,6 +7,10 @@
 
 import Foundation
 
+public struct IdentityNewAgent {
+    
+}
+
 /////First of 4 signing steps to hand off an identity to a new identity
 /////Previous Identity key over new identity pub Key + context
 /////
