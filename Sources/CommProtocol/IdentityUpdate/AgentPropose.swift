@@ -104,7 +104,7 @@ public enum CommProposal: LinearEncodable {
     }
 }
 
-public struct AgentHandoff {    
+public struct AgentHandoff {
     struct KnownAgentTBS {
         static let discriminator = Data("proposeAgent".utf8)
         let newAgentKey: AgentPublicKey
@@ -123,7 +123,15 @@ public struct AgentHandoff {
         let updateMessage: Data // stapled in the message AD
         
         var formatForSigning: Data {
-            knownAgentKey.wireFormat + context.wireFormat + updateMessage
+            get throws {
+                let encodedAgentData = try agentData.encoded.declaredWidthWire
+                let encodedUpdate = try updateMessage.declaredWidthWire
+                
+                return knownAgentKey.wireFormat
+                + context.wireFormat
+                + encodedAgentData
+                + encodedUpdate
+            }
         }
     }
 }
