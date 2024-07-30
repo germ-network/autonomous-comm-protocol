@@ -55,15 +55,20 @@ public struct IdentityPrivateKey: Sendable {
     
     public func agentHelloDelegate() throws -> (
         AgentPrivateKey,
-        SignedObject<AgentPublicKey>
+        IdentityDelegate
     ) {
         let newAgent = AgentPrivateKey(algorithm: .curve25519)
         let newAgentPubKey = newAgent.publicKey
-        let signature = try signature(for: newAgentPubKey.wireFormat)
+        let signature = try signature(
+            for: IdentityDelegate.delegateTBS(agentKey: newAgentPubKey)
+        )
         
         return (
             newAgent,
-            .init(signature: signature, body: newAgentPubKey.wireFormat)
+            .init(
+                newAgentId: newAgentPubKey.id,
+                knownIdentitySignature: signature
+            )
         )
     }
     
@@ -130,6 +135,15 @@ public struct IdentityPublicKey: Sendable {
         default:
             throw ProtocolError.typedKeyArchiveMismatch
         }
+    }
+    
+    //MARK: Validation
+    public func validate(delegate: IdentityDelegate) throws -> AgentPublicKey {
+        guard publicKey.isValidSignature(
+            delegate.knownIdentitySignature.signature,
+            for: delegate.delegateTBS
+        ) else { throw ProtocolError.authenticationError }
+        return try .init(archive: delegate.newAgentId)
     }
 }
 

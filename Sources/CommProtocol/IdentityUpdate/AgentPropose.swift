@@ -38,11 +38,11 @@ import Foundation
 ///[knownAgentSignature.wireFormat]
 ///
 
-public enum CommProposal: LinearEncoding {
+public enum CommProposal: LinearEncodable {
     //we don't, strictly speaking, need the type enum, but this lets us
     //parse thte data structure without injecting the expected type
     case sameAgent(TypedSignature) //over the new update message
-    case sameIdentity(IdentityNewAgent) //used with multi-agents
+    case sameIdentity(IdentityDelegate, AgentHandoff) //used with multi-agents
     case newIdentity(IdentityHandoff, AgentHandoff)
     
     enum ProposalType: UInt8, LinearEnum {

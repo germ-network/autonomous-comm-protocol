@@ -11,7 +11,7 @@ import Foundation
 ///that is prepended
 ///
 ///Allows us to keep binary data in binary format as an alternative to JSON encoding
-public protocol DefinedWidthBinary: WireFormat, LinearEncoding {
+public protocol DefinedWidthBinary: WireFormat, LinearEncodable {
     associatedtype Prefix: DefinedWidthPrefix
     var wireFormat: Data { get }
     //where checkedData has the expected width

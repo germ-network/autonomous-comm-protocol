@@ -17,7 +17,7 @@ public struct AgentHello: Sendable {
     public let identityMutable: SignedObject<IdentityMutableData>
     
     //Agent
-    public let agentDelegate: SignedObject<AgentPublicKey>
+    public let agentDelegate: IdentityDelegate
     public let agentSignedData: Data //AgentTBS encoded
     public let agentSignature: Data
     
@@ -35,7 +35,7 @@ public struct AgentHello: Sendable {
     init(
         signedIdentity: SignedObject<CoreIdentity>,
         identityMutable: SignedObject<IdentityMutableData>,
-        agentDelegate: SignedObject<AgentPublicKey>,
+        agentDelegate: IdentityDelegate,
         agentSignedData: Data,
         agentSignature: Data //bare signature, not typed signature
     ) {
@@ -65,7 +65,7 @@ public struct AgentHello: Sendable {
     public func validated() throws -> Validated {
         let identity = try signedIdentity.verifiedIdentity()
         let identityKey = try IdentityPublicKey(wireFormat: identity.id)
-        let agentKey = try agentDelegate.validate(for: identityKey.publicKey)
+        let agentKey = try identityKey.validate(delegate: agentDelegate)
 
         guard agentKey.publicKey.isValidSignature(
             agentSignature,
@@ -95,9 +95,9 @@ extension AgentHello: Codable {
         self.identityMutable = try .init(
             wireFormat:  values.decode(Data.self, forKey: .identityMutable)
         )
-        self.agentDelegate = try .init(
-            wireFormat:  values.decode(Data.self, forKey: .agentDelegate)
-        )
+        //will deprecate
+        let stored = try values.decode(Data.self, forKey: .agentDelegate)
+        self.agentDelegate = try IdentityDelegate.finalParse(stored)
         self.agentSignedData = try values.decode(Data.self,
                                                  forKey: .agentSignedData)
         self.agentSignature = try values.decode(Data.self,

@@ -51,7 +51,7 @@ public struct AgentPrivateKey: Sendable {
     public func createAgentHello(
         signedIdentity: SignedObject<CoreIdentity>,
         identityMutable: SignedObject<IdentityMutableData>,
-        agentDelegate: SignedObject<AgentPublicKey>,
+        agentDelegate: IdentityDelegate,
         agentTBS: AgentHello.AgentTBS
     ) throws -> AgentHello {
         let identityKey = try signedIdentity.verifiedIdentity().identityKey
@@ -190,11 +190,6 @@ extension AgentPublicKey: Equatable {
     static public func == (lhs: Self, rhs: Self) -> Bool {
         lhs.id == rhs.id
     }
-}
-
-//Signable directly by the identity key for initial exchange only
-extension AgentPublicKey: SignableObject {
-    static public let type: SignableObjectTypes = .identityDelegate
 }
 
 extension AgentPublicKey: WireFormat {}

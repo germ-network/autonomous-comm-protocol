@@ -9,15 +9,17 @@ import Foundation
 
 ///A format for consuming a stream of binary data into a known structure, with some branch points
 
-public protocol LinearEncoding  {
+public protocol LinearEncodable  {
     static func parse(_ input: Data) throws -> (Self, Int)
     var wireFormat: Data { get throws }
 }
 
-public extension LinearEncoding {
+public extension LinearEncodable {
     static func continuingParse(_ input: Data) throws -> (Self, Data) {
         let (result, remainder) = try optionalParse(input)
-        guard let remainder else { throw LinearEncodingError.unexpectedEOF }
+        guard let remainder else {
+            throw LinearEncodingError.unexpectedEOF
+        }
         return (result, remainder)
     }
     
@@ -35,15 +37,19 @@ public extension LinearEncoding {
 }
 
 public struct LinearEncoder {
-    static func decode<T: LinearEncoding, U:LinearEncoding>(
+    static func decode<T: LinearEncodable, U:LinearEncodable>(
         _ firstType: T.Type,
         _ secondType: U.Type,
         input: Data
-    ) throws -> (T, U, Data) {
-        let (first, firstRemainder) = try T.continuingParse(input)
+    ) throws -> (T, U, Int) {
+        let (first, consumed) = try T.parse(input)
+        guard consumed < input.count else {
+            throw LinearEncodingError.unexpectedEOF
+        }
+        let slice = input.suffix(from: input.startIndex + consumed)
+        let (second, secondConsumed) = try U.parse(slice)
         
-        let (second, secondRemainder) = try U.continuingParse(firstRemainder)
-        return (first, second, secondRemainder)
+        return (first, second, consumed + secondConsumed)
     }
 }
 
@@ -78,7 +84,7 @@ extension LinearEncodingError: LocalizedError {
     }
 }
 
-public protocol LinearEnum: RawRepresentable<UInt8>, LinearEncoding {}
+public protocol LinearEnum: RawRepresentable<UInt8>, LinearEncodable {}
 
 extension LinearEnum {
     static func parse(

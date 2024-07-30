@@ -7,7 +7,43 @@
 
 import Foundation
 
-public struct IdentityNewAgent {
+///Need:
+///* knownIdentity signature over new Agent
+public struct IdentityDelegate: Sendable {
+    static let discriminator = Data("delegate".utf8)
+    let newAgentId: TypedKeyMaterial
+    let knownIdentitySignature: TypedSignature
+    
+    public var wireFormat: Data {
+        newAgentId.wireFormat + knownIdentitySignature.wireFormat
+    }
+    
+    static func delegateTBS(agentKey: AgentPublicKey) -> Data {
+        agentKey.id.wireFormat + IdentityDelegate.discriminator
+    }
+    
+    var delegateTBS: Data {
+        newAgentId.wireFormat + IdentityDelegate.discriminator
+    }
+}
+
+extension IdentityDelegate: LinearEncodable {
+    public static func parse(
+        _ input: Data
+    ) throws -> (IdentityDelegate, Int) {
+        let (agent, signature, consumed) = try LinearEncoder.decode(
+            TypedKeyMaterial.self,
+            TypedSignature.self,
+            input: input
+        )
+        return (
+            .init(
+                newAgentId: agent,
+                knownIdentitySignature: signature
+            ),
+            consumed
+        )
+    }
     
 }
 

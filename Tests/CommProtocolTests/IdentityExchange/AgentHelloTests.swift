@@ -17,7 +17,7 @@ struct AgentHelloTests {
     let signedIdentity: SignedObject<CoreIdentity>
     let mutableFields: IdentityMutableData
     let agentKey: AgentPrivateKey
-    let signedDelegation: SignedObject<AgentPublicKey>
+    let signedDelegation: IdentityDelegate
     let agentTBS: AgentHello.AgentTBS
     let agentHello: AgentHello
     
