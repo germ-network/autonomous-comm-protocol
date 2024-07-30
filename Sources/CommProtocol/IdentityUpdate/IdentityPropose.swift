@@ -10,20 +10,21 @@ import Foundation
 ///Need:
 ///* knownIdentity signature over new Agent
 public struct IdentityDelegate: Sendable {
-    static let discriminator = Data("delegate".utf8)
     let newAgentId: TypedKeyMaterial
+    
+    struct TBS {
+        static let discriminator = Data("delegate".utf8)
+        let agentID: TypedKeyMaterial
+        let context: TypedDigest?
+        
+        var encoded: Data {
+            agentID.wireFormat + Self.discriminator + (context?.wireFormat ?? .init())
+        }
+    }
     let knownIdentitySignature: TypedSignature
     
     public var wireFormat: Data {
         newAgentId.wireFormat + knownIdentitySignature.wireFormat
-    }
-    
-    static func delegateTBS(agentKey: AgentPublicKey) -> Data {
-        agentKey.id.wireFormat + IdentityDelegate.discriminator
-    }
-    
-    var delegateTBS: Data {
-        newAgentId.wireFormat + IdentityDelegate.discriminator
     }
 }
 

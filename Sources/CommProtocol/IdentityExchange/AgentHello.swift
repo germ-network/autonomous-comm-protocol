@@ -65,7 +65,10 @@ public struct AgentHello: Sendable {
     public func validated() throws -> Validated {
         let identity = try signedIdentity.verifiedIdentity()
         let identityKey = try IdentityPublicKey(wireFormat: identity.id)
-        let agentKey = try identityKey.validate(delegate: agentDelegate)
+        let agentKey = try identityKey.validate(
+            delegate: agentDelegate,
+            context: nil
+        )
 
         guard agentKey.publicKey.isValidSignature(
             agentSignature,

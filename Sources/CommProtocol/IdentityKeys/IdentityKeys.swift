@@ -60,7 +60,10 @@ public struct IdentityPrivateKey: Sendable {
         let newAgent = AgentPrivateKey(algorithm: .curve25519)
         let newAgentPubKey = newAgent.publicKey
         let signature = try signature(
-            for: IdentityDelegate.delegateTBS(agentKey: newAgentPubKey)
+            for: IdentityDelegate.TBS(
+                agentID: newAgentPubKey.id,
+                context: nil
+            ).encoded
         )
         
         return (
@@ -138,10 +141,16 @@ public struct IdentityPublicKey: Sendable {
     }
     
     //MARK: Validation
-    public func validate(delegate: IdentityDelegate) throws -> AgentPublicKey {
+    public func validate(
+        delegate: IdentityDelegate,
+        context: TypedDigest?
+    ) throws -> AgentPublicKey {
         guard publicKey.isValidSignature(
             delegate.knownIdentitySignature.signature,
-            for: delegate.delegateTBS
+            for: IdentityDelegate.TBS(
+                agentID: delegate.newAgentId,
+                context: context
+            ).encoded
         ) else { throw ProtocolError.authenticationError }
         return try .init(archive: delegate.newAgentId)
     }

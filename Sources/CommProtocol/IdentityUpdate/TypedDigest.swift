@@ -7,12 +7,12 @@
 
 import Foundation
 
-struct TypedDigest: DefinedWidthBinary {    
-    typealias Prefix = DigestTypes
+public struct TypedDigest: DefinedWidthBinary {
+    public typealias Prefix = DigestTypes
     let type: DigestTypes
     let digest: Data
     
-    init(
+    public init(
         prefix: Prefix,
         checkedData: Data
     ) throws(LinearEncodingError) {
@@ -23,13 +23,13 @@ struct TypedDigest: DefinedWidthBinary {
         self.digest = checkedData
     }
     
-    var wireFormat: Data { [type.rawValue] + digest }
+    public var wireFormat: Data { [type.rawValue] + digest }
 }
 
-enum DigestTypes: UInt8, DefinedWidthPrefix{
+public enum DigestTypes: UInt8, DefinedWidthPrefix{
     case SHA256 = 1
     
-    var contentByteSize: Int {
+    public var contentByteSize: Int {
         switch self {
         case .SHA256: 32
         }
