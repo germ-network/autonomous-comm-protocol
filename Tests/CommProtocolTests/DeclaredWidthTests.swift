@@ -24,24 +24,24 @@ struct DeclaredWidthTests {
     
     @Test func testDeclaredWidth() throws {
         let width = UInt8.random(in: 1...UInt8.max)
-        let data = SymmetricKey(size: .init(bitCount: Int(width) * 8)).dataRepresentation
+        let body = SymmetricKey(size: .init(bitCount: Int(width) * 8)).dataRepresentation
         
-        let encoded = try data.declaredWidthWire
-        #expect(encoded.count == data.count + MemoryLayout<UInt16>.size)
-        let decoded = try Data(declaredWidthWire: encoded)
+        let encoded = try DeclaredWidthData(body: body)
+        #expect(encoded.width == width)
+        let wireFormat = encoded.wireFormat
+        #expect(wireFormat.count == Int(width) + MemoryLayout<UInt16>.size)
+        let decoded = try DeclaredWidthData.finalParse(wireFormat)
         
-        #expect(data == decoded)
+        #expect(body == decoded.body)
         
+        //fail the prefix check
         #expect(throws: LinearEncodingError.incorrectDataLength) {
-            let _ = try Data(
-                declaredWidthWire:  Data(encoded.prefix(3))
-            )
+            let _ = try DeclaredWidthData.finalParse( wireFormat.prefix(1) )
         }
         
-        #expect(throws: LinearEncodingError.incorrectDataLength) {
-            let _ = try Data(
-                declaredWidthWire: Data(encoded.prefix(encoded.count - 1))
-            )
+        //fail the expected width check
+        #expect(throws: LinearEncodingError.unexpectedEOF) {
+            let _ = try DeclaredWidthData.finalParse( wireFormat.prefix(wireFormat.count - 1) )
         }
     }
 }

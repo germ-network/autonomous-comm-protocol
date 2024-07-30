@@ -53,7 +53,7 @@ public struct IdentityPrivateKey: Sendable {
         )
     }
     
-    public func agentHelloDelegate() throws -> (
+    public func createAgentDelegate(context: TypedDigest?) throws -> (
         AgentPrivateKey,
         IdentityDelegate
     ) {
@@ -62,10 +62,9 @@ public struct IdentityPrivateKey: Sendable {
         let signature = try signature(
             for: IdentityDelegate.TBS(
                 agentID: newAgentPubKey.id,
-                context: nil
+                context: context
             ).formatForSigning
         )
-        
         return (
             newAgent,
             .init(

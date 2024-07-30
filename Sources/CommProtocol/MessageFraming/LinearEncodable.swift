@@ -61,6 +61,7 @@ public enum LinearEncodingError: Error, Equatable {
     case invalidTypedSignature
     case invalidPrefix
     case incorrectDataLength
+    case bodyTooLarge
     case unexpectedData
     case unexpectedEOF
     case notImplemented //shim
@@ -77,7 +78,8 @@ extension LinearEncodingError: LocalizedError {
         case .invalidTypedSignature: "Invalid typed signature"
         case .invalidPrefix: "Invalid prefix"
         case .incorrectDataLength: "Incorrect Data Length"
-        case .unexpectedData: "E"
+        case .bodyTooLarge: "Data body too large"
+        case .unexpectedData: "Additional data found at end of parse"
         case .unexpectedEOF: "Unexpected end of input"
         case .notImplemented: "Not Implemented"
         }

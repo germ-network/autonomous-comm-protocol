@@ -38,7 +38,7 @@ struct AgentHelloTests {
         )
         
         (agentKey, signedDelegation) = try privateKey
-            .agentHelloDelegate()
+            .createAgentDelegate(context: nil)
         
         agentTBS = .init(
             version: .init(major: 1, minor: 1, patch: 1),

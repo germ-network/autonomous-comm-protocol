@@ -34,8 +34,6 @@ public enum SignableObjectTypes: UInt8, Codable, Sendable {
 }
 
 //like TypedKeyMaterial, prepend a byte that indicates length of the body
-
-
 public struct TypedSignature: DefinedWidthBinary, Sendable {
     public typealias Prefix = SigningKeyAlgorithm
     let signingAlgorithm: SigningKeyAlgorithm

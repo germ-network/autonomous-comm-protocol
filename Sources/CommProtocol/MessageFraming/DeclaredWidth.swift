@@ -26,27 +26,41 @@ extension UInt16 {
     }
 }
 
-extension Data {
-    init(declaredWidthWire: Data) throws(LinearEncodingError) {
-        guard declaredWidthWire.count > MemoryLayout<UInt16>.size else {
+struct DeclaredWidthData {
+    let width: UInt16
+    let body: Data
+    
+    init(body: Data) throws(LinearEncodingError) {
+        guard !body.isEmpty else {
             throw .incorrectDataLength
         }
-        
-        let prefix = Data(declaredWidthWire.prefix(MemoryLayout<UInt16>.size ))
-        let expectedWidth = try Int(UInt16(dataRepresentation: prefix)) + MemoryLayout<UInt16>.size
-        guard declaredWidthWire.count == expectedWidth else {
-            throw .incorrectDataLength
+        guard body.count <= UInt16.max else {
+            throw .bodyTooLarge
         }
-        self.init(declaredWidthWire.suffix(from: MemoryLayout<UInt16>.size))
+        self.width = UInt16(body.count)
+        self.body = body
     }
     
-    var declaredWidthWire: Data {
-        get throws(LinearEncodingError) {
-            guard count <= UInt16.max, count >= UInt16.min else {
-                throw .incorrectDataLength
-            }
-            let count16 = UInt16(count)
-            return count16.dataRepresentation + self
+    var wireFormat: Data {
+        width.dataRepresentation + body
+    }
+}
+
+extension DeclaredWidthData: LinearEncodable {
+    static func parse(_ input: Data) throws(LinearEncodingError) -> (DeclaredWidthData, Int) {
+        let prefix =  input.prefix( MemoryLayout<UInt16>.size )
+        let bodyWidth = try Int ( UInt16(dataRepresentation: prefix))
+        let consumeWidth = bodyWidth + MemoryLayout<UInt16>.size
+        guard input.count >= consumeWidth else {
+            throw .unexpectedEOF
         }
+        
+        let bodySlice = input
+            .suffix(from: input.startIndex + MemoryLayout<UInt16>.size )
+        
+        let result = try DeclaredWidthData(
+            body: bodySlice.prefix(bodyWidth)
+        )
+        return (result, consumeWidth)
     }
 }

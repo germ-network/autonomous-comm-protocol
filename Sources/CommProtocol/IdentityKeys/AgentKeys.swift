@@ -5,8 +5,8 @@
 //  Created by Mark Xue on 6/12/24.
 //
 
-import Foundation
 import CryptoKit
+import Foundation
 
 ///- To permit cryptographic flexibility, we
 /// - contain signing keys in an abstract protocol
@@ -15,24 +15,24 @@ import CryptoKit
 //MARK: Concrete object
 public struct AgentPrivateKey: Sendable {
     private let privateKey: any PrivateSigningKey
-    public let publicKey: AgentPublicKey //store public key for efficiency
+    public let publicKey: AgentPublicKey  //store public key for efficiency
 
     public var id: TypedKeyMaterial { publicKey.id }
     public var type: SigningKeyAlgorithm {
         Swift.type(of: privateKey).signingAlgorithm
     }
-    
+
     public init(algorithm: SigningKeyAlgorithm) {
         switch algorithm {
-        case .curve25519: 
+        case .curve25519:
             self.privateKey = Curve25519.Signing.PrivateKey()
             self.publicKey = .init(concrete: privateKey.publicKey)
         }
     }
-    
+
     //for local storage
     public var archive: TypedKeyMaterial { .init(typedKey: privateKey) }
-    
+
     public init(archive: TypedKeyMaterial) throws {
         switch archive.algorithm {
         case .Curve25519_Signing:
@@ -42,12 +42,12 @@ public struct AgentPrivateKey: Sendable {
         default: throw ProtocolError.typedKeyArchiveMismatch
         }
     }
-    
+
     init(concrete: any PrivateSigningKey) {
         privateKey = concrete
         publicKey = .init(concrete: concrete.publicKey)
     }
-    
+
     public func createAgentHello(
         signedIdentity: SignedObject<CoreIdentity>,
         identityMutable: SignedObject<IdentityMutableData>,
@@ -55,12 +55,12 @@ public struct AgentPrivateKey: Sendable {
         agentTBS: AgentHello.AgentTBS
     ) throws -> AgentHello {
         let identityKey = try signedIdentity.verifiedIdentity().identityKey
-        
+
         let encodedTBS = try agentTBS.encoded
         let signature = try privateKey.signature(
             for: identityKey.id.wireFormat + encodedTBS
         )
-        
+
         return .init(
             signedIdentity: signedIdentity,
             identityMutable: identityMutable,
@@ -69,7 +69,7 @@ public struct AgentPrivateKey: Sendable {
             agentSignature: signature
         )
     }
-    
+
     public func proposeLeafNode(update: Data) throws -> CommProposal {
         let signature = try privateKey.signature(for: update)
         let typedSignature: TypedSignature = .init(
@@ -78,8 +78,7 @@ public struct AgentPrivateKey: Sendable {
         )
         return .sameAgent(typedSignature)
     }
-    
-    
+
     public func proposeSuccessorAgent(
         newAgent: AgentPublicKey,
         context: TypedDigest
@@ -90,13 +89,12 @@ public struct AgentPrivateKey: Sendable {
         )
         return try sign(input: signatureOver.formatForSigning)
     }
-    
+
     //MARK: Implementation
     private func sign(input: Data) throws -> TypedSignature {
         try .init(prefix: type, checkedData: privateKey.signature(for: input))
     }
-    
-   
+
     //
     //    public func sign(transition: SignedAgentTransition.Transition)
     //    throws -> (encoded: Data, signature: Data) {
@@ -134,40 +132,40 @@ public struct AgentPrivateKey: Sendable {
 public struct AgentPublicKey: Sendable {
     let publicKey: any PublicSigningKey
     public let id: TypedKeyMaterial
-    
+
     public var wireFormat: Data { id.wireFormat }
     public var type: SigningKeyAlgorithm {
         Swift.type(of: publicKey).signingAlgorithm
     }
-    
+
     init(concrete: any PublicSigningKey) {
         publicKey = concrete
         id = .init(typedKey: publicKey)
     }
-    
+
     public init(wireFormat: Data) throws {
         let typedArchive = try TypedKeyMaterial(wireFormat: wireFormat)
         try self.init(archive: typedArchive)
     }
-    
+
     public init(archive: TypedKeyMaterial) throws {
         switch archive.algorithm {
         case .Curve25519_Signing:
             self.init(
                 concrete: try Curve25519.Signing
-                    .PublicKey(rawRepresentation: archive.keyData )
+                    .PublicKey(rawRepresentation: archive.keyData)
             )
         default:
             throw ProtocolError.typedKeyArchiveMismatch
         }
     }
-    
+
     //Deprecate?
     //presume subject (identity) key will separately verify
-    
+
     func validate<T>(
         signedObject: SignedObject<T>
-    ) throws -> T where T:SignableObject, T: Codable{
+    ) throws -> T where T: SignableObject, T: Codable {
         guard T.type.signer == .agent else {
             throw ProtocolError.incorrectSigner
         }
@@ -176,10 +174,10 @@ public struct AgentPublicKey: Sendable {
             from: signedObject.validate(for: publicKey)
         )
     }
-    
+
     func validate<T>(
         signedObject: SignedObject<T>?
-    ) throws -> T? where T:SignableObject, T: Codable{
+    ) throws -> T? where T: SignableObject, T: Codable {
         guard let signedObject else { return nil }
         guard T.type.signer == .agent else {
             throw ProtocolError.incorrectSigner
@@ -189,7 +187,7 @@ public struct AgentPublicKey: Sendable {
             from: signedObject.validate(for: publicKey)
         )
     }
-    
+
 }
 
 extension AgentPublicKey: Hashable {

@@ -39,8 +39,9 @@ import Foundation
 ///
 
 public enum CommProposal: LinearEncodable {
-    //we don't, strictly speaking, need the type enum, but this lets us
-    //parse thte data structure without injecting the expected type
+    //we don't, strictly speaking, need the type enum on the typed signature,
+    //but this lets us parse the data structure without injecting the expected
+    //types into the
     case sameAgent(TypedSignature) //over the new update message
     case sameIdentity(IdentityDelegate, AgentHandoff) //used with multi-agents
     case newIdentity(IdentityHandoff, AgentHandoff)
@@ -118,21 +119,25 @@ public struct AgentHandoff {
     
     struct NewAgentTBS {
         let knownAgentKey: AgentPublicKey
-        let context: TypedDigest
-        let agentData: AgentUpdate
-        let updateMessage: Data // stapled in the message AD
+        let newAgentIdentity: IdentityPublicKey //known or conveyed in the IdentityHandoff
+        let context: TypedDigest //known
+        let agentData: DeclaredWidthData
+        let updateMessage: DeclaredWidthData // stapled in the message AD
         
         var formatForSigning: Data {
             get throws {
-                let encodedAgentData = try agentData.encoded.declaredWidthWire
-                let encodedUpdate = try updateMessage.declaredWidthWire
+                let encodedAgentData = agentData.wireFormat
+                let encodedUpdate = updateMessage.wireFormat
                 
                 return knownAgentKey.wireFormat
+                + newAgentIdentity.id.wireFormat
                 + context.wireFormat
                 + encodedAgentData
                 + encodedUpdate
             }
         }
     }
+    let encodedAgentData: DeclaredWidthData
+    let newAgentSignature: TypedSignature
 }
 

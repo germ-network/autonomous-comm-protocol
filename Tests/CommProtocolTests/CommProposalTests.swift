@@ -18,7 +18,7 @@ struct CommProposalTests {
         knownAgent = .init(algorithm: .curve25519)
     }
 
-    @Test func testSameAgent() async throws {
+    @Test func testSameAgent() throws {
         let mockMessage = SymmetricKey(size: .bits256).rawRepresentation
         let proposal = try knownAgent.proposeLeafNode(update: mockMessage)
         
@@ -32,6 +32,18 @@ struct CommProposalTests {
             #expect(Bool(false))
             return
         }
+        
+    }
+    
+    @Test func testSameIdentity() async throws {
+        let mockMessage = SymmetricKey(size: .bits256).rawRepresentation
+        let mockContext = try TypedDigest(
+            prefix: .SHA256,
+            checkedData: SymmetricKey(size: .bits256).rawRepresentation
+        )
+
+        let (newAgent, identityDelegate) = try knownIdentity
+            .createAgentDelegate(context: mockContext)
         
     }
 
