@@ -27,11 +27,11 @@ public struct TypedDigest: DefinedWidthBinary {
 }
 
 public enum DigestTypes: UInt8, DefinedWidthPrefix {
-    case SHA256 = 1
+    case sha256 = 1
 
     public var contentByteSize: Int {
         switch self {
-        case .SHA256: 32
+        case .sha256: 32
         }
     }
 }

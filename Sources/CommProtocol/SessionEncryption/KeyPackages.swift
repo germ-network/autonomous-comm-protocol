@@ -8,12 +8,12 @@
 import Foundation
 
 public enum SessionEncryptionSuites: UInt8, Codable, Equatable, Sendable, CaseIterable {
-    case MLS_Curve25519_ChaChaPoly = 1
+    case mlsCurve25519ChaChaPoly = 1
 
     //match the RFC 9420 cipher suite
     var fixedWidth: Data {
         switch self {
-        case .MLS_Curve25519_ChaChaPoly: Data([0x0, 0x03])
+        case .mlsCurve25519ChaChaPoly: Data([0x0, 0x03])
         }
     }
 
@@ -25,7 +25,7 @@ public enum SessionEncryptionSuites: UInt8, Codable, Equatable, Sendable, CaseIt
             throw ProtocolError.archiveIncorrect
         }
         switch (first, second) {
-        case (0, 3): self = .MLS_Curve25519_ChaChaPoly
+        case (0, 3): self = .mlsCurve25519ChaChaPoly
         default: throw ProtocolError.archiveIncorrect
         }
     }

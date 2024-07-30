@@ -100,7 +100,7 @@ public struct IdentityPrivateKey: Sendable {
 
     public init(archive: TypedKeyMaterial) throws {
         switch archive.algorithm {
-        case .Curve25519_Signing:
+        case .curve25519Signing:
             self.init(
                 concrete: try Curve25519.Signing.PrivateKey(rawRepresentation: archive.keyData)
             )
@@ -130,7 +130,7 @@ public struct IdentityPublicKey: Sendable {
 
     public init(archive: TypedKeyMaterial) throws {
         switch archive.algorithm {
-        case .Curve25519_Signing:
+        case .curve25519Signing:
             self.init(
                 concrete: try Curve25519.Signing
                     .PublicKey(rawRepresentation: archive.keyData)

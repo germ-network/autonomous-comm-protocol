@@ -62,5 +62,5 @@ public enum SigningKeyAlgorithm: UInt8, DefinedWidthPrefix, Sendable {
 //private keys when public keys are expected,
 //instead of encoding in the wire format and make sure we then check the generated wire format
 extension Curve25519.KeyAgreement.PrivateKey: TypedKeyMaterialInput {
-    public static let encodeAlgorithm: TypedKeyMaterial.Algorithms = .ChaCha20Poly1305
+    public static let encodeAlgorithm: TypedKeyMaterial.Algorithms = .chaCha20Poly1305
 }

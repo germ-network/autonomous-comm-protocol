@@ -126,7 +126,5 @@ extension AgentHello: Codable {
 //mainly for testability
 extension AgentHello.AgentTBS: Equatable {}
 
-/*
- public struct AgentHelloReply: Codable, Sendable {
- }
- */
+// public struct AgentHelloReply: Codable, Sendable {
+// }

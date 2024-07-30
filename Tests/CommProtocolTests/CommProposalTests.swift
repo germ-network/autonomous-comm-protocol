@@ -39,7 +39,7 @@ struct CommProposalTests {
     @Test func testSameIdentity() async throws {
         let mockMessage = SymmetricKey(size: .bits256).rawRepresentation
         let mockContext = try TypedDigest(
-            prefix: .SHA256,
+            prefix: .sha256,
             checkedData: SymmetricKey(size: .bits256).rawRepresentation
         )
 
