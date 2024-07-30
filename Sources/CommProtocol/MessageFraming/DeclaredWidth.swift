@@ -7,19 +7,19 @@
 
 import Foundation
 
-extension UInt32 {
+extension UInt16 {
     var dataRepresentation: Data {
         var endian = bigEndian
-        return Data(bytes: &endian, count: MemoryLayout<UInt32>.size)
+        return Data(bytes: &endian, count: MemoryLayout<UInt16>.size)
     }
     
     init(dataRepresentation: Data) throws(LinearEncodingError) {
-        guard dataRepresentation.count == MemoryLayout<UInt32>.size else {
+        guard dataRepresentation.count == MemoryLayout<UInt16>.size else {
             throw .incorrectDataLength
         }
         
         let bigEndian = dataRepresentation.withUnsafeBytes { rawBuffer in
-            rawBuffer.load(as: UInt32.self)
+            rawBuffer.load(as: UInt16.self)
         }
         
         self = .init(bigEndian: bigEndian)
@@ -28,25 +28,25 @@ extension UInt32 {
 
 extension Data {
     init(declaredWidthWire: Data) throws(LinearEncodingError) {
-        guard declaredWidthWire.count > MemoryLayout<UInt32>.size else {
+        guard declaredWidthWire.count > MemoryLayout<UInt16>.size else {
             throw .incorrectDataLength
         }
         
-        let prefix = Data(declaredWidthWire.prefix(MemoryLayout<UInt32>.size ))
-        let expectedWidth = try Int(UInt32(dataRepresentation: prefix)) + MemoryLayout<UInt32>.size
+        let prefix = Data(declaredWidthWire.prefix(MemoryLayout<UInt16>.size ))
+        let expectedWidth = try Int(UInt16(dataRepresentation: prefix)) + MemoryLayout<UInt16>.size
         guard declaredWidthWire.count == expectedWidth else {
             throw .incorrectDataLength
         }
-        self.init(declaredWidthWire.suffix(from: MemoryLayout<UInt32>.size))
+        self.init(declaredWidthWire.suffix(from: MemoryLayout<UInt16>.size))
     }
     
     var declaredWidthWire: Data {
         get throws(LinearEncodingError) {
-            guard count <= UInt32.max, count >= UInt32.min else {
+            guard count <= UInt16.max, count >= UInt16.min else {
                 throw .incorrectDataLength
             }
-            let count32 = UInt32(count)
-            return count32.dataRepresentation + self
+            let count16 = UInt16(count)
+            return count16.dataRepresentation + self
         }
     }
 }

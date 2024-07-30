@@ -12,13 +12,13 @@ import CryptoKit
 
 struct DeclaredWidthTests {
     @Test func testUIntConversion() throws {
-        let value = UInt32.random(in: UInt32.min...UInt32.max)
-        let reencoded = try UInt32(dataRepresentation: value.dataRepresentation)
+        let value = UInt16.random(in: UInt16.min...UInt16.max)
+        let reencoded = try UInt16(dataRepresentation: value.dataRepresentation)
         #expect(value == reencoded)
         
-        let prefix = Data(value.dataRepresentation.prefix(3))
+        let prefix = Data(value.dataRepresentation.prefix(1))
         #expect(throws: LinearEncodingError.incorrectDataLength) {
-            let _ = try UInt32(dataRepresentation: prefix)
+            let _ = try UInt16(dataRepresentation: prefix)
         }
     }
     
@@ -27,7 +27,7 @@ struct DeclaredWidthTests {
         let data = SymmetricKey(size: .init(bitCount: Int(width) * 8)).dataRepresentation
         
         let encoded = try data.declaredWidthWire
-        #expect(encoded.count == data.count + MemoryLayout<UInt32>.size)
+        #expect(encoded.count == data.count + MemoryLayout<UInt16>.size)
         let decoded = try Data(declaredWidthWire: encoded)
         
         #expect(data == decoded)
