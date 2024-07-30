@@ -11,6 +11,7 @@ import Foundation
 
 public protocol LinearEncoding  {
     static func parse(_ input: Data) throws -> (Self, Int)
+    var wireFormat: Data { get throws }
 }
 
 public extension LinearEncoding {
@@ -20,10 +21,16 @@ public extension LinearEncoding {
         return (result, remainder)
     }
     
+    static func finalParse(_ input: Data) throws -> Self {
+        let (result, remainder) = try optionalParse(input)
+        guard remainder == nil else { throw LinearEncodingError.unexpectedData }
+        return result
+    }
+    
     static func optionalParse(_ input: Data) throws -> (Self, Data?) {
         let (result, consumed) = try parse(input)
         guard input.count > consumed else { return (result, nil) }
-        return (result, .init(input.suffix(from: consumed)) )
+        return (result, input.suffix(from: input.startIndex + consumed )) 
     }
 }
 
@@ -48,7 +55,9 @@ public enum LinearEncodingError: Error, Equatable {
     case invalidTypedSignature
     case invalidPrefix
     case incorrectDataLength
+    case unexpectedData
     case unexpectedEOF
+    case notImplemented //shim
 }
 
 extension LinearEncodingError: LocalizedError {
@@ -62,7 +71,9 @@ extension LinearEncodingError: LocalizedError {
         case .invalidTypedSignature: "Invalid typed signature"
         case .invalidPrefix: "Invalid prefix"
         case .incorrectDataLength: "Incorrect Data Length"
+        case .unexpectedData: "E"
         case .unexpectedEOF: "Unexpected end of input"
+        case .notImplemented: "Not Implemented"
         }
     }
 }
@@ -77,5 +88,9 @@ extension LinearEnum {
             throw .unexpectedEOF
         }
         return (value, 1)
+    }
+    
+    public var wireFormat: Data {
+        get { Data([rawValue]) }
     }
 }

@@ -38,7 +38,9 @@ import Foundation
 ///[knownAgentSignature.wireFormat]
 ///
 
-enum CommProposal {
+public enum CommProposal: LinearEncoding {
+    //we don't, strictly speaking, need the type enum, but this lets us
+    //parse thte data structure without injecting the expected type
     case sameAgent(TypedSignature) //over the new update message
     case sameIdentity(IdentityNewAgent) //used with multi-agents
     case newIdentity(IdentityHandoff, AgentHandoff)
@@ -47,6 +49,58 @@ enum CommProposal {
         case sameAgent = 1
         case sameIdentity
         case newIdentity
+    }
+    
+    public enum Validated {
+        case sameAgent
+    }
+    
+    public static func parseAndValidate(
+        _ input: Data,
+        knownIdentity: IdentityPublicKey,
+        knownAgent: AgentPublicKey,
+        updateMessage: Data
+    ) throws -> Validated {
+        let result = try finalParse(input)
+        switch result {
+        case .sameAgent(let signature):
+            guard knownAgent.publicKey.isValidSignature(
+                signature.signature,
+                for: updateMessage),
+                  signature.signingAlgorithm == knownAgent.type
+            else {
+                throw ProtocolError.authenticationError
+            }
+            return .sameAgent
+        case .sameIdentity: throw LinearEncodingError.notImplemented
+        case .newIdentity: throw LinearEncodingError.notImplemented
+
+        }
+    }
+    
+     public static func parse(_ input: Data) throws -> (CommProposal, Int) {
+        let (type, remainder) = try ProposalType.continuingParse(input)
+        switch type {
+        case .sameAgent:
+            let (signature, width) = try TypedSignature.parse(remainder)
+            return (.sameAgent(signature), width + 1)
+        case .sameIdentity: throw LinearEncodingError.notImplemented
+        case .newIdentity: throw LinearEncodingError.notImplemented
+        }
+        
+    }
+    
+    public var wireFormat: Data {
+        get throws {
+            switch self {
+            case .sameAgent(let typedSignature):
+                [ProposalType.sameAgent.rawValue] + typedSignature.wireFormat
+            case .sameIdentity(let identityNewAgent):
+                throw LinearEncodingError.notImplemented
+            case .newIdentity(let identityHandoff, let agentHandoff):
+                throw LinearEncodingError.notImplemented
+            }
+        }
     }
 }
 

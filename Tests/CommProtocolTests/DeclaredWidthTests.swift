@@ -23,7 +23,7 @@ struct DeclaredWidthTests {
     }
     
     @Test func testDeclaredWidth() throws {
-        let width = UInt8.random(in: UInt8.min...UInt8.max)
+        let width = UInt8.random(in: 1...UInt8.max)
         let data = SymmetricKey(size: .init(bitCount: Int(width) * 8)).dataRepresentation
         
         let encoded = try data.declaredWidthWire

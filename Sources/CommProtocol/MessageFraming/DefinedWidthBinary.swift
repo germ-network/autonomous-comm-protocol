@@ -63,10 +63,12 @@ public extension DefinedWidthBinary {
         case (..<knownWidth):
             throw .incorrectDataLength
         default:
+            let start = wireFormat.startIndex + 1
+            let end = wireFormat.startIndex + knownWidth
             return (
                 try .init(
                     prefix: prefixType,
-                    checkedData: Data( wireFormat[1..<knownWidth] )
+                    checkedData: Data( wireFormat[start..<end] )
                 ),
                 knownWidth
             )

@@ -18,6 +18,9 @@ public struct AgentPrivateKey: Sendable {
     public let publicKey: AgentPublicKey //store public key for efficiency
 
     public var id: TypedKeyMaterial { publicKey.id }
+    public var type: SigningKeyAlgorithm {
+        Swift.type(of: privateKey).signingAlgorithm
+    }
     
     public init(algorithm: SigningKeyAlgorithm) {
         switch algorithm {
@@ -67,6 +70,15 @@ public struct AgentPrivateKey: Sendable {
         )
     }
     
+    public func proposeLeafNode(update: Data) throws -> CommProposal {
+        let signature = try privateKey.signature(for: update)
+        let typedSignature: TypedSignature = .init(
+            signingAlgorithm: type,
+            signature: signature
+        )
+        return .sameAgent(typedSignature)
+    }
+    
     //MARK: signing methods
     
     
@@ -110,6 +122,9 @@ public struct AgentPublicKey: Sendable {
     public let id: TypedKeyMaterial
     
     public var wireFormat: Data { id.wireFormat }
+    public var type: SigningKeyAlgorithm {
+        Swift.type(of: publicKey).signingAlgorithm
+    }
     
     init(concrete: any PublicSigningKey) {
         publicKey = concrete
