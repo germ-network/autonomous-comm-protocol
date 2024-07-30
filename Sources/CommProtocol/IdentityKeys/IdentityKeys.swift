@@ -54,6 +54,8 @@ public struct IdentityPrivateKey: Sendable {
         )
     }
 
+    //have to leave this framework to generate the update message
+    //that we then pass to the agent in a variety of proposeAgentHandoff
     public func createAgentDelegate(context: TypedDigest?) throws -> (
         AgentPrivateKey,
         IdentityDelegate

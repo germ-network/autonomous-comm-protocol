@@ -35,7 +35,7 @@ public struct AgentPrivateKey: Sendable {
 
     public init(archive: TypedKeyMaterial) throws {
         switch archive.algorithm {
-        case .Curve25519_Signing:
+        case .curve25519Signing:
             self.init(
                 concrete: try Curve25519.Signing.PrivateKey(rawRepresentation: archive.keyData)
             )
@@ -79,7 +79,41 @@ public struct AgentPrivateKey: Sendable {
         return .sameAgent(typedSignature)
     }
 
-    public func proposeSuccessorAgent(
+    public func proposeAgentHandoff(
+        existingIdentity: IdentityPublicKey,
+        identityDelegate: IdentityDelegate,
+        establishedAgent: AgentPrivateKey,
+        context: TypedDigest,
+        agentData: AgentUpdate,
+        updateMessage: Data
+    ) throws -> CommProposal {
+        let establishedSignature = try establishedAgent.proposeSuccessorAgent(
+            newAgent: publicKey,
+            context: context
+        )
+        
+        let encodedAgentData = try agentData.encoded
+        
+        let newAgentSignatureOver = try AgentHandoff.NewAgentTBS(
+            knownAgentKey: establishedAgent.publicKey,
+            newAgentIdentity: existingIdentity,
+            context: context,
+            agentData: encodedAgentData,
+            updateMessage: updateMessage
+        ).formatForSigning
+        let newAgentSignature = try sign(input: newAgentSignatureOver)
+        
+        let agentHandoff = AgentHandoff(
+            knownAgentSignature: establishedSignature,
+            encodedAgentData: try .init(body: encodedAgentData),
+            newAgentSignature: newAgentSignature
+        )
+        
+        return .sameIdentity(identityDelegate, agentHandoff)
+    }
+
+    //MARK: Implementation
+    func proposeSuccessorAgent(
         newAgent: AgentPublicKey,
         context: TypedDigest
     ) throws -> TypedSignature {
@@ -89,8 +123,7 @@ public struct AgentPrivateKey: Sendable {
         )
         return try sign(input: signatureOver.formatForSigning)
     }
-
-    //MARK: Implementation
+    
     private func sign(input: Data) throws -> TypedSignature {
         try .init(prefix: type, checkedData: privateKey.signature(for: input))
     }
@@ -150,7 +183,7 @@ public struct AgentPublicKey: Sendable {
 
     public init(archive: TypedKeyMaterial) throws {
         switch archive.algorithm {
-        case .Curve25519_Signing:
+        case .curve25519Signing:
             self.init(
                 concrete: try Curve25519.Signing
                     .PublicKey(rawRepresentation: archive.keyData)

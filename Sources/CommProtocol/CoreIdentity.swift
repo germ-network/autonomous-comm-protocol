@@ -42,6 +42,7 @@ public struct CoreIdentity: Codable, Sendable, Equatable {
 }
 
 public struct DescribedImage: Equatable, Codable, Sendable {
+    //TODO: make this a typed digest
     public let imageDigest: Data
     public let altText: String?
 

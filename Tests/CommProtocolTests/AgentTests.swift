@@ -30,7 +30,7 @@ struct AgentKeyTests {
         #expect(privateKey.publicKey == decodedPublic)
 
         let symmetricKey = try TypedKeyMaterial(
-            algorithm: .ChaCha20Poly1305,
+            algorithm: .chaCha20Poly1305,
             symmetricKey: SymmetricKey(size: .bits256)
         )
 

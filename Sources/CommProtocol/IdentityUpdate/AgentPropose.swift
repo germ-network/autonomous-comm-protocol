@@ -120,13 +120,13 @@ public struct AgentHandoff {
         let knownAgentKey: AgentPublicKey
         let newAgentIdentity: IdentityPublicKey  //known or conveyed in the IdentityHandoff
         let context: TypedDigest  //known
-        let agentData: DeclaredWidthData
-        let updateMessage: DeclaredWidthData  // stapled in the message AD
+        let agentData: Data
+        let updateMessage: Data  // stapled in the message AD
 
         var formatForSigning: Data {
             get throws {
-                let encodedAgentData = agentData.wireFormat
-                let encodedUpdate = updateMessage.wireFormat
+                let encodedAgentData = agentData
+                let encodedUpdate = updateMessage
 
                 return knownAgentKey.wireFormat
                     + newAgentIdentity.id.wireFormat
@@ -138,4 +138,10 @@ public struct AgentHandoff {
     }
     let encodedAgentData: DeclaredWidthData
     let newAgentSignature: TypedSignature
+    
+    var wireFormat: Data {
+        knownAgentSignature.wireFormat
+        + encodedAgentData.wireFormat
+        + newAgentSignature.wireFormat
+    }
 }

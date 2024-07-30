@@ -46,9 +46,9 @@ struct AgentHelloTests {
         agentTBS = .init(
             version: .init(major: 1, minor: 1, patch: 1),
             isAppClip: false,
-            addresses: [.testMock],
+            addresses: [.mock()],
             keyChoices: [:],
-            imageResource: .testMock,
+            imageResource: .mock(),
             expiration: .distantFuture
         )
 
@@ -99,27 +99,5 @@ struct AgentHelloTests {
         #expect(throws: ProtocolError.authenticationError) {
             let _ = try modifiedTBSHello.validated()
         }
-    }
-}
-
-extension Resource {
-    static var testMock: Self {
-        .init(
-            identifier: UUID().uuidString,
-            plaintextDigest: SymmetricKey(size: .bits256).rawRepresentation,
-            host: "example.com",
-            symmetricKey: SymmetricKey(size: .bits256),
-            expiration: Date.distantFuture
-        )
-    }
-}
-
-extension ProtocolAddress {
-    static var testMock: Self {
-        .init(
-            identifier: UUID().uuidString,
-            serviceHost: "example.com",
-            expiration: Date.distantFuture
-        )
     }
 }

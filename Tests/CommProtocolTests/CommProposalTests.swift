@@ -20,7 +20,7 @@ struct CommProposalTests {
     }
 
     @Test func testSameAgent() throws {
-        let mockMessage = SymmetricKey(size: .bits256).rawRepresentation
+        let mockMessage = Mocks.mockMessage()
         let proposal = try knownAgent.proposeLeafNode(update: mockMessage)
 
         let validated = try CommProposal.parseAndValidate(
@@ -37,7 +37,6 @@ struct CommProposalTests {
     }
 
     @Test func testSameIdentity() async throws {
-        let mockMessage = SymmetricKey(size: .bits256).rawRepresentation
         let mockContext = try TypedDigest(
             prefix: .sha256,
             checkedData: SymmetricKey(size: .bits256).rawRepresentation
@@ -46,7 +45,21 @@ struct CommProposalTests {
         let (newAgent, identityDelegate) =
             try knownIdentity
             .createAgentDelegate(context: mockContext)
-
+        let mockMessage = Mocks.mockMessage()
+        
+        let newAgentData = AgentUpdate.mock()
+        
+        let proposal = try newAgent.proposeAgentHandoff(
+            existingIdentity: knownIdentity.publicKey,
+            identityDelegate: identityDelegate,
+            establishedAgent: knownAgent,
+            context: mockContext,
+            agentData: newAgentData,
+            updateMessage: mockMessage
+        )
+        
     }
 
 }
+
+
