@@ -79,8 +79,22 @@ public struct AgentPrivateKey: Sendable {
         return .sameAgent(typedSignature)
     }
     
-    //MARK: signing methods
     
+    public func proposeSuccessorAgent(
+        newAgent: AgentPublicKey,
+        context: TypedDigest
+    ) throws -> TypedSignature {
+        let signatureOver = AgentHandoff.KnownAgentTBS(
+            newAgentKey: newAgent,
+            context: context
+        )
+        return try sign(input: signatureOver.formatForSigning)
+    }
+    
+    //MARK: Implementation
+    private func sign(input: Data) throws -> TypedSignature {
+        try .init(prefix: type, checkedData: privateKey.signature(for: input))
+    }
     
    
     //
