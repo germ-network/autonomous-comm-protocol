@@ -32,10 +32,11 @@ public protocol WireFormat {
     init(wireFormat: Data) throws
 }
 
-public extension DefinedWidthBinary {
-    init(wireFormat: Data) throws(LinearEncodingError) {
+extension DefinedWidthBinary {
+    public init(wireFormat: Data) throws(LinearEncodingError) {
         guard let prefix = wireFormat.first,
-              let prefixType = Prefix(rawValue: prefix) else {
+            let prefixType = Prefix(rawValue: prefix)
+        else {
             throw .invalidPrefix
         }
         guard wireFormat.count == prefixType.contentByteSize + 1 else {
@@ -46,16 +47,18 @@ public extension DefinedWidthBinary {
             checkedData: wireFormat.suffix(from: wireFormat.startIndex + 1)
         )
     }
-    
+
     //defaut implementation of LinearEncoding conformance
-    static func parse(_ input: Data) throws -> (Self, Int) {
+    public static func parse(_ input: Data) throws -> (Self, Int) {
         return try parse(wireFormat: input)
     }
-    
-    static func parse(wireFormat: Data)
-    throws(LinearEncodingError) -> (Self, Int) {
+
+    public static func parse(wireFormat: Data)
+        throws(LinearEncodingError) -> (Self, Int)
+    {
         guard let prefix = wireFormat.first,
-              let prefixType = Prefix(rawValue: prefix) else {
+            let prefixType = Prefix(rawValue: prefix)
+        else {
             throw .invalidPrefix
         }
         let knownWidth = 1 + prefixType.contentByteSize
@@ -68,7 +71,7 @@ public extension DefinedWidthBinary {
             return (
                 try .init(
                     prefix: prefixType,
-                    checkedData: Data( wireFormat[start..<end] )
+                    checkedData: Data(wireFormat[start..<end])
                 ),
                 knownWidth
             )

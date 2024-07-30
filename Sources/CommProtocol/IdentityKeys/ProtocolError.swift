@@ -9,7 +9,7 @@ import Foundation
 
 public enum ProtocolError: Error {
     case mismatchedSignedObjectType
-    
+
     case typedKeyArchiveMismatch
     case typedKeyArchiveWireFormat
     case authenticationError
@@ -18,10 +18,10 @@ public enum ProtocolError: Error {
     case incorrectAssertionType
     case incorrectSigner
     case archiveIncorrect
-//    case missingData
-//    case incorrectKeyPackage
-//    case incorrectSignedBodyType
-//    case notImplemented
+    //    case missingData
+    //    case incorrectKeyPackage
+    //    case incorrectSignedBodyType
+    //    case notImplemented
 }
 
 extension ProtocolError: LocalizedError {
@@ -36,18 +36,18 @@ extension ProtocolError: LocalizedError {
         case .incorrectAssertionType: "Incorrect identity relationship type"
         case .incorrectSigner: "Incorrect signing key type"
         case .archiveIncorrect: "unexpected archive"
-//        case .missingData:
-//            "ProtocolError: Missing data"
-//        case .incorrectKeyPackage:
-//            "ProtocolError: Incorrect key package"
-//        case .incorrectSignedBodyType:
-//            "ProtocolError: Incorrect signed body type"
-//        case .signatureCheckFailed:
-//            "ProtocolError: Signature check failed"
-//        case .digestNotEqual:
-//            "ProtocolError: Digest not equal"
-//        case .notImplemented:
-//            "ProtocolError: Not implemented"
+        //        case .missingData:
+        //            "ProtocolError: Missing data"
+        //        case .incorrectKeyPackage:
+        //            "ProtocolError: Incorrect key package"
+        //        case .incorrectSignedBodyType:
+        //            "ProtocolError: Incorrect signed body type"
+        //        case .signatureCheckFailed:
+        //            "ProtocolError: Signature check failed"
+        //        case .digestNotEqual:
+        //            "ProtocolError: Digest not equal"
+        //        case .notImplemented:
+        //            "ProtocolError: Not implemented"
         }
     }
 }

@@ -9,35 +9,35 @@ import Foundation
 
 ///A format for consuming a stream of binary data into a known structure, with some branch points
 
-public protocol LinearEncodable  {
+public protocol LinearEncodable {
     static func parse(_ input: Data) throws -> (Self, Int)
     var wireFormat: Data { get throws }
 }
 
-public extension LinearEncodable {
-    static func continuingParse(_ input: Data) throws -> (Self, Data) {
+extension LinearEncodable {
+    public static func continuingParse(_ input: Data) throws -> (Self, Data) {
         let (result, remainder) = try optionalParse(input)
         guard let remainder else {
             throw LinearEncodingError.unexpectedEOF
         }
         return (result, remainder)
     }
-    
-    static func finalParse(_ input: Data) throws -> Self {
+
+    public static func finalParse(_ input: Data) throws -> Self {
         let (result, remainder) = try optionalParse(input)
         guard remainder == nil else { throw LinearEncodingError.unexpectedData }
         return result
     }
-    
-    static func optionalParse(_ input: Data) throws -> (Self, Data?) {
+
+    public static func optionalParse(_ input: Data) throws -> (Self, Data?) {
         let (result, consumed) = try parse(input)
         guard input.count > consumed else { return (result, nil) }
-        return (result, input.suffix(from: input.startIndex + consumed )) 
+        return (result, input.suffix(from: input.startIndex + consumed))
     }
 }
 
 public struct LinearEncoder {
-    static func decode<T: LinearEncodable, U:LinearEncodable>(
+    static func decode<T: LinearEncodable, U: LinearEncodable>(
         _ firstType: T.Type,
         _ secondType: U.Type,
         input: Data
@@ -48,14 +48,15 @@ public struct LinearEncoder {
         }
         let slice = input.suffix(from: input.startIndex + consumed)
         let (second, secondConsumed) = try U.parse(slice)
-        
+
         return (first, second, consumed + secondConsumed)
     }
 }
 
 public enum LinearEncodingError: Error, Equatable {
-    case mismatchedAlgorithms(expected: TypedKeyMaterial.Algorithms,
-                              found: TypedKeyMaterial.Algorithms)
+    case mismatchedAlgorithms(
+        expected: TypedKeyMaterial.Algorithms,
+        found: TypedKeyMaterial.Algorithms)
     case unknownTypedKeyAlgorithm(UInt8)
     case invalidTypedKey
     case invalidTypedSignature
@@ -64,12 +65,12 @@ public enum LinearEncodingError: Error, Equatable {
     case bodyTooLarge
     case unexpectedData
     case unexpectedEOF
-    case notImplemented //shim
+    case notImplemented  //shim
 }
 
 extension LinearEncodingError: LocalizedError {
     public var errorDescription: String? {
-        switch self{
+        switch self {
         case .mismatchedAlgorithms(let expected, let found):
             "Mismatched key algorithm, expected \(expected), found \(found)"
         case .unknownTypedKeyAlgorithm(let index):
@@ -97,8 +98,8 @@ extension LinearEnum {
         }
         return (value, 1)
     }
-    
+
     public var wireFormat: Data {
-        get { Data([rawValue]) }
+        Data([rawValue])
     }
 }

@@ -5,12 +5,12 @@
 //  Created by Mark Xue on 6/12/24.
 //
 
+import CryptoKit
 ///Protocol conformance for the bare CryptoKit key types
 import Foundation
-import CryptoKit
 
 public protocol RawRepresentableKey {
-    init<D>(rawRepresentation: D) throws where D : ContiguousBytes
+    init<D>(rawRepresentation: D) throws where D: ContiguousBytes
     var rawRepresentation: Data { get }
 }
 

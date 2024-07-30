@@ -5,14 +5,15 @@
 //  Created by Mark Xue on 7/29/24.
 //
 
-import Testing
 import CryptoKit
+import Testing
+
 @testable import CommProtocol
 
 struct CommProposalTests {
     let knownIdentity: IdentityPrivateKey
     let knownAgent: AgentPrivateKey
-    
+
     init() {
         knownIdentity = .init(algorithm: .curve25519)
         knownAgent = .init(algorithm: .curve25519)
@@ -21,7 +22,7 @@ struct CommProposalTests {
     @Test func testSameAgent() throws {
         let mockMessage = SymmetricKey(size: .bits256).rawRepresentation
         let proposal = try knownAgent.proposeLeafNode(update: mockMessage)
-        
+
         let validated = try CommProposal.parseAndValidate(
             proposal.wireFormat,
             knownIdentity: knownIdentity.publicKey,
@@ -32,9 +33,9 @@ struct CommProposalTests {
             #expect(Bool(false))
             return
         }
-        
+
     }
-    
+
     @Test func testSameIdentity() async throws {
         let mockMessage = SymmetricKey(size: .bits256).rawRepresentation
         let mockContext = try TypedDigest(
@@ -42,9 +43,10 @@ struct CommProposalTests {
             checkedData: SymmetricKey(size: .bits256).rawRepresentation
         )
 
-        let (newAgent, identityDelegate) = try knownIdentity
+        let (newAgent, identityDelegate) =
+            try knownIdentity
             .createAgentDelegate(context: mockContext)
-        
+
     }
 
 }

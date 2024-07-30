@@ -5,8 +5,8 @@
 //  Created by Mark Xue on 6/23/24.
 //
 
-import Foundation
 import CryptoKit
+import Foundation
 
 public enum TypedCodableError: Error {
     case decode(String, Error)
@@ -14,7 +14,7 @@ public enum TypedCodableError: Error {
 
 extension TypedCodableError: LocalizedError {
     public var errorDescription: String? {
-        switch self{
+        switch self {
         case .decode(let string, let error):
             "Error decoding type \(string): \(error.localizedDescription)"
         }
@@ -29,7 +29,7 @@ extension Encodable {
 
 ///Captures type information when throwing a Json decoder error so we know what object it was trying to decode
 extension Data {
-    func decoded<T:Decodable>() throws -> T {
+    func decoded<T: Decodable>() throws -> T {
         do {
             return try JSONDecoder().decode(T.self, from: self)
         } catch {
@@ -48,7 +48,7 @@ extension SymmetricKey: RawRepresentableKey {
     public init<D>(rawRepresentation data: D) throws where D: ContiguousBytes {
         self.init(data: data)
     }
-    
+
     public var rawRepresentation: Data {
         return dataRepresentation  // Contiguous bytes repackaged as a Data instance.
     }
@@ -81,7 +81,6 @@ extension Data {
     }
 }
 
-
 extension String {
     // Make base64 string safe for passing into URL query params
     var toBase64URL: String {
@@ -89,17 +88,17 @@ extension String {
             .replacingOccurrences(of: "+", with: "-")
             .replacingOccurrences(of: "=", with: "")
     }
-    
+
     var fromBase64URL: String {
         self.replacingOccurrences(of: "_", with: "/")
             .replacingOccurrences(of: "-", with: "+")
             .base64padded
     }
-    
+
     private var base64padded: String {
         let padding = 4 - count % 4
         guard (0..<4).contains(padding) else { return self }
-        
+
         return self + String(repeating: "=", count: padding)
     }
 }

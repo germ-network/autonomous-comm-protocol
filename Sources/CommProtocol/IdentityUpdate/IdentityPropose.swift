@@ -11,18 +11,18 @@ import Foundation
 ///* knownIdentity signature over new Agent
 public struct IdentityDelegate: Sendable {
     let newAgentId: TypedKeyMaterial
-    
+
     struct TBS {
         static let discriminator = Data("delegate".utf8)
         let agentID: TypedKeyMaterial
         let context: TypedDigest?
-        
+
         var formatForSigning: Data {
             agentID.wireFormat + Self.discriminator + (context?.wireFormat ?? .init())
         }
     }
     let knownIdentitySignature: TypedSignature
-    
+
     public var wireFormat: Data {
         newAgentId.wireFormat + knownIdentitySignature.wireFormat
     }
@@ -45,7 +45,7 @@ extension IdentityDelegate: LinearEncodable {
             consumed
         )
     }
-    
+
 }
 
 /////First of 4 signing steps to hand off an identity to a new identity
@@ -72,21 +72,20 @@ extension IdentityDelegate: LinearEncodable {
 //    public let newAgentId: AgentPublicKey
 //}
 
-
 ///package the elements you need for a identity handoff
 public struct IdentityHandoff {
     let newIdentity: CoreIdentity
     //over new identity pub Key + verb + TypedDigest
-    struct PredecessorTBS { // can just
+    struct PredecessorTBS {  // can just
         let newIdentityPubKey: IdentityPublicKey
         let verb = Data("successor".utf8)
-        let context: TypedDigest //representing groupId
+        let context: TypedDigest  //representing groupId
     }
     let predecessorSignature: TypedSignature
-    
+
     struct SuccessorTBS {
         let predecessorPubKey: IdentityPublicKey
-        let context: TypedDigest //representing groupId
+        let context: TypedDigest  //representing groupId
         let newAgentKey: AgentPublicKey
     }
     let successorSignature: TypedSignature

@@ -1,12 +1,12 @@
 //
 //  File.swift
-//  
+//
 //
 //  Created by Mark @ Germ on 6/15/24.
 //
 
-import Foundation
 import CryptoKit
+import Foundation
 
 ///CoreIdentity is an identity key that asserts a user-facing representation:
 /// - name (assert once)
@@ -19,13 +19,13 @@ public struct CoreIdentity: Codable, Sendable, Equatable {
         //previously, 0.0.1
         static let currentVersion = SemanticVersion(major: 1, minor: 0, patch: 0)
     }
-    
-    public let id: Data //WireFormat for IdentityPublicKey
+
+    public let id: Data  //WireFormat for IdentityPublicKey
     public let name: String
     public let describedImage: DescribedImage
     public let version: SemanticVersion
     public let nonce: Data
-    
+
     init(id: IdentityPublicKey, name: String, describedImage: DescribedImage) {
         self.id = id.id.wireFormat
         self.name = name
@@ -33,7 +33,7 @@ public struct CoreIdentity: Codable, Sendable, Equatable {
         self.version = Constants.currentVersion
         self.nonce = SymmetricKey(size: .bits128).rawRepresentation
     }
-    
+
     var identityKey: IdentityPublicKey {
         get throws {
             try .init(wireFormat: id)
@@ -41,10 +41,10 @@ public struct CoreIdentity: Codable, Sendable, Equatable {
     }
 }
 
-public struct DescribedImage: Equatable, Codable, Sendable{
+public struct DescribedImage: Equatable, Codable, Sendable {
     public let imageDigest: Data
     public let altText: String?
-    
+
     public init(imageDigest: Data, altText: String?) {
         self.imageDigest = imageDigest
         self.altText = altText
@@ -66,10 +66,10 @@ extension SignedObject<CoreIdentity> {
     public func verifiedIdentity() throws -> CoreIdentity {
         //have to decode the credentialData to get the public key
         let coreIdentity: CoreIdentity = try body.decoded()
-        
+
         //remainder of credential is not valid until we validate the signature
         let identityKey: IdentityPublicKey = try .init(wireFormat: coreIdentity.id)
-        let verifiedIdentity = try validate(for: identityKey.publicKey)  
+        let verifiedIdentity = try validate(for: identityKey.publicKey)
         assert(verifiedIdentity == coreIdentity)
 
         return verifiedIdentity
@@ -77,10 +77,10 @@ extension SignedObject<CoreIdentity> {
 }
 
 public enum HashAlgorithms: UInt8, DefinedWidthPrefix {
-    case sha256 //RFC 6234
-    
+    case sha256  //RFC 6234
+
     public var contentByteSize: Int { digestWidth }
-    
+
     private var digestWidth: Int {
         switch self {
         case .sha256: 32
@@ -88,10 +88,10 @@ public enum HashAlgorithms: UInt8, DefinedWidthPrefix {
     }
 }
 
-public struct IdentityMutableData: SignableObject, Codable, Sendable, Equatable{
+public struct IdentityMutableData: SignableObject, Codable, Sendable, Equatable {
     public static let type: SignableObjectTypes = .identityMutableData
     public var type: SignableObjectTypes = .identityMutableData
-    public let counter: UInt16 //for predecence defined by the sender/signer
+    public let counter: UInt16  //for predecence defined by the sender/signer
     public let pronouns: [String]?
     public let aboutText: String?
 }

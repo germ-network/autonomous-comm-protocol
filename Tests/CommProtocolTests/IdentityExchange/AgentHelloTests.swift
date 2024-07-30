@@ -5,9 +5,9 @@
 //  Created by Mark Xue on 7/26/24.
 //
 
+import CryptoKit
 import Foundation
 import Testing
-import CryptoKit
 
 @testable import CommProtocol
 
@@ -20,26 +20,29 @@ struct AgentHelloTests {
     let signedDelegation: IdentityDelegate
     let agentTBS: AgentHello.AgentTBS
     let agentHello: AgentHello
-    
+
     init() throws {
         let describedImage = DescribedImage(
             imageDigest: SymmetricKey(size: .bits128).rawRepresentation,
             altText: nil
         )
-        
-        (privateKey, coreIdentity, signedIdentity) = try IdentityPrivateKey
-            .create(name: UUID().uuidString,
-                    describedImage: describedImage)
-        
+
+        (privateKey, coreIdentity, signedIdentity) =
+            try IdentityPrivateKey
+            .create(
+                name: UUID().uuidString,
+                describedImage: describedImage)
+
         mutableFields = IdentityMutableData(
             counter: 2,
             pronouns: ["they/them"],
             aboutText: UUID().uuidString
         )
-        
-        (agentKey, signedDelegation) = try privateKey
+
+        (agentKey, signedDelegation) =
+            try privateKey
             .createAgentDelegate(context: nil)
-        
+
         agentTBS = .init(
             version: .init(major: 1, minor: 1, patch: 1),
             isAppClip: false,
@@ -48,31 +51,33 @@ struct AgentHelloTests {
             imageResource: .testMock,
             expiration: .distantFuture
         )
-        
+
         agentHello = try agentKey.createAgentHello(
             signedIdentity: signedIdentity,
-            identityMutable: try privateKey
+            identityMutable:
+                try privateKey
                 .sign(mutableData: mutableFields),
             agentDelegate: signedDelegation,
             agentTBS: agentTBS
         )
     }
-    
+
     @Test func testAgentHello() throws {
-        let reencoded: AgentHello = try agentHello
+        let reencoded: AgentHello =
+            try agentHello
             .encoded
             .decoded()
-        
+
         let validatedHello = try reencoded.validated()
-        
+
         #expect(validatedHello.coreIdentity == coreIdentity)
         #expect(validatedHello.signedIdentity.wireFormat == signedIdentity.wireFormat)
         #expect(validatedHello.agentKey == agentKey.publicKey)
         #expect(validatedHello.mutableData == validatedHello.mutableData)
         #expect(validatedHello.agentData == agentTBS)
-        
+
     }
-    
+
     @Test func testAgentHelloFailure() throws {
         let modifiedTBS = AgentHello.AgentTBS(
             version: agentTBS.version,
@@ -82,7 +87,7 @@ struct AgentHelloTests {
             imageResource: agentTBS.imageResource,
             expiration: agentTBS.expiration
         )
-        
+
         let modifiedTBSHello = AgentHello(
             signedIdentity: agentHello.signedIdentity,
             identityMutable: agentHello.identityMutable,
@@ -90,8 +95,8 @@ struct AgentHelloTests {
             agentSignedData: try modifiedTBS.encoded,
             agentSignature: agentHello.agentSignature
         )
-        
-        #expect(throws:ProtocolError.authenticationError ) {
+
+        #expect(throws: ProtocolError.authenticationError) {
             let _ = try modifiedTBSHello.validated()
         }
     }
@@ -111,7 +116,7 @@ extension Resource {
 
 extension ProtocolAddress {
     static var testMock: Self {
-        .init (
+        .init(
             identifier: UUID().uuidString,
             serviceHost: "example.com",
             expiration: Date.distantFuture

@@ -30,7 +30,7 @@ import Foundation
 /// [Application Update][Application Content]
 
 struct ApplicationUpdate {
-    
+
 }
 
 enum ApplicationContent {

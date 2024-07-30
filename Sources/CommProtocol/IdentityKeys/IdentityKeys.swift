@@ -5,16 +5,16 @@
 //  Created by Mark @ Germ on 6/15/24.
 //
 
-import Foundation
 import CryptoKit
+import Foundation
 
 ///- To permit cryptographic flexibility, we use 2 layers of abstraction:
 /// - unify the interface in a protocol
 /// - contain the protocol in a concrete object for storage
 public struct IdentityPrivateKey: Sendable {
     private let privateKey: any PrivateSigningKey
-    public let publicKey: IdentityPublicKey //store public key for efficiency
-    
+    public let publicKey: IdentityPublicKey  //store public key for efficiency
+
     init(algorithm: SigningKeyAlgorithm) {
         switch algorithm {
         case .curve25519:
@@ -22,20 +22,21 @@ public struct IdentityPrivateKey: Sendable {
             self.publicKey = .init(concrete: privateKey.publicKey)
         }
     }
-    
+
     public static func create(
         name: String,
         describedImage: DescribedImage,
         algorithm: SigningKeyAlgorithm = .curve25519
     ) throws -> (IdentityPrivateKey, CoreIdentity, SignedObject<CoreIdentity>) {
         let privateKey = IdentityPrivateKey(algorithm: algorithm)
-        let coreIdentity = CoreIdentity(id: privateKey.publicKey,
-                                        name: name,
-                                        describedImage: describedImage)
-        
+        let coreIdentity = CoreIdentity(
+            id: privateKey.publicKey,
+            name: name,
+            describedImage: describedImage)
+
         let coreIdentityData = try JSONEncoder().encode(coreIdentity)
         let signature = try privateKey.signature(for: coreIdentityData)
-        
+
         return (
             privateKey,
             coreIdentity,
@@ -45,14 +46,14 @@ public struct IdentityPrivateKey: Sendable {
             )
         )
     }
-    
+
     private func signature(for input: Data) throws -> TypedSignature {
         .init(
             signingAlgorithm: type(of: privateKey).signingAlgorithm,
             signature: try privateKey.signature(for: input)
         )
     }
-    
+
     public func createAgentDelegate(context: TypedDigest?) throws -> (
         AgentPrivateKey,
         IdentityDelegate
@@ -73,30 +74,30 @@ public struct IdentityPrivateKey: Sendable {
             )
         )
     }
-    
+
     public func sign(
         maybeMutableData: IdentityMutableData?
     ) throws -> SignedObject<IdentityMutableData>? {
         guard let mutableData = maybeMutableData else { return nil }
-        
+
         return try sign(mutableData: mutableData)
     }
-    
+
     public func sign(
         mutableData: IdentityMutableData
     ) throws -> SignedObject<IdentityMutableData> {
-        
+
         let encoded = try mutableData.encoded
-        
+
         return .init(
             signature: try signature(for: encoded),
             body: encoded
         )
     }
-    
+
     //for local storage
     public var archive: TypedKeyMaterial { .init(typedKey: privateKey) }
-    
+
     public init(archive: TypedKeyMaterial) throws {
         switch archive.algorithm {
         case .Curve25519_Signing:
@@ -106,7 +107,7 @@ public struct IdentityPrivateKey: Sendable {
         default: throw LinearEncodingError.invalidTypedKey
         }
     }
-    
+
     init(concrete: any PrivateSigningKey) {
         privateKey = concrete
         publicKey = .init(concrete: concrete.publicKey)
@@ -116,41 +117,43 @@ public struct IdentityPrivateKey: Sendable {
 public struct IdentityPublicKey: Sendable {
     let publicKey: any PublicSigningKey
     public let id: TypedKeyMaterial
-    
+
     init(concrete: any PublicSigningKey) {
         publicKey = concrete
         id = .init(typedKey: concrete)
     }
-    
+
     public init(wireFormat: Data) throws {
         let typedArchive = try TypedKeyMaterial(wireFormat: wireFormat)
         try self.init(archive: typedArchive)
     }
-    
+
     public init(archive: TypedKeyMaterial) throws {
         switch archive.algorithm {
         case .Curve25519_Signing:
             self.init(
                 concrete: try Curve25519.Signing
-                    .PublicKey(rawRepresentation: archive.keyData )
+                    .PublicKey(rawRepresentation: archive.keyData)
             )
         default:
             throw ProtocolError.typedKeyArchiveMismatch
         }
     }
-    
+
     //MARK: Validation
     public func validate(
         delegate: IdentityDelegate,
         context: TypedDigest?
     ) throws -> AgentPublicKey {
-        guard publicKey.isValidSignature(
-            delegate.knownIdentitySignature.signature,
-            for: IdentityDelegate.TBS(
-                agentID: delegate.newAgentId,
-                context: context
-            ).formatForSigning
-        ) else { throw ProtocolError.authenticationError }
+        guard
+            publicKey.isValidSignature(
+                delegate.knownIdentitySignature.signature,
+                for: IdentityDelegate.TBS(
+                    agentID: delegate.newAgentId,
+                    context: context
+                ).formatForSigning
+            )
+        else { throw ProtocolError.authenticationError }
         return try .init(archive: delegate.newAgentId)
     }
 }
@@ -168,4 +171,3 @@ extension IdentityPublicKey: Equatable {
         lhs.id == rhs.id
     }
 }
-

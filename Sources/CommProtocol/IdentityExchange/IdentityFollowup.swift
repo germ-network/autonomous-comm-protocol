@@ -12,17 +12,17 @@ import Foundation
 public struct IdentityFollowup: Sendable {
     public var signedMutableFields: SignedObject<IdentityMutableData>?
     public let imageResource: Resource?
-    public let agentSignedData: Data //AgentTBS encoded
+    public let agentSignedData: Data  //AgentTBS encoded
     public let agentSignature: Data
-    
-    public var addresses: [ProtocolAddress]? //if dropped, can use rendezvous to reply
-    
+
+    public var addresses: [ProtocolAddress]?  //if dropped, can use rendezvous to reply
+
     struct AgentTBS {
-        public let version: SemanticVersion //update agent client version
+        public let version: SemanticVersion  //update agent client version
         public let isAppClip: Bool?
         public let addresses: [ProtocolAddress]
     }
-    
+
     public init(
         signedMutableFields: SignedObject<IdentityMutableData>? = nil,
         imageResource: Resource?,
@@ -36,22 +36,19 @@ public struct IdentityFollowup: Sendable {
         self.agentSignature = agentSignature
         self.addresses = addresses
     }
-    
-//    public func sha2Hash(into hasher: inout SHA256) {
-//        imageResource?.sha2Hash(into: &hasher)
-//        signedMutableFields?.sha2Hash(into: &hasher)
-//        addresses?.sha2Hash(into: &hasher)
-//    }
-}
 
+    //    public func sha2Hash(into hasher: inout SHA256) {
+    //        imageResource?.sha2Hash(into: &hasher)
+    //        signedMutableFields?.sha2Hash(into: &hasher)
+    //        addresses?.sha2Hash(into: &hasher)
+    //    }
+}
 
 //Stapled to every message
 public struct AgentUpdate: Codable, Sendable {
     public let version: SemanticVersion?
-    public let isAppClip: Bool? //ommitted when false
+    public let isAppClip: Bool?  //ommitted when false
     public let addresses: [ProtocolAddress]
     public let imageResource: Resource?
     public let expiration: Date
 }
-
-
