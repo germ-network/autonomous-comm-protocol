@@ -17,7 +17,7 @@ public struct IdentityDelegate: Sendable {
         let agentID: TypedKeyMaterial
         let context: TypedDigest?
         
-        var encoded: Data {
+        var formatForSigning: Data {
             agentID.wireFormat + Self.discriminator + (context?.wireFormat ?? .init())
         }
     }

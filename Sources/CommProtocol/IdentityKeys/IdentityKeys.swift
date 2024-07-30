@@ -63,7 +63,7 @@ public struct IdentityPrivateKey: Sendable {
             for: IdentityDelegate.TBS(
                 agentID: newAgentPubKey.id,
                 context: nil
-            ).encoded
+            ).formatForSigning
         )
         
         return (
@@ -150,7 +150,7 @@ public struct IdentityPublicKey: Sendable {
             for: IdentityDelegate.TBS(
                 agentID: delegate.newAgentId,
                 context: context
-            ).encoded
+            ).formatForSigning
         ) else { throw ProtocolError.authenticationError }
         return try .init(archive: delegate.newAgentId)
     }

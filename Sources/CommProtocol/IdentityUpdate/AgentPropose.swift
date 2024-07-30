@@ -104,15 +104,14 @@ public enum CommProposal: LinearEncodable {
     }
 }
 
-public struct AgentHandoff {
-    let newAgentKey: AgentPublicKey
-    
+public struct AgentHandoff {    
     struct KnownAgentTBS {
+        static let discriminator = Data("proposeAgent".utf8)
         let newAgentKey: AgentPublicKey
         let context: TypedDigest
         
         var formatForSigning: Data {
-            Data("proposeAgent".utf8) + newAgentKey.wireFormat + context.wireFormat
+            Self.discriminator + newAgentKey.wireFormat + context.wireFormat
         }
     }
     let knownAgentSignature: TypedSignature
