@@ -27,8 +27,23 @@ public struct IdentityDelegate: Sendable {
         newAgentId.wireFormat + knownIdentitySignature.wireFormat
     }
 
-    func signatureOver(with context: TypedDigest?) -> Data {
-        TBS(agentID: newAgentId, context: context).formatForSigning
+    func validate(
+        knownIdentity: IdentityPublicKey,
+        context: TypedDigest?
+    ) throws -> AgentPublicKey {
+        let knownSignatureBody = TBS(
+            agentID: newAgentId,
+            context: context
+        ).formatForSigning
+        guard
+            knownIdentity.publicKey.isValidSignature(
+                knownIdentitySignature.signature,
+                for: knownSignatureBody
+            )
+        else {
+            throw ProtocolError.authenticationError
+        }
+        return try .init(archive: newAgentId)
     }
 }
 
@@ -114,10 +129,81 @@ public struct IdentityHandoff {
             + newAgentKey.wireFormat
             + successorSignature.wireFormat
     }
+
+    struct Validated {
+        let newIdentity: CoreIdentity
+        let signedNewIdentity: SignedIdentity
+        let newAgentKey: AgentPublicKey
+    }
+
+    func validate(
+        knownIdentity: IdentityPublicKey,
+        context: TypedDigest
+    ) throws -> Validated {
+        //verify self-contained new identity assertion
+        let newIdentity = try signedNewIdentity.verifiedIdentity()
+
+        //verify predecessor signature over the new key + context
+        let predecessorSignatureBody = PredecessorTBS(
+            newIdentityPubKey: newIdentity.id,
+            context: context
+        ).formatForSigning
+        guard
+            knownIdentity.publicKey.isValidSignature(
+                predecessorSignature.signature,
+                for: predecessorSignatureBody
+            )
+        else {
+            throw ProtocolError.authenticationError
+        }
+
+        //verify successor signature
+        let successorSignatureBody = SuccessorTBS(
+            predecessorPubKey: knownIdentity,
+            context: context,
+            newAgentKey: newAgentKey
+        ).formatForSigning
+        guard
+            newIdentity.id.publicKey.isValidSignature(
+                successorSignature.signature,
+                for: successorSignatureBody
+            )
+        else {
+            throw ProtocolError.authenticationError
+        }
+
+        return .init(
+            newIdentity: newIdentity,
+            signedNewIdentity: signedNewIdentity,
+            newAgentKey: newAgentKey
+        )
+    }
 }
 
 extension IdentityHandoff: LinearEncodable {
     public static func parse(_ input: Data) throws -> (IdentityHandoff, Int) {
-        throw LinearEncodingError.notImplemented
+        let (
+            signedNewIdentity,
+            predecessorSignature,
+            newAgentKeyMaterial,
+            successorSignature,
+            consumed
+        ) = try LinearEncoder.decode(
+            SignedIdentity.self,
+            TypedSignature.self,
+            TypedKeyMaterial.self,
+            TypedSignature.self,
+            input: input
+        )
+
+        return (
+            try .init(
+                signedNewIdentity: signedNewIdentity,
+                predecessorSignature: predecessorSignature,
+                newAgentKey: AgentPublicKey(archive: newAgentKeyMaterial),
+                successorSignature: successorSignature
+            ),
+            consumed
+        )
     }
 }

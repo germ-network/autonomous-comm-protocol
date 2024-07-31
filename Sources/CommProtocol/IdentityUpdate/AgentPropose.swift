@@ -53,7 +53,7 @@ public enum CommProposal: LinearEncodable {
     public enum Validated {
         case sameAgent
         case sameIdentity(AgentHandoff.Validated)
-        case newIdentity(CoreIdentity, AgentHandoff.Validated)
+        case newIdentity(CoreIdentity, SignedIdentity, AgentHandoff.Validated)
     }
 
     public static func parseAndValidate(
@@ -167,17 +167,17 @@ public enum CommProposal: LinearEncodable {
         identityDelegate: IdentityDelegate,
         agentHandoff: AgentHandoff
     ) throws -> Validated {
-        let newAgent = try knownIdentity.validate(
-            delegate: identityDelegate,
+        let newAgent = try identityDelegate.validate(
+            knownIdentity: knownIdentity,
             context: context
         )
 
-        let agentUpdate = try newAgent.validate(
+        let agentUpdate = try agentHandoff.validate(
             knownAgent: knownAgent,
+            newAgent: newAgent,
             newAgentIdentity: knownIdentity,
             context: context,
-            updateMessage: updateMessage,
-            agentHandoff: agentHandoff
+            updateMessage: updateMessage
         )
 
         let validated = AgentHandoff.Validated(
@@ -195,7 +195,27 @@ public enum CommProposal: LinearEncodable {
         identityHandoff: IdentityHandoff,
         agentHandoff: AgentHandoff
     ) throws -> Validated {
-        throw LinearEncodingError.notImplemented
+        let validatedIdentity = try identityHandoff.validate(
+            knownIdentity: knownIdentity,
+            context: context
+        )
+
+        let agentUpdate = try agentHandoff.validate(
+            knownAgent: knownAgent,
+            newAgent: validatedIdentity.newAgentKey,
+            newAgentIdentity: validatedIdentity.newIdentity.id,
+            context: context,
+            updateMessage: updateMessage
+        )
+
+        return .newIdentity(
+            validatedIdentity.newIdentity,
+            validatedIdentity.signedNewIdentity,
+            .init(
+                newAgent: validatedIdentity.newAgentKey,
+                agentData: agentUpdate
+            )
+        )
     }
 }
 
@@ -241,13 +261,14 @@ public struct AgentHandoff {
         let agentData: AgentUpdate
     }
 
-    func newAgentSignatureBody(
+    func validate(
         knownAgent: AgentPublicKey,
+        newAgent: AgentPublicKey,
         newAgentIdentity: IdentityPublicKey,
         context: TypedDigest,
         updateMessage: Data
-    ) -> Data {
-        NewAgentTBS(
+    ) throws -> AgentUpdate {
+        let signatureBody = NewAgentTBS(
             knownAgentKey: knownAgent,
             newAgentIdentity: newAgentIdentity,
             context: context,
@@ -255,6 +276,19 @@ public struct AgentHandoff {
             updateMessage: updateMessage
         )
         .formatForSigning
+        guard
+            newAgent.publicKey.isValidSignature(
+                newAgentSignature.signature,
+                for: signatureBody
+            )
+        else {
+            throw ProtocolError.authenticationError
+        }
+
+        return try JSONDecoder().decode(
+            AgentUpdate.self,
+            from: encodedAgentData.body
+        )
     }
 }
 

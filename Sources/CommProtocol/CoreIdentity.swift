@@ -142,7 +142,7 @@ public struct SignedIdentity: Sendable {
 
 extension SignedIdentity: LinearEncodable {
     public static func parse(_ input: Data) throws -> (SignedIdentity, Int) {
-        let (identity, consumed) = try CoreIdentity.parse(input)
+        let (_, consumed) = try CoreIdentity.parse(input)
         let encodedIdentity = input.prefix(consumed)
 
         let slice = input.suffix(from: input.startIndex + consumed)

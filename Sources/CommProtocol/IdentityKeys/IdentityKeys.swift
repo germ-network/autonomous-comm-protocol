@@ -191,22 +191,6 @@ public struct IdentityPublicKey: Sendable {
         }
     }
 
-    //MARK: Validation
-    public func validate(
-        delegate: IdentityDelegate,
-        context: TypedDigest?
-    ) throws -> AgentPublicKey {
-        guard
-            publicKey.isValidSignature(
-                delegate.knownIdentitySignature.signature,
-                for: delegate.signatureOver(with: context)
-            )
-        else {
-            throw ProtocolError.authenticationError
-        }
-        return try .init(archive: delegate.newAgentId)
-    }
-
     //MARK: Implementation
     func validate(signature: TypedSignature, for body: Data) throws {
         guard keyType == signature.signingAlgorithm,

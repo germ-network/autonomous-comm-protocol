@@ -100,7 +100,7 @@ struct CommProposalTests {
         )
 
         let (newAgent, identityHandoff) = try nextIdentityKey.createHandoff(
-            existingIdentity: nextIdentityKey.publicKey,
+            existingIdentity: knownIdentityKey.publicKey,
             startSignature: knownIdentitySignature,
             signedIdentity: signedNextIdentity,
             context: mockContext
@@ -113,7 +113,7 @@ struct CommProposalTests {
         )
 
         let proposal = try newAgent.completeIdentityHandoff(
-            existingIdentity: knownIdentity.id,
+            newIdentity: nextIdentity.id,
             identityHandoff: identityHandoff,
             establishedAgent: knownAgent.publicKey,
             establishedAgentSignature: existingAgentSignature,

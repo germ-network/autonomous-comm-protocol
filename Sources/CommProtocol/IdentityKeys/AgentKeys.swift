@@ -124,7 +124,7 @@ public struct AgentPrivateKey: Sendable {
     }
 
     public func completeIdentityHandoff(
-        existingIdentity: IdentityPublicKey,
+        newIdentity: IdentityPublicKey,
         identityHandoff: IdentityHandoff,
         establishedAgent: AgentPublicKey,
         establishedAgentSignature: TypedSignature,
@@ -136,7 +136,7 @@ public struct AgentPrivateKey: Sendable {
 
         let newAgentSignatureOver = AgentHandoff.NewAgentTBS(
             knownAgentKey: establishedAgent,
-            newAgentIdentity: existingIdentity,
+            newAgentIdentity: newIdentity,
             context: context,
             agentData: encodedAgentData,
             updateMessage: updateMessage
@@ -220,35 +220,6 @@ public struct AgentPublicKey: Sendable {
         default:
             throw ProtocolError.typedKeyArchiveMismatch
         }
-    }
-
-    //MARK: Validation
-    func validate(
-        knownAgent: AgentPublicKey,
-        newAgentIdentity: IdentityPublicKey,
-        context: TypedDigest,
-        updateMessage: Data,
-        agentHandoff: AgentHandoff
-    ) throws -> AgentUpdate {
-        let signatureBody = agentHandoff.newAgentSignatureBody(
-            knownAgent: knownAgent,
-            newAgentIdentity: newAgentIdentity,
-            context: context,
-            updateMessage: updateMessage
-        )
-        guard
-            publicKey.isValidSignature(
-                agentHandoff.newAgentSignature.signature,
-                for: signatureBody
-            )
-        else {
-            throw ProtocolError.authenticationError
-        }
-
-        return try JSONDecoder().decode(
-            AgentUpdate.self,
-            from: agentHandoff.encodedAgentData.body
-        )
     }
 
     //Deprecate?
