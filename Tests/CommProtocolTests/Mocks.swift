@@ -84,6 +84,7 @@ extension CoreIdentity {
             id: newIdentity,
             name: UUID().uuidString,
             describedImage: try .mock(),
+            version: CoreIdentity.Constants.currentVersion,
             nonce: SymmetricKey(size: .bits128).rawRepresentation
         )
     }

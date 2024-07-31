@@ -31,12 +31,13 @@ public struct CoreIdentity: Sendable, Equatable {
         id: IdentityPublicKey,
         name: String,
         describedImage: DescribedImage,
+        version: SemanticVersion,
         nonce: Data
     ) throws {
         self.id = id
         self.name = name
         self.describedImage = describedImage
-        self.version = Constants.currentVersion
+        self.version = version
         self.nonce = try .init(body: nonce)
     }
 }
@@ -59,6 +60,7 @@ extension CoreIdentity: LinearEncodable {
             id: try .init(archive: id),
             name: name,
             describedImage: describedImage,
+            version: version,
             nonce: nonce.body
         )
         return (result, consumed)

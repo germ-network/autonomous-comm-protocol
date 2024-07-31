@@ -37,6 +37,7 @@ public struct IdentityPrivateKey: Sendable {
             id: privateKey.publicKey,
             name: name,
             describedImage: describedImage,
+            version: CoreIdentity.Constants.currentVersion,
             nonce: SymmetricKey(size: .bits128).rawRepresentation
         )
 
