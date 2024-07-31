@@ -1,5 +1,5 @@
 //
-//  File.swift
+//  CoreIdentity.swift
 //
 //
 //  Created by Mark @ Germ on 6/15/24.
@@ -14,7 +14,6 @@ import Foundation
 /// - pronouns
 /// - bindings to other identities
 
-//TODO: remove codable
 public struct CoreIdentity: Sendable, Equatable {
     struct Constants {
         //previously, 0.0.1
@@ -79,7 +78,6 @@ extension CoreIdentity: LinearEncodable {
 
 }
 
-//TODO: remove codable
 public struct DescribedImage: Equatable, Sendable {
     //TODO: make this a typed digest
     public let imageDigest: TypedDigest

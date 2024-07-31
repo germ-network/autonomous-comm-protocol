@@ -70,8 +70,11 @@ public struct AgentPrivateKey: Sendable {
         )
     }
 
-    public func proposeLeafNode(update: Data) throws -> CommProposal {
-        let signature = try privateKey.signature(for: update)
+    public func proposeLeafNode(
+        update: Data,
+        context: TypedDigest
+    ) throws -> CommProposal {
+        let signature = try privateKey.signature(for: update + context.wireFormat)
         let typedSignature: TypedSignature = .init(
             signingAlgorithm: type,
             signature: signature

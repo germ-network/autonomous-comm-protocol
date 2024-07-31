@@ -35,7 +35,3 @@ public enum DigestTypes: UInt8, DefinedWidthPrefix, Sendable, Equatable {
         }
     }
 }
-
-//TODO: remove
-extension TypedDigest: Codable {}
-extension DigestTypes: Codable {}

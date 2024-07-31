@@ -20,7 +20,7 @@ public struct AgentHello: Sendable {
     public let agentSignature: Data
 
     //what the agent signs
-    public struct AgentTBS: Codable, Sendable {
+    public struct AgentTBS: Sendable, Codable {
         //prepend the identity key when signing
         public let version: SemanticVersion
         public let isAppClip: Bool?  //ommitted when false

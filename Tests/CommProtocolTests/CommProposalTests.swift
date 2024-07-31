@@ -5,6 +5,7 @@
 //  Created by Mark Xue on 7/29/24.
 //
 
+import Foundation
 import CryptoKit
 import Testing
 
@@ -27,7 +28,10 @@ struct CommProposalTests {
     @Test func testSameAgent() throws {
         let mockMessage = Mocks.mockMessage()
         let mockContext = try TypedDigest.mock()
-        let proposal = try knownAgent.proposeLeafNode(update: mockMessage)
+        let proposal = try knownAgent.proposeLeafNode(
+            update: mockMessage,
+            context: mockContext
+        )
         let wireProposal = try proposal.wireFormat
 
         let validated = try CommProposal.parseAndValidate(
@@ -44,7 +48,38 @@ struct CommProposalTests {
             #expect(Bool(false))
             return
         }
+    }
+    
+    @Test func testSameAgentErrors() throws {
+        let mockMessage = Mocks.mockMessage()
+        let mockContext = try TypedDigest.mock()
+        let proposal = try knownAgent.proposeLeafNode(
+            update: mockMessage,
+            context: mockContext
+        )
+        let wireProposal = try proposal.wireFormat
+        
+        let wrongKey = AgentPrivateKey(algorithm: .curve25519)
+        
+        #expect(throws: ProtocolError.authenticationError) {
+            let _ = try CommProposal.parseAndValidate(
+                wireProposal,
+                knownIdentity: knownIdentity.id,
+                knownAgent: wrongKey.publicKey,
+                context: mockContext,
+                updateMessage: mockMessage
+            )
+        }
 
+        #expect(throws: ProtocolError.authenticationError) {
+            let _ = try CommProposal.parseAndValidate(
+                wireProposal,
+                knownIdentity: knownIdentity.id,
+                knownAgent: knownAgent.publicKey,
+                context: .mock(),
+                updateMessage: mockMessage
+            )
+        }
     }
 
     @Test func testSameIdentity() async throws {
@@ -87,6 +122,42 @@ struct CommProposalTests {
         }
         #expect(validated.newAgent == newAgent.publicKey)
         #expect(validated.agentData == newAgentData)
+    }
+    
+    @Test func testSameIdentityErrors() async throws {
+        let mockContext = try TypedDigest.mock()
+
+        let (newAgent, identityDelegate) =
+            try knownIdentityKey
+            .createAgentDelegate(context: mockContext)
+
+        let newAgentData = AgentUpdate.mock()
+        let mockMessage = Mocks.mockMessage()
+
+        let existingSignature = try knownAgent.startAgentHandoff(
+            newAgent: newAgent.publicKey,
+            context: mockContext
+        )
+
+        let proposal = try newAgent.completeAgentHandoff(
+            existingIdentity: knownIdentity.id,
+            identityDelegate: identityDelegate,
+            establishedAgent: knownAgent.publicKey,
+            establishedSignature: existingSignature,
+            context: mockContext,
+            agentData: newAgentData,
+            updateMessage: mockMessage
+        )
+
+        #expect(throws: ProtocolError.authenticationError) {
+            let _ = try CommProposal.parseAndValidate(
+                try proposal.wireFormat,
+                knownIdentity: knownIdentity.id,
+                knownAgent: knownAgent.publicKey,
+                context: .mock(),
+                updateMessage: mockMessage
+            )
+        }
     }
 
     @Test func testNewIdentity() async throws {
@@ -132,5 +203,14 @@ struct CommProposalTests {
             context: mockContext,
             updateMessage: mockMessage
         )
+        
+        guard case .newIdentity(
+            let identity,
+            let signedIdentity,
+            let validatedAgentHandoff
+        ) = outcome else {
+            #expect(Bool(false))
+            return
+        }
     }
 }
