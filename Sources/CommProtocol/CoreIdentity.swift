@@ -145,7 +145,7 @@ extension SignedIdentity: LinearEncodable {
         let (identity, consumed) = try CoreIdentity.parse(input)
         let encodedIdentity = input.prefix(consumed)
 
-        let slice = input.suffix(input.startIndex + consumed)
+        let slice = input.suffix(from: input.startIndex + consumed)
         let (signature, secondConsumed) = try TypedSignature.parse(slice)
 
         let result = SignedIdentity(
