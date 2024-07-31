@@ -47,7 +47,9 @@ struct DeclaredWidthData {
 }
 
 extension DeclaredWidthData: LinearEncodable {
-    static func parse(_ input: Data) throws(LinearEncodingError) -> (DeclaredWidthData, Int) {
+    static func parse(_ input: Data)
+        throws(LinearEncodingError) -> (DeclaredWidthData, Int)
+    {
         let prefix = input.prefix(MemoryLayout<UInt16>.size)
         let bodyWidth = try Int(UInt16(dataRepresentation: prefix))
         let consumeWidth = bodyWidth + MemoryLayout<UInt16>.size
@@ -60,6 +62,55 @@ extension DeclaredWidthData: LinearEncodable {
             .suffix(from: input.startIndex + MemoryLayout<UInt16>.size)
 
         let result = try DeclaredWidthData(
+            body: bodySlice.prefix(bodyWidth)
+        )
+        return (result, consumeWidth)
+    }
+}
+
+struct DeclaredWidthOptionalData {
+    let width: UInt16
+    let body: Data?
+
+    init(body: Data?) throws(LinearEncodingError) {
+        guard let body, body.count != 0 else {
+            self.width = 0
+            self.body = nil
+            return
+        }
+
+        guard body.count <= UInt16.max else {
+            throw .bodyTooLarge
+        }
+        self.width = UInt16(body.count)
+        self.body = body
+    }
+
+    var wireFormat: Data {
+        width.dataRepresentation + (body ?? Data())
+    }
+}
+
+extension DeclaredWidthOptionalData: LinearEncodable {
+    static func parse(_ input: Data)
+        throws(LinearEncodingError) -> (DeclaredWidthOptionalData, Int)
+    {
+        let prefix = input.prefix(MemoryLayout<UInt16>.size)
+        let bodyWidth = try Int(UInt16(dataRepresentation: prefix))
+        let consumeWidth = bodyWidth + MemoryLayout<UInt16>.size
+        guard input.count >= consumeWidth else {
+            throw .unexpectedEOF
+        }
+
+        guard bodyWidth != 0 else {
+            return (try .init(body: nil), consumeWidth)
+        }
+
+        let bodySlice =
+            input
+            .suffix(from: input.startIndex + MemoryLayout<UInt16>.size)
+
+        let result = try DeclaredWidthOptionalData(
             body: bodySlice.prefix(bodyWidth)
         )
         return (result, consumeWidth)

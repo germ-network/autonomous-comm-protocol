@@ -7,7 +7,7 @@
 
 import Foundation
 
-public struct TypedDigest: DefinedWidthBinary {
+public struct TypedDigest: DefinedWidthBinary, Sendable, Equatable {
     public typealias Prefix = DigestTypes
     let type: DigestTypes
     let digest: Data
@@ -26,7 +26,7 @@ public struct TypedDigest: DefinedWidthBinary {
     public var wireFormat: Data { [type.rawValue] + digest }
 }
 
-public enum DigestTypes: UInt8, DefinedWidthPrefix {
+public enum DigestTypes: UInt8, DefinedWidthPrefix, Sendable, Equatable {
     case sha256 = 1
 
     public var contentByteSize: Int {
@@ -35,3 +35,7 @@ public enum DigestTypes: UInt8, DefinedWidthPrefix {
         }
     }
 }
+
+//TODO: remove
+extension TypedDigest: Codable {}
+extension DigestTypes: Codable {}

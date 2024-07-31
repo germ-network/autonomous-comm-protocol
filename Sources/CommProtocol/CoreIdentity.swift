@@ -13,8 +13,9 @@ import Foundation
 /// - image (hash, assert once)
 /// - pronouns
 /// - bindings to other identities
-///
-public struct CoreIdentity: Codable, Sendable, Equatable {
+
+//TODO: remove codable
+public struct CoreIdentity: Sendable, Equatable {
     struct Constants {
         //previously, 0.0.1
         static let currentVersion = SemanticVersion(major: 1, minor: 0, patch: 0)
@@ -41,16 +42,55 @@ public struct CoreIdentity: Codable, Sendable, Equatable {
     }
 }
 
-public struct DescribedImage: Equatable, Codable, Sendable {
+//TODO: remove codable
+public struct DescribedImage: Equatable, Sendable {
     //TODO: make this a typed digest
-    public let imageDigest: Data
+    public let imageDigest: TypedDigest
     public let altText: String?
 
-    public init(imageDigest: Data, altText: String?) {
+    public init(imageDigest: TypedDigest, altText: String?) {
         self.imageDigest = imageDigest
         self.altText = altText
     }
 }
+
+extension DescribedImage: LinearEncodable {
+    public static func parse(_ input: Data) throws -> (DescribedImage, Int) {
+        let (digest, altTextData, consumed) = try LinearEncoder.decode(
+            TypedDigest.self,
+            DeclaredWidthOptionalData.self,
+            input: input
+        )
+        let value = DescribedImage(
+            imageDigest: digest,
+            altText: altTextData.body?.utf8String
+        )
+        return (value, consumed)
+    }
+
+    public var wireFormat: Data {
+        get throws {
+            imageDigest.wireFormat
+                + (altText?.utf8Data ?? .init())
+        }
+    }
+}
+
+extension String {
+    var utf8Data: Data {
+        Data(utf8)
+    }
+}
+
+extension Data {
+    var utf8String: String? {
+        String(bytes: self, encoding: .utf8)
+    }
+}
+
+//TODO: remove
+extension CoreIdentity: Codable {}
+extension DescribedImage: Codable {}
 
 extension CoreIdentity: SignableObject {
     public static let type: SignableObjectTypes = .identityRepresentation
