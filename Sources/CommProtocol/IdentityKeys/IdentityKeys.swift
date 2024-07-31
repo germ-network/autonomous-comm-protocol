@@ -150,12 +150,11 @@ public struct IdentityPublicKey: Sendable {
         guard
             publicKey.isValidSignature(
                 delegate.knownIdentitySignature.signature,
-                for: IdentityDelegate.TBS(
-                    agentID: delegate.newAgentId,
-                    context: context
-                ).formatForSigning
+                for: delegate.signatureOver(with: context)
             )
-        else { throw ProtocolError.authenticationError }
+        else {
+            throw ProtocolError.authenticationError
+        }
         return try .init(archive: delegate.newAgentId)
     }
 }

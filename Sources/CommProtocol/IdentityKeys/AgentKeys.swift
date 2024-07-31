@@ -91,9 +91,9 @@ public struct AgentPrivateKey: Sendable {
             newAgent: publicKey,
             context: context
         )
-        
+
         let encodedAgentData = try agentData.encoded
-        
+
         let newAgentSignatureOver = try AgentHandoff.NewAgentTBS(
             knownAgentKey: establishedAgent.publicKey,
             newAgentIdentity: existingIdentity,
@@ -102,13 +102,13 @@ public struct AgentPrivateKey: Sendable {
             updateMessage: updateMessage
         ).formatForSigning
         let newAgentSignature = try sign(input: newAgentSignatureOver)
-        
+
         let agentHandoff = AgentHandoff(
             knownAgentSignature: establishedSignature,
             encodedAgentData: try .init(body: encodedAgentData),
             newAgentSignature: newAgentSignature
         )
-        
+
         return .sameIdentity(identityDelegate, agentHandoff)
     }
 
@@ -123,7 +123,7 @@ public struct AgentPrivateKey: Sendable {
         )
         return try sign(input: signatureOver.formatForSigning)
     }
-    
+
     private func sign(input: Data) throws -> TypedSignature {
         try .init(prefix: type, checkedData: privateKey.signature(for: input))
     }
@@ -191,6 +191,35 @@ public struct AgentPublicKey: Sendable {
         default:
             throw ProtocolError.typedKeyArchiveMismatch
         }
+    }
+
+    //MARK: Validation
+    func validate(
+        knownAgent: AgentPublicKey,
+        newAgentIdentity: IdentityPublicKey,
+        context: TypedDigest,
+        updateMessage: Data,
+        agentHandoff: AgentHandoff
+    ) throws -> AgentUpdate {
+        let signatureBody = agentHandoff.newAgentSignatureBody(
+            knownAgent: knownAgent,
+            newAgentIdentity: newAgentIdentity,
+            context: context,
+            updateMessage: updateMessage
+        )
+        guard
+            publicKey.isValidSignature(
+                agentHandoff.newAgentSignature.signature,
+                for: signatureBody
+            )
+        else {
+            throw ProtocolError.authenticationError
+        }
+
+        return try JSONDecoder().decode(
+            AgentUpdate.self,
+            from: agentHandoff.encodedAgentData.body
+        )
     }
 
     //Deprecate?

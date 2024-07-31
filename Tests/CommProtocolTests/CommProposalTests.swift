@@ -21,14 +21,20 @@ struct CommProposalTests {
 
     @Test func testSameAgent() throws {
         let mockMessage = Mocks.mockMessage()
+        let mockContext = try TypedDigest.mock()
         let proposal = try knownAgent.proposeLeafNode(update: mockMessage)
+        let wireProposal = try proposal.wireFormat
 
         let validated = try CommProposal.parseAndValidate(
-            proposal.wireFormat,
+            wireProposal,
             knownIdentity: knownIdentity.publicKey,
             knownAgent: knownAgent.publicKey,
+            context: mockContext,
             updateMessage: mockMessage
         )
+
+        print("Same Agent proposal size: \(wireProposal.count)")
+
         guard case .sameAgent = validated else {
             #expect(Bool(false))
             return
@@ -37,18 +43,15 @@ struct CommProposalTests {
     }
 
     @Test func testSameIdentity() async throws {
-        let mockContext = try TypedDigest(
-            prefix: .sha256,
-            checkedData: SymmetricKey(size: .bits256).rawRepresentation
-        )
+        let mockContext = try TypedDigest.mock()
 
         let (newAgent, identityDelegate) =
             try knownIdentity
             .createAgentDelegate(context: mockContext)
-        let mockMessage = Mocks.mockMessage()
-        
+
         let newAgentData = AgentUpdate.mock()
-        
+        let mockMessage = Mocks.mockMessage()
+
         let proposal = try newAgent.proposeAgentHandoff(
             existingIdentity: knownIdentity.publicKey,
             identityDelegate: identityDelegate,
@@ -57,9 +60,18 @@ struct CommProposalTests {
             agentData: newAgentData,
             updateMessage: mockMessage
         )
-        
+        let wireProposal = try proposal.wireFormat
+
+        let validated = try CommProposal.parseAndValidate(
+            try proposal.wireFormat,
+            knownIdentity: knownIdentity.publicKey,
+            knownAgent: knownAgent.publicKey,
+            context: mockContext,
+            updateMessage: mockMessage
+        )
+
+        print("Same Agent proposal size: \(wireProposal.count)")
+
     }
 
 }
-
-

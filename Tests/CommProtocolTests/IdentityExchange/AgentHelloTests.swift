@@ -22,16 +22,11 @@ struct AgentHelloTests {
     let agentHello: AgentHello
 
     init() throws {
-        let describedImage = DescribedImage(
-            imageDigest: SymmetricKey(size: .bits128).rawRepresentation,
-            altText: nil
-        )
-
         (privateKey, coreIdentity, signedIdentity) =
             try IdentityPrivateKey
             .create(
                 name: UUID().uuidString,
-                describedImage: describedImage)
+                describedImage: DescribedImage.mock())
 
         mutableFields = IdentityMutableData(
             counter: 2,

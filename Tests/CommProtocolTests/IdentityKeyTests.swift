@@ -17,16 +17,11 @@ struct IdentityKeyTests {
     let signedIdentity: SignedObject<CoreIdentity>
 
     init() throws {
-        let describedImage = DescribedImage(
-            imageDigest: SymmetricKey(size: .bits128).rawRepresentation,
-            altText: nil
-        )
-
         (privateKey, coreIdentity, signedIdentity) =
             try IdentityPrivateKey
             .create(
                 name: UUID().uuidString,
-                describedImage: describedImage)
+                describedImage: DescribedImage.mock())
     }
 
     @Test func testCreation() async throws {

@@ -52,12 +52,15 @@ public enum CommProposal: LinearEncodable {
 
     public enum Validated {
         case sameAgent
+        case sameIdentity(AgentHandoff.Validated)
+        case newIdentity(CoreIdentity, AgentHandoff.Validated)
     }
 
     public static func parseAndValidate(
         _ input: Data,
         knownIdentity: IdentityPublicKey,
         knownAgent: AgentPublicKey,
+        context: TypedDigest,
         updateMessage: Data
     ) throws -> Validated {
         let result = try finalParse(input)
@@ -72,8 +75,24 @@ public enum CommProposal: LinearEncodable {
                 throw ProtocolError.authenticationError
             }
             return .sameAgent
-        case .sameIdentity: throw LinearEncodingError.notImplemented
-        case .newIdentity: throw LinearEncodingError.notImplemented
+        case .sameIdentity(let identityDelegate, let agentHandoff):
+            return try validateSameIdentity(
+                knownIdentity: knownIdentity,
+                knownAgent: knownAgent,
+                context: context,
+                updateMessage: updateMessage,
+                identityDelegate: identityDelegate,
+                agentHandoff: agentHandoff
+            )
+        case .newIdentity(let identityHandoff, let agentHandoff):
+            return try validateNewIdentity(
+                knownIdentity: knownIdentity,
+                knownAgent: knownAgent,
+                context: context,
+                updateMessage: updateMessage,
+                identityHandoff: identityHandoff,
+                agentHandoff: agentHandoff
+            )
 
         }
     }
@@ -84,8 +103,10 @@ public enum CommProposal: LinearEncodable {
         case .sameAgent:
             let (signature, width) = try TypedSignature.parse(remainder)
             return (.sameAgent(signature), width + 1)
-        case .sameIdentity: throw LinearEncodingError.notImplemented
-        case .newIdentity: throw LinearEncodingError.notImplemented
+        case .sameIdentity:
+            return try parseSameIdentity(remainder)
+        case .newIdentity:
+            return try parseNewIdentity(remainder)
         }
 
     }
@@ -94,13 +115,80 @@ public enum CommProposal: LinearEncodable {
         get throws {
             switch self {
             case .sameAgent(let typedSignature):
-                [ProposalType.sameAgent.rawValue] + typedSignature.wireFormat
-            case .sameIdentity(let identityNewAgent):
-                throw LinearEncodingError.notImplemented
+                [ProposalType.sameAgent.rawValue]
+                    + typedSignature.wireFormat
+            case .sameIdentity(let identityDelegate, let agentHandoff):
+                [ProposalType.sameIdentity.rawValue]
+                    + identityDelegate.wireFormat
+                    + agentHandoff.wireFormat
             case .newIdentity(let identityHandoff, let agentHandoff):
-                throw LinearEncodingError.notImplemented
+                [ProposalType.sameIdentity.rawValue]
+                    + identityHandoff.wireFormat
+                    + agentHandoff.wireFormat
             }
         }
+    }
+
+    //MARK: Parse Implementation
+    //increment the return value to include the enum so we can directly pass it back
+    private static func parseSameIdentity(_ input: Data) throws -> (
+        CommProposal,
+        Int
+    ) {
+        let (identityDelegate, agentHandoff, consumed) =
+            try LinearEncoder
+            .decode(
+                IdentityDelegate.self,
+                AgentHandoff.self,
+                input: input
+            )
+        return (.sameIdentity(identityDelegate, agentHandoff), consumed + 1)
+    }
+
+    private static func parseNewIdentity(_ input: Data)
+        throws -> (CommProposal, Int)
+    {
+        throw LinearEncodingError.notImplemented
+    }
+
+    //MARK: Validate Implementation
+    private static func validateSameIdentity(
+        knownIdentity: IdentityPublicKey,
+        knownAgent: AgentPublicKey,
+        context: TypedDigest,
+        updateMessage: Data,
+        identityDelegate: IdentityDelegate,
+        agentHandoff: AgentHandoff
+    ) throws -> Validated {
+        let newAgent = try knownIdentity.validate(
+            delegate: identityDelegate,
+            context: context
+        )
+
+        let agentUpdate = try newAgent.validate(
+            knownAgent: knownAgent,
+            newAgentIdentity: knownIdentity,
+            context: context,
+            updateMessage: updateMessage,
+            agentHandoff: agentHandoff
+        )
+
+        let validated = AgentHandoff.Validated(
+            newAgent: newAgent,
+            agentData: agentUpdate
+        )
+        return .sameIdentity(validated)
+    }
+
+    private static func validateNewIdentity(
+        knownIdentity: IdentityPublicKey,
+        knownAgent: AgentPublicKey,
+        context: TypedDigest,
+        updateMessage: Data,
+        identityHandoff: IdentityHandoff,
+        agentHandoff: AgentHandoff
+    ) throws -> Validated {
+        throw LinearEncodingError.notImplemented
     }
 }
 
@@ -117,6 +205,7 @@ public struct AgentHandoff {
     let knownAgentSignature: TypedSignature
 
     struct NewAgentTBS {
+        static let discriminator = Data("successorAgent".utf8)
         let knownAgentKey: AgentPublicKey
         let newAgentIdentity: IdentityPublicKey  //known or conveyed in the IdentityHandoff
         let context: TypedDigest  //known
@@ -124,24 +213,65 @@ public struct AgentHandoff {
         let updateMessage: Data  // stapled in the message AD
 
         var formatForSigning: Data {
-            get throws {
-                let encodedAgentData = agentData
-                let encodedUpdate = updateMessage
-
-                return knownAgentKey.wireFormat
-                    + newAgentIdentity.id.wireFormat
-                    + context.wireFormat
-                    + encodedAgentData
-                    + encodedUpdate
-            }
+            knownAgentKey.wireFormat
+                + newAgentIdentity.id.wireFormat
+                + context.wireFormat
+                + agentData
+                + updateMessage
         }
     }
     let encodedAgentData: DeclaredWidthData
     let newAgentSignature: TypedSignature
-    
-    var wireFormat: Data {
+
+    public var wireFormat: Data {
         knownAgentSignature.wireFormat
-        + encodedAgentData.wireFormat
-        + newAgentSignature.wireFormat
+            + encodedAgentData.wireFormat
+            + newAgentSignature.wireFormat
     }
+
+    public struct Validated {
+        let newAgent: AgentPublicKey
+        let agentData: AgentUpdate
+    }
+
+    func newAgentSignatureBody(
+        knownAgent: AgentPublicKey,
+        newAgentIdentity: IdentityPublicKey,
+        context: TypedDigest,
+        updateMessage: Data
+    ) -> Data {
+        NewAgentTBS(
+            knownAgentKey: knownAgent,
+            newAgentIdentity: newAgentIdentity,
+            context: context,
+            agentData: encodedAgentData.body,
+            updateMessage: updateMessage
+        )
+        .formatForSigning
+    }
+}
+
+extension AgentHandoff: LinearEncodable {
+    public static func parse(_ input: Data) throws -> (AgentHandoff, Int) {
+        let (
+            knownAgentSignature,
+            encodedAgentData,
+            newAgentSignature,
+            consumed
+        ) = try LinearEncoder.decode(
+            TypedSignature.self,
+            DeclaredWidthData.self,
+            TypedSignature.self,
+            input: input
+        )
+        return (
+            .init(
+                knownAgentSignature: knownAgentSignature,
+                encodedAgentData: encodedAgentData,
+                newAgentSignature: newAgentSignature
+            ),
+            consumed
+        )
+    }
+
 }

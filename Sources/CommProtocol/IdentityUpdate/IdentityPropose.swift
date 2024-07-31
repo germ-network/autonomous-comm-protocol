@@ -26,6 +26,10 @@ public struct IdentityDelegate: Sendable {
     public var wireFormat: Data {
         newAgentId.wireFormat + knownIdentitySignature.wireFormat
     }
+
+    func signatureOver(with context: TypedDigest?) -> Data {
+        TBS(agentID: newAgentId, context: context).formatForSigning
+    }
 }
 
 extension IdentityDelegate: LinearEncodable {
@@ -77,16 +81,36 @@ public struct IdentityHandoff {
     let newIdentity: CoreIdentity
     //over new identity pub Key + verb + TypedDigest
     struct PredecessorTBS {  // can just
+        static let discriminator = Data("proposeIdentity".utf8)
         let newIdentityPubKey: IdentityPublicKey
-        let verb = Data("successor".utf8)
         let context: TypedDigest  //representing groupId
+        var formatForSigning: Data {
+            Self.discriminator
+                + newIdentityPubKey.id.wireFormat
+                + context.wireFormat
+        }
     }
     let predecessorSignature: TypedSignature
 
     struct SuccessorTBS {
+        static let discriminator = Data("successorIdentity".utf8)
         let predecessorPubKey: IdentityPublicKey
         let context: TypedDigest  //representing groupId
         let newAgentKey: AgentPublicKey
+
+        var formatForSigning: Data {
+            Self.discriminator
+                + predecessorPubKey.id.wireFormat
+                + context.wireFormat
+                + newAgentKey.wireFormat
+        }
     }
+    let newAgentKey: AgentPublicKey
     let successorSignature: TypedSignature
+
+    var wireFormat: Data {
+        predecessorSignature.wireFormat
+            + newAgentKey.wireFormat
+            + successorSignature.wireFormat
+    }
 }

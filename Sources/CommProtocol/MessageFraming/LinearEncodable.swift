@@ -51,6 +51,30 @@ public struct LinearEncoder {
 
         return (first, second, consumed + secondConsumed)
     }
+
+    static func decode<
+        T: LinearEncodable,
+        U: LinearEncodable,
+        V: LinearEncodable
+    >(
+        _ firstType: T.Type,
+        _ secondType: U.Type,
+        _ thirdType: V.Type,
+        input: Data
+    ) throws -> (T, U, V, Int) {
+        let (first, consumed) = try T.parse(input)
+        guard consumed < input.count else {
+            throw LinearEncodingError.unexpectedEOF
+        }
+
+        let slice = input.suffix(from: input.startIndex + consumed)
+        let (second, secondConsumed) = try U.parse(slice)
+
+        let secondSlice = slice.suffix(from: slice.startIndex + secondConsumed)
+        let (third, thirdConsumed) = try V.parse(secondSlice)
+
+        return (first, second, third, consumed + secondConsumed + thirdConsumed)
+    }
 }
 
 public enum LinearEncodingError: Error, Equatable {

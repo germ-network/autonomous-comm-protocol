@@ -5,8 +5,9 @@
 //  Created by Mark @ Germ on 7/30/24.
 //
 
-import Foundation
 import CryptoKit
+import Foundation
+
 @testable import CommProtocol
 
 extension AgentUpdate {
@@ -23,9 +24,11 @@ extension AgentUpdate {
 
 extension ProtocolAddress {
     static func mock() -> Self {
-        .init(identifier: UUID().uuidString,
-              serviceHost: UUID().uuidString,
-              expiration: .distantFuture)
+        .init(
+            identifier: UUID().uuidString,
+            serviceHost: UUID().uuidString,
+            expiration: .distantFuture
+        )
     }
 }
 
@@ -56,8 +59,8 @@ extension TypedDigest {
     }
 }
 
-public extension DescribedImage {
-    static func mock() throws -> Self {
+extension DescribedImage {
+    public static func mock() throws -> Self {
         .init(
             imageDigest: SymmetricKey(size: .bits256).rawRepresentation,
             altText: "description"
