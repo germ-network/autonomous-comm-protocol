@@ -45,10 +45,9 @@ public struct IdentityFollowup: Sendable {
 }
 
 //Stapled to every message
-public struct AgentUpdate: Codable, Sendable {
+public struct AgentUpdate: Codable, Sendable, Equatable {
     public let version: SemanticVersion?
     public let isAppClip: Bool?  //ommitted when false
     public let addresses: [ProtocolAddress]
     public let imageResource: Resource?
-    public let expiration: Date
 }

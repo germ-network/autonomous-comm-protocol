@@ -79,23 +79,34 @@ public struct AgentPrivateKey: Sendable {
         return .sameAgent(typedSignature)
     }
 
-    public func proposeAgentHandoff(
+    ///Agent handoffs cross 3 isolation domains
+    /// 1. start in IdentityPrivateKey creating a new agent
+    /// 2. the existing Agent signs the new agent Key
+    /// 3. the new Agent completes it
+    public func startAgentHandoff(
+        newAgent: AgentPublicKey,
+        context: TypedDigest
+    ) throws -> TypedSignature {
+        let signatureOver = AgentHandoff.KnownAgentTBS(
+            newAgentKey: newAgent,
+            context: context
+        )
+        return try sign(input: signatureOver.formatForSigning)
+    }
+
+    public func completeAgentHandoff(
         existingIdentity: IdentityPublicKey,
         identityDelegate: IdentityDelegate,
-        establishedAgent: AgentPrivateKey,
+        establishedAgent: AgentPublicKey,
+        establishedSignature: TypedSignature,
         context: TypedDigest,
         agentData: AgentUpdate,
         updateMessage: Data
     ) throws -> CommProposal {
-        let establishedSignature = try establishedAgent.proposeSuccessorAgent(
-            newAgent: publicKey,
-            context: context
-        )
-
         let encodedAgentData = try agentData.encoded
 
-        let newAgentSignatureOver = try AgentHandoff.NewAgentTBS(
-            knownAgentKey: establishedAgent.publicKey,
+        let newAgentSignatureOver = AgentHandoff.NewAgentTBS(
+            knownAgentKey: establishedAgent,
             newAgentIdentity: existingIdentity,
             context: context,
             agentData: encodedAgentData,
@@ -112,18 +123,36 @@ public struct AgentPrivateKey: Sendable {
         return .sameIdentity(identityDelegate, agentHandoff)
     }
 
-    //MARK: Implementation
-    func proposeSuccessorAgent(
-        newAgent: AgentPublicKey,
-        context: TypedDigest
-    ) throws -> TypedSignature {
-        let signatureOver = AgentHandoff.KnownAgentTBS(
-            newAgentKey: newAgent,
-            context: context
+    public func completeIdentityHandoff(
+        existingIdentity: IdentityPublicKey,
+        identityHandoff: IdentityHandoff,
+        establishedAgent: AgentPublicKey,
+        establishedAgentSignature: TypedSignature,
+        context: TypedDigest,
+        agentData: AgentUpdate,
+        updateMessage: Data
+    ) throws -> CommProposal {
+        let encodedAgentData = try agentData.encoded
+
+        let newAgentSignatureOver = AgentHandoff.NewAgentTBS(
+            knownAgentKey: establishedAgent,
+            newAgentIdentity: existingIdentity,
+            context: context,
+            agentData: encodedAgentData,
+            updateMessage: updateMessage
+        ).formatForSigning
+        let newAgentSignature = try sign(input: newAgentSignatureOver)
+
+        let agentHandoff = AgentHandoff(
+            knownAgentSignature: establishedAgentSignature,
+            encodedAgentData: try .init(body: encodedAgentData),
+            newAgentSignature: newAgentSignature
         )
-        return try sign(input: signatureOver.formatForSigning)
+
+        return .newIdentity(identityHandoff, agentHandoff)
     }
 
+    //MARK: Implementation
     private func sign(input: Data) throws -> TypedSignature {
         try .init(prefix: type, checkedData: privateKey.signature(for: input))
     }

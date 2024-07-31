@@ -16,8 +16,7 @@ extension AgentUpdate {
             version: .init(major: 1, minor: 1, patch: 1),
             isAppClip: true,
             addresses: [.mock(), .mock()],
-            imageResource: .mock(),
-            expiration: .distantFuture
+            imageResource: .mock()
         )
     }
 }
@@ -60,10 +59,20 @@ extension TypedDigest {
 }
 
 extension DescribedImage {
-    public static func mock() throws -> Self {
+    public static func mock() -> Self {
         .init(
             imageDigest: SymmetricKey(size: .bits256).rawRepresentation,
             altText: "description"
+        )
+    }
+}
+
+extension CoreIdentity {
+    public static func mock(newIdentity: IdentityPublicKey) -> Self {
+        .init(
+            id: newIdentity,
+            name: UUID().uuidString,
+            describedImage: .mock()
         )
     }
 }

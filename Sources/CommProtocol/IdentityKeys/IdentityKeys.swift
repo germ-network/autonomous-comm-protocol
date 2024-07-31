@@ -15,6 +15,10 @@ public struct IdentityPrivateKey: Sendable {
     private let privateKey: any PrivateSigningKey
     public let publicKey: IdentityPublicKey  //store public key for efficiency
 
+    public var type: SigningKeyAlgorithm {
+        Swift.type(of: privateKey).signingAlgorithm
+    }
+
     init(algorithm: SigningKeyAlgorithm) {
         switch algorithm {
         case .curve25519:
@@ -35,7 +39,7 @@ public struct IdentityPrivateKey: Sendable {
             describedImage: describedImage)
 
         let coreIdentityData = try JSONEncoder().encode(coreIdentity)
-        let signature = try privateKey.signature(for: coreIdentityData)
+        let signature = try privateKey.sign(input: coreIdentityData)
 
         return (
             privateKey,
@@ -47,13 +51,6 @@ public struct IdentityPrivateKey: Sendable {
         )
     }
 
-    private func signature(for input: Data) throws -> TypedSignature {
-        .init(
-            signingAlgorithm: type(of: privateKey).signingAlgorithm,
-            signature: try privateKey.signature(for: input)
-        )
-    }
-
     //have to leave this framework to generate the update message
     //that we then pass to the agent in a variety of proposeAgentHandoff
     public func createAgentDelegate(context: TypedDigest?) throws -> (
@@ -62,8 +59,8 @@ public struct IdentityPrivateKey: Sendable {
     ) {
         let newAgent = AgentPrivateKey(algorithm: .curve25519)
         let newAgentPubKey = newAgent.publicKey
-        let signature = try signature(
-            for: IdentityDelegate.TBS(
+        let signature = try sign(
+            input: IdentityDelegate.TBS(
                 agentID: newAgentPubKey.id,
                 context: context
             ).formatForSigning
@@ -75,6 +72,45 @@ public struct IdentityPrivateKey: Sendable {
                 knownIdentitySignature: signature
             )
         )
+    }
+
+    ///The private keys are held in different isolation domains, so we perform this in separate
+    public func startHandoff(
+        to newIdentity: IdentityPublicKey,
+        context: TypedDigest
+    ) throws -> TypedSignature {
+        let signatureBody = IdentityHandoff.PredecessorTBS(
+            newIdentityPubKey: newIdentity,
+            context: context
+        )
+        return try sign(input: signatureBody.formatForSigning)
+    }
+
+    public func createHandoff(
+        existingIdentity: IdentityPublicKey,
+        startSignature: TypedSignature,
+        newIdentity: CoreIdentity,
+        context: TypedDigest
+    ) throws -> (AgentPrivateKey, IdentityHandoff) {
+        let newAgent = AgentPrivateKey(algorithm: .curve25519)
+        let newAgentPubKey = newAgent.publicKey
+
+        let newIdentitySignatureBody = IdentityHandoff.SuccessorTBS(
+            predecessorPubKey: existingIdentity,
+            context: context,
+            newAgentKey: newAgentPubKey
+        )
+
+        let successorSignature = try sign(input: newIdentitySignatureBody.formatForSigning)
+
+        let handoff = IdentityHandoff(
+            newIdentity: newIdentity,
+            predecessorSignature: startSignature,
+            newAgentKey: newAgentPubKey,
+            successorSignature: successorSignature
+        )
+
+        return (newAgent, handoff)
     }
 
     public func sign(
@@ -92,7 +128,7 @@ public struct IdentityPrivateKey: Sendable {
         let encoded = try mutableData.encoded
 
         return .init(
-            signature: try signature(for: encoded),
+            signature: try sign(input: encoded),
             body: encoded
         )
     }
@@ -113,6 +149,11 @@ public struct IdentityPrivateKey: Sendable {
     init(concrete: any PrivateSigningKey) {
         privateKey = concrete
         publicKey = .init(concrete: concrete.publicKey)
+    }
+
+    //MARK: Implementation
+    private func sign(input: Data) throws -> TypedSignature {
+        try .init(prefix: type, checkedData: privateKey.signature(for: input))
     }
 }
 

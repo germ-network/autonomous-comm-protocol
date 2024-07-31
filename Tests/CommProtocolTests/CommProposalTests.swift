@@ -52,26 +52,70 @@ struct CommProposalTests {
         let newAgentData = AgentUpdate.mock()
         let mockMessage = Mocks.mockMessage()
 
-        let proposal = try newAgent.proposeAgentHandoff(
+        let existingSignature = try knownAgent.startAgentHandoff(
+            newAgent: newAgent.publicKey,
+            context: mockContext
+        )
+
+        let proposal = try newAgent.completeAgentHandoff(
             existingIdentity: knownIdentity.publicKey,
             identityDelegate: identityDelegate,
-            establishedAgent: knownAgent,
+            establishedAgent: knownAgent.publicKey,
+            establishedSignature: existingSignature,
             context: mockContext,
             agentData: newAgentData,
             updateMessage: mockMessage
         )
         let wireProposal = try proposal.wireFormat
+        print("Same Identity proposal size: \(wireProposal.count)")
 
-        let validated = try CommProposal.parseAndValidate(
+        let outcome = try CommProposal.parseAndValidate(
             try proposal.wireFormat,
             knownIdentity: knownIdentity.publicKey,
             knownAgent: knownAgent.publicKey,
             context: mockContext,
             updateMessage: mockMessage
         )
-
-        print("Same Agent proposal size: \(wireProposal.count)")
-
+        guard case .sameIdentity(let validated) = outcome else {
+            #expect(Bool(false))
+            return
+        }
+        #expect(validated.newAgent == newAgent.publicKey)
+        #expect(validated.agentData == newAgentData)
     }
 
+    @Test func testNewIdentity() async throws {
+        let nextIdentityKey = IdentityPrivateKey(algorithm: .curve25519)
+        let nextIdentity = CoreIdentity.mock(newIdentity: nextIdentityKey.publicKey)
+        let mockContext = try TypedDigest.mock()
+
+        let knownIdentitySignature = try knownIdentity.startHandoff(
+            to: nextIdentityKey.publicKey,
+            context: mockContext
+        )
+
+        let (newAgent, identityHandoff) = try nextIdentityKey.createHandoff(
+            existingIdentity: nextIdentityKey.publicKey,
+            startSignature: knownIdentitySignature,
+            newIdentity: nextIdentity,
+            context: mockContext
+        )
+
+        let mockMessage = Mocks.mockMessage()
+        let existingAgentSignature = try knownAgent.startAgentHandoff(
+            newAgent: newAgent.publicKey,
+            context: mockContext
+        )
+
+        let proposal = try newAgent.completeIdentityHandoff(
+            existingIdentity: knownIdentity.publicKey,
+            identityHandoff: identityHandoff,
+            establishedAgent: knownAgent.publicKey,
+            establishedAgentSignature: existingAgentSignature,
+            context: mockContext,
+            agentData: .mock(),
+            updateMessage: mockMessage
+        )
+
+    }
 }
