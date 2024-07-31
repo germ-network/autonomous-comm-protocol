@@ -108,9 +108,17 @@ public struct IdentityHandoff {
     let newAgentKey: AgentPublicKey
     let successorSignature: TypedSignature
 
-    var wireFormat: Data {
-        predecessorSignature.wireFormat
+    public var wireFormat: Data {
+        //TODO: rework core identity encoding
+        try! newIdentity.encoded
+            + predecessorSignature.wireFormat
             + newAgentKey.wireFormat
             + successorSignature.wireFormat
+    }
+}
+
+extension IdentityHandoff: LinearEncodable {
+    public static func parse(_ input: Data) throws -> (IdentityHandoff, Int) {
+        throw LinearEncodingError.notImplemented
     }
 }

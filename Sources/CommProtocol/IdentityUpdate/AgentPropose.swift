@@ -122,7 +122,7 @@ public enum CommProposal: LinearEncodable {
                     + identityDelegate.wireFormat
                     + agentHandoff.wireFormat
             case .newIdentity(let identityHandoff, let agentHandoff):
-                [ProposalType.sameIdentity.rawValue]
+                [ProposalType.newIdentity.rawValue]
                     + identityHandoff.wireFormat
                     + agentHandoff.wireFormat
             }
@@ -148,7 +148,14 @@ public enum CommProposal: LinearEncodable {
     private static func parseNewIdentity(_ input: Data)
         throws -> (CommProposal, Int)
     {
-        throw LinearEncodingError.notImplemented
+        let (newIdentity, agentHandoff, consumed) =
+            try LinearEncoder
+            .decode(
+                IdentityHandoff.self,
+                AgentHandoff.self,
+                input: input
+            )
+        return (.newIdentity(newIdentity, agentHandoff), consumed + 1)
     }
 
     //MARK: Validate Implementation

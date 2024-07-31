@@ -116,6 +116,16 @@ struct CommProposalTests {
             agentData: .mock(),
             updateMessage: mockMessage
         )
+        let wireProposal = try proposal.wireFormat
 
+        print("New Identity proposal size: \(wireProposal.count)")
+
+        let outcome = try CommProposal.parseAndValidate(
+            wireProposal,
+            knownIdentity: knownIdentity.publicKey,
+            knownAgent: knownAgent.publicKey,
+            context: mockContext,
+            updateMessage: mockMessage
+        )
     }
 }

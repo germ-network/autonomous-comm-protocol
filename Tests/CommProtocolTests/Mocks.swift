@@ -15,7 +15,7 @@ extension AgentUpdate {
         .init(
             version: .init(major: 1, minor: 1, patch: 1),
             isAppClip: true,
-            addresses: [.mock(), .mock()],
+            addresses: [.mock()],
             imageResource: .mock()
         )
     }
