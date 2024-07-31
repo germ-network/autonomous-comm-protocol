@@ -59,20 +59,33 @@ extension TypedDigest {
 }
 
 extension DescribedImage {
-    public static func mock() -> Self {
+    public static func mock() throws -> Self {
         .init(
-            imageDigest: SymmetricKey(size: .bits256).rawRepresentation,
+            imageDigest: try .mock(),
             altText: "description"
         )
     }
 }
 
 extension CoreIdentity {
-    public static func mock(newIdentity: IdentityPublicKey) -> Self {
+    public static func mock(newIdentity: IdentityPublicKey) throws -> Self {
         .init(
             id: newIdentity,
             name: UUID().uuidString,
-            describedImage: .mock()
+            describedImage: try .mock()
+        )
+    }
+}
+
+extension SemanticVersion {
+    public static func mock() -> Self {
+        let suffix = Bool.random() ? nil : UUID().uuidString
+
+        return .init(
+            major: UInt32.random(in: UInt32.min...UInt32.max),
+            minor: UInt32.random(in: UInt32.min...UInt32.max),
+            patch: UInt32.random(in: UInt32.min...UInt32.max),
+            preReleaseSuffix: suffix
         )
     }
 }

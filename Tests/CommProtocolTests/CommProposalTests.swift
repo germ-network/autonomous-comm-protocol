@@ -86,7 +86,7 @@ struct CommProposalTests {
 
     @Test func testNewIdentity() async throws {
         let nextIdentityKey = IdentityPrivateKey(algorithm: .curve25519)
-        let nextIdentity = CoreIdentity.mock(newIdentity: nextIdentityKey.publicKey)
+        let nextIdentity = try CoreIdentity.mock(newIdentity: nextIdentityKey.publicKey)
         let mockContext = try TypedDigest.mock()
 
         let knownIdentitySignature = try knownIdentity.startHandoff(

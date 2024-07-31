@@ -13,25 +13,12 @@ import Testing
 struct Test {
 
     @Test func testSemVerCoding() throws {
-        let semVer = SemanticVersion(
-            major: .random,
-            minor: .random,
-            patch: .random)
+        let semVer = SemanticVersion.mock()
 
         let reencoded: SemanticVersion =
             try semVer
             .encoded.decoded()
 
         #expect(semVer == reencoded)
-    }
-}
-
-extension SemanticField {
-    static var random: SemanticField {
-        if Bool.random() {
-            .alpha(UUID().uuidString)
-        } else {
-            .numeric(UInt.random(in: UInt.min...UInt.max))
-        }
     }
 }
