@@ -18,7 +18,9 @@ extension UInt16 {
             throw .incorrectDataLength
         }
 
-        let bigEndian = dataRepresentation.withUnsafeBytes { rawBuffer in
+        let copy = Data(dataRepresentation)
+
+        let bigEndian = copy.withUnsafeBytes { rawBuffer in
             rawBuffer.load(as: UInt16.self)
         }
 
@@ -26,7 +28,7 @@ extension UInt16 {
     }
 }
 
-struct DeclaredWidthData {
+struct DeclaredWidthData: Sendable, Equatable {
     let width: UInt16
     let body: Data
 

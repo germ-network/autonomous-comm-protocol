@@ -14,7 +14,7 @@ import Testing
 struct IdentityKeyTests {
     let privateKey: IdentityPrivateKey
     let coreIdentity: CoreIdentity
-    let signedIdentity: SignedObject<CoreIdentity>
+    let signedIdentity: SignedIdentity
 
     init() throws {
         (privateKey, coreIdentity, signedIdentity) =

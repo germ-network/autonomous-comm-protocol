@@ -49,12 +49,12 @@ public struct AgentPrivateKey: Sendable {
     }
 
     public func createAgentHello(
-        signedIdentity: SignedObject<CoreIdentity>,
+        signedIdentity: SignedIdentity,
         identityMutable: SignedObject<IdentityMutableData>,
         agentDelegate: IdentityDelegate,
         agentTBS: AgentHello.AgentTBS
     ) throws -> AgentHello {
-        let identityKey = try signedIdentity.verifiedIdentity().identityKey
+        let identityKey = try signedIdentity.verifiedIdentity().id
 
         let encodedTBS = try agentTBS.encoded
         let signature = try privateKey.signature(

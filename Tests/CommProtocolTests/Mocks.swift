@@ -35,6 +35,17 @@ struct Mocks {
     static func mockMessage() -> Data {
         SymmetricKey(size: .bits256).rawRepresentation
     }
+
+    static func mockIdentity() throws -> (
+        IdentityPrivateKey,
+        CoreIdentity,
+        SignedIdentity
+    ) {
+        try IdentityPrivateKey.create(
+            name: UUID().uuidString,
+            describedImage: try .mock()
+        )
+    }
 }
 
 extension Resource {
@@ -69,10 +80,11 @@ extension DescribedImage {
 
 extension CoreIdentity {
     public static func mock(newIdentity: IdentityPublicKey) throws -> Self {
-        .init(
+        try .init(
             id: newIdentity,
             name: UUID().uuidString,
-            describedImage: try .mock()
+            describedImage: try .mock(),
+            nonce: SymmetricKey(size: .bits128).rawRepresentation
         )
     }
 }

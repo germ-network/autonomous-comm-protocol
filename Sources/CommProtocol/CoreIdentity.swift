@@ -21,25 +21,60 @@ public struct CoreIdentity: Sendable, Equatable {
         static let currentVersion = SemanticVersion(major: 1, minor: 0, patch: 0)
     }
 
-    public let id: Data  //WireFormat for IdentityPublicKey
+    public let id: IdentityPublicKey  //WireFormat for IdentityPublicKey
     public let name: String
     public let describedImage: DescribedImage
     public let version: SemanticVersion
-    public let nonce: Data
+    let nonce: DeclaredWidthData
 
-    init(id: IdentityPublicKey, name: String, describedImage: DescribedImage) {
-        self.id = id.id.wireFormat
+    init(
+        id: IdentityPublicKey,
+        name: String,
+        describedImage: DescribedImage,
+        nonce: Data
+    ) throws {
+        self.id = id
         self.name = name
         self.describedImage = describedImage
         self.version = Constants.currentVersion
-        self.nonce = SymmetricKey(size: .bits128).rawRepresentation
+        self.nonce = try .init(body: nonce)
+    }
+}
+
+extension CoreIdentity: LinearEncodable {
+    public static func parse(_ input: Data) throws -> (CoreIdentity, Int) {
+        let (id, name, describedImage, version, nonce, consumed) =
+            try LinearEncoder
+            .decode(
+                TypedKeyMaterial.self,
+                (String?).self,
+                DescribedImage.self,
+                SemanticVersion.self,
+                DeclaredWidthData.self,
+                input: input
+            )
+        guard let name else { throw LinearEncodingError.unexpectedData }
+
+        let result = try CoreIdentity(
+            id: try .init(archive: id),
+            name: name,
+            describedImage: describedImage,
+            nonce: nonce.body
+        )
+        return (result, consumed)
+
     }
 
-    var identityKey: IdentityPublicKey {
+    public var wireFormat: Data {
         get throws {
-            try .init(wireFormat: id)
+            try id.id.wireFormat
+                + (name as String?).wireFormat
+                + describedImage.wireFormat
+                + version.wireFormat
+                + nonce.wireFormat
         }
     }
+
 }
 
 //TODO: remove codable
@@ -56,22 +91,22 @@ public struct DescribedImage: Equatable, Sendable {
 
 extension DescribedImage: LinearEncodable {
     public static func parse(_ input: Data) throws -> (DescribedImage, Int) {
-        let (digest, altTextData, consumed) = try LinearEncoder.decode(
+        let (digest, altText, consumed) = try LinearEncoder.decode(
             TypedDigest.self,
-            DeclaredWidthOptionalData.self,
+            String?.self,
             input: input
         )
         let value = DescribedImage(
             imageDigest: digest,
-            altText: altTextData.body?.utf8String
+            altText: altText
         )
         return (value, consumed)
     }
 
     public var wireFormat: Data {
         get throws {
-            imageDigest.wireFormat
-                + (altText?.utf8Data ?? .init())
+            try imageDigest.wireFormat
+                + altText.wireFormat
         }
     }
 }
@@ -88,33 +123,42 @@ extension Data {
     }
 }
 
-//TODO: remove
-extension CoreIdentity: Codable {}
-extension DescribedImage: Codable {}
-
 extension CoreIdentity: SignableObject {
     public static let type: SignableObjectTypes = .identityRepresentation
 }
 
-//MARK: Signed identity
-///Bundles the encoded CoreIdentity
-///The CoreIdentity contains two variable-length strings, and we expect it to grow, so we leave it JSON-encoded for flexibility
-///Because JSON encoding does not produce a stable output, we have to store and exchange the particular encoding that we sign
-///
-///However, since signedDigest is a predictable width, we can be a bit more efficient by leaving the signedDigest
-///in raw bytes and not base64 encoding it
-extension SignedObject<CoreIdentity> {
+public struct SignedIdentity: Sendable {
+    let encodedIdentity: Data  //Linear encoded CoreIdentity, freeze what's signed over
+    let signature: TypedSignature
+
     public func verifiedIdentity() throws -> CoreIdentity {
         //have to decode the credentialData to get the public key
-        let coreIdentity: CoreIdentity = try body.decoded()
+        let coreIdentity: CoreIdentity = try CoreIdentity.finalParse(encodedIdentity)
+        try coreIdentity.id.validate(signature: signature, for: encodedIdentity)
 
-        //remainder of credential is not valid until we validate the signature
-        let identityKey: IdentityPublicKey = try .init(wireFormat: coreIdentity.id)
-        let verifiedIdentity = try validate(for: identityKey.publicKey)
-        assert(verifiedIdentity == coreIdentity)
-
-        return verifiedIdentity
+        return coreIdentity
     }
+}
+
+extension SignedIdentity: LinearEncodable {
+    public static func parse(_ input: Data) throws -> (SignedIdentity, Int) {
+        let (identity, consumed) = try CoreIdentity.parse(input)
+        let encodedIdentity = input.prefix(consumed)
+
+        let slice = input.suffix(input.startIndex + consumed)
+        let (signature, secondConsumed) = try TypedSignature.parse(slice)
+
+        let result = SignedIdentity(
+            encodedIdentity: encodedIdentity,
+            signature: signature
+        )
+        return (result, consumed + secondConsumed)
+    }
+
+    public var wireFormat: Data {
+        encodedIdentity + signature.wireFormat
+    }
+
 }
 
 public enum HashAlgorithms: UInt8, DefinedWidthPrefix {

@@ -78,7 +78,7 @@ extension IdentityDelegate: LinearEncodable {
 
 ///package the elements you need for a identity handoff
 public struct IdentityHandoff {
-    let newIdentity: CoreIdentity
+    let signedNewIdentity: SignedIdentity
     //over new identity pub Key + verb + TypedDigest
     struct PredecessorTBS {  // can just
         static let discriminator = Data("proposeIdentity".utf8)
@@ -109,8 +109,7 @@ public struct IdentityHandoff {
     let successorSignature: TypedSignature
 
     public var wireFormat: Data {
-        //TODO: rework core identity encoding
-        try! newIdentity.encoded
+        signedNewIdentity.wireFormat
             + predecessorSignature.wireFormat
             + newAgentKey.wireFormat
             + successorSignature.wireFormat

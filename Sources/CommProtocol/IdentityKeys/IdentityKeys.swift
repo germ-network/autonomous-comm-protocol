@@ -15,8 +15,8 @@ public struct IdentityPrivateKey: Sendable {
     private let privateKey: any PrivateSigningKey
     public let publicKey: IdentityPublicKey  //store public key for efficiency
 
-    public var type: SigningKeyAlgorithm {
-        Swift.type(of: privateKey).signingAlgorithm
+    public var keyType: SigningKeyAlgorithm {
+        type(of: privateKey).signingAlgorithm
     }
 
     init(algorithm: SigningKeyAlgorithm) {
@@ -31,22 +31,24 @@ public struct IdentityPrivateKey: Sendable {
         name: String,
         describedImage: DescribedImage,
         algorithm: SigningKeyAlgorithm = .curve25519
-    ) throws -> (IdentityPrivateKey, CoreIdentity, SignedObject<CoreIdentity>) {
+    ) throws -> (IdentityPrivateKey, CoreIdentity, SignedIdentity) {
         let privateKey = IdentityPrivateKey(algorithm: algorithm)
-        let coreIdentity = CoreIdentity(
+        let coreIdentity = try CoreIdentity(
             id: privateKey.publicKey,
             name: name,
-            describedImage: describedImage)
+            describedImage: describedImage,
+            nonce: SymmetricKey(size: .bits128).rawRepresentation
+        )
 
-        let coreIdentityData = try JSONEncoder().encode(coreIdentity)
+        let coreIdentityData = try coreIdentity.wireFormat
         let signature = try privateKey.sign(input: coreIdentityData)
 
         return (
             privateKey,
             coreIdentity,
             .init(
-                signature: signature,
-                body: coreIdentityData
+                encodedIdentity: coreIdentityData,
+                signature: signature
             )
         )
     }
@@ -89,7 +91,7 @@ public struct IdentityPrivateKey: Sendable {
     public func createHandoff(
         existingIdentity: IdentityPublicKey,
         startSignature: TypedSignature,
-        newIdentity: CoreIdentity,
+        signedIdentity: SignedIdentity,
         context: TypedDigest
     ) throws -> (AgentPrivateKey, IdentityHandoff) {
         let newAgent = AgentPrivateKey(algorithm: .curve25519)
@@ -104,7 +106,7 @@ public struct IdentityPrivateKey: Sendable {
         let successorSignature = try sign(input: newIdentitySignatureBody.formatForSigning)
 
         let handoff = IdentityHandoff(
-            newIdentity: newIdentity,
+            signedNewIdentity: signedIdentity,
             predecessorSignature: startSignature,
             newAgentKey: newAgentPubKey,
             successorSignature: successorSignature
@@ -153,13 +155,19 @@ public struct IdentityPrivateKey: Sendable {
 
     //MARK: Implementation
     private func sign(input: Data) throws -> TypedSignature {
-        try .init(prefix: type, checkedData: privateKey.signature(for: input))
+        try .init(
+            prefix: keyType,
+            checkedData: privateKey.signature(for: input)
+        )
     }
 }
 
 public struct IdentityPublicKey: Sendable {
     let publicKey: any PublicSigningKey
     public let id: TypedKeyMaterial
+    public var keyType: SigningKeyAlgorithm {
+        type(of: publicKey).signingAlgorithm
+    }
 
     init(concrete: any PublicSigningKey) {
         publicKey = concrete
@@ -197,6 +205,15 @@ public struct IdentityPublicKey: Sendable {
             throw ProtocolError.authenticationError
         }
         return try .init(archive: delegate.newAgentId)
+    }
+
+    //MARK: Implementation
+    func validate(signature: TypedSignature, for body: Data) throws {
+        guard keyType == signature.signingAlgorithm,
+            publicKey.isValidSignature(signature.signature, for: body)
+        else {
+            throw ProtocolError.authenticationError
+        }
     }
 }
 

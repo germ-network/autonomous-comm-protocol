@@ -11,11 +11,16 @@ import Testing
 @testable import CommProtocol
 
 struct CommProposalTests {
-    let knownIdentity: IdentityPrivateKey
+    let knownIdentityKey: IdentityPrivateKey
+    let knownIdentity: CoreIdentity
+    let knownSignedIdentity: SignedIdentity
     let knownAgent: AgentPrivateKey
 
-    init() {
-        knownIdentity = .init(algorithm: .curve25519)
+    init() throws {
+        (knownIdentityKey, knownIdentity, knownSignedIdentity) =
+            try Mocks
+            .mockIdentity()
+
         knownAgent = .init(algorithm: .curve25519)
     }
 
@@ -27,7 +32,7 @@ struct CommProposalTests {
 
         let validated = try CommProposal.parseAndValidate(
             wireProposal,
-            knownIdentity: knownIdentity.publicKey,
+            knownIdentity: knownIdentity.id,
             knownAgent: knownAgent.publicKey,
             context: mockContext,
             updateMessage: mockMessage
@@ -46,7 +51,7 @@ struct CommProposalTests {
         let mockContext = try TypedDigest.mock()
 
         let (newAgent, identityDelegate) =
-            try knownIdentity
+            try knownIdentityKey
             .createAgentDelegate(context: mockContext)
 
         let newAgentData = AgentUpdate.mock()
@@ -58,7 +63,7 @@ struct CommProposalTests {
         )
 
         let proposal = try newAgent.completeAgentHandoff(
-            existingIdentity: knownIdentity.publicKey,
+            existingIdentity: knownIdentity.id,
             identityDelegate: identityDelegate,
             establishedAgent: knownAgent.publicKey,
             establishedSignature: existingSignature,
@@ -71,7 +76,7 @@ struct CommProposalTests {
 
         let outcome = try CommProposal.parseAndValidate(
             try proposal.wireFormat,
-            knownIdentity: knownIdentity.publicKey,
+            knownIdentity: knownIdentity.id,
             knownAgent: knownAgent.publicKey,
             context: mockContext,
             updateMessage: mockMessage
@@ -85,11 +90,11 @@ struct CommProposalTests {
     }
 
     @Test func testNewIdentity() async throws {
-        let nextIdentityKey = IdentityPrivateKey(algorithm: .curve25519)
-        let nextIdentity = try CoreIdentity.mock(newIdentity: nextIdentityKey.publicKey)
+        let (nextIdentityKey, nextIdentity, signedNextIdentity) = try Mocks.mockIdentity()
+
         let mockContext = try TypedDigest.mock()
 
-        let knownIdentitySignature = try knownIdentity.startHandoff(
+        let knownIdentitySignature = try knownIdentityKey.startHandoff(
             to: nextIdentityKey.publicKey,
             context: mockContext
         )
@@ -97,7 +102,7 @@ struct CommProposalTests {
         let (newAgent, identityHandoff) = try nextIdentityKey.createHandoff(
             existingIdentity: nextIdentityKey.publicKey,
             startSignature: knownIdentitySignature,
-            newIdentity: nextIdentity,
+            signedIdentity: signedNextIdentity,
             context: mockContext
         )
 
@@ -108,7 +113,7 @@ struct CommProposalTests {
         )
 
         let proposal = try newAgent.completeIdentityHandoff(
-            existingIdentity: knownIdentity.publicKey,
+            existingIdentity: knownIdentity.id,
             identityHandoff: identityHandoff,
             establishedAgent: knownAgent.publicKey,
             establishedAgentSignature: existingAgentSignature,
@@ -122,7 +127,7 @@ struct CommProposalTests {
 
         let outcome = try CommProposal.parseAndValidate(
             wireProposal,
-            knownIdentity: knownIdentity.publicKey,
+            knownIdentity: knownIdentity.id,
             knownAgent: knownAgent.publicKey,
             context: mockContext,
             updateMessage: mockMessage

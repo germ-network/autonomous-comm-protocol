@@ -14,7 +14,7 @@ import Testing
 struct AgentHelloTests {
     let privateKey: IdentityPrivateKey
     let coreIdentity: CoreIdentity
-    let signedIdentity: SignedObject<CoreIdentity>
+    let signedIdentity: SignedIdentity
     let mutableFields: IdentityMutableData
     let agentKey: AgentPrivateKey
     let signedDelegation: IdentityDelegate

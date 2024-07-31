@@ -11,7 +11,7 @@ import Foundation
 ///Format for a card that gets symmetrically encrypted and exchanged
 public struct AgentHello: Sendable {
     //Identity
-    public let signedIdentity: SignedObject<CoreIdentity>
+    public let signedIdentity: SignedIdentity
     public let identityMutable: SignedObject<IdentityMutableData>
 
     //Agent
@@ -31,7 +31,7 @@ public struct AgentHello: Sendable {
     }
 
     init(
-        signedIdentity: SignedObject<CoreIdentity>,
+        signedIdentity: SignedIdentity,
         identityMutable: SignedObject<IdentityMutableData>,
         agentDelegate: IdentityDelegate,
         agentSignedData: Data,
@@ -46,14 +46,17 @@ public struct AgentHello: Sendable {
 
     public struct Validated: Sendable {
         public let coreIdentity: CoreIdentity  //from the SignedIdentity
-        public let signedIdentity: SignedObject<CoreIdentity>
+        public let signedIdentity: SignedIdentity
         public let mutableData: IdentityMutableData
         public let agentKey: AgentPublicKey
         public let agentData: AgentTBS
 
         init(
-            coreIdentity: CoreIdentity, signedIdentity: SignedObject<CoreIdentity>,
-            mutableData: IdentityMutableData, agentKey: AgentPublicKey, agentData: AgentTBS
+            coreIdentity: CoreIdentity,
+            signedIdentity: SignedIdentity,
+            mutableData: IdentityMutableData,
+            agentKey: AgentPublicKey,
+            agentData: AgentTBS
         ) {
             self.coreIdentity = coreIdentity
             self.signedIdentity = signedIdentity
@@ -65,7 +68,7 @@ public struct AgentHello: Sendable {
 
     public func validated() throws -> Validated {
         let identity = try signedIdentity.verifiedIdentity()
-        let identityKey = try IdentityPublicKey(wireFormat: identity.id)
+        let identityKey = identity.id
         let agentKey = try identityKey.validate(
             delegate: agentDelegate,
             context: nil
@@ -95,9 +98,8 @@ extension AgentHello: Codable {
 
     public init(from decoder: Decoder) throws {
         let values = try decoder.container(keyedBy: CodingKeys.self)
-        self.signedIdentity = try .init(
-            wireFormat: values.decode(Data.self, forKey: .signedIdentity)
-        )
+        let identityData = try values.decode(Data.self, forKey: .signedIdentity)
+        self.signedIdentity = try SignedIdentity.finalParse(identityData)
         self.identityMutable = try .init(
             wireFormat: values.decode(Data.self, forKey: .identityMutable)
         )

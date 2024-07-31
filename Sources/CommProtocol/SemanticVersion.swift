@@ -109,8 +109,9 @@ extension String?: LinearEncodable {
             guard input.count > prefix else {
                 throw .unexpectedEOF
             }
-            let string = slice.utf8String
-            return (string, slice.count + 1)
+            let width = Int(UInt8(prefix))
+            let string = slice.prefix(width).utf8String
+            return (string, width + 1)
         }
     }
 
