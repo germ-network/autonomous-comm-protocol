@@ -11,13 +11,13 @@ import Foundation
 ///Format for a card that gets symmetrically encrypted and exchanged
 public struct AgentHello: Sendable {
     //Identity
-    public let signedIdentity: SignedIdentity
-    public let identityMutable: SignedObject<IdentityMutableData>
+    let signedIdentity: SignedIdentity
+    let identityMutable: SignedObject<IdentityMutableData>
 
     //Agent
-    public let agentDelegate: IdentityDelegate
-    public let agentSignedData: Data  //AgentTBS encoded
-    public let agentSignature: Data
+    let agentDelegate: IdentityDelegate
+    let agentSignedData: Data  //AgentTBS encoded
+    let agentSignature: Data
 
     //what the agent signs
     public struct AgentTBS: Sendable, Codable {
@@ -100,12 +100,14 @@ extension AgentHello: Codable {
         let values = try decoder.container(keyedBy: CodingKeys.self)
         let identityData = try values.decode(Data.self, forKey: .signedIdentity)
         self.signedIdentity = try SignedIdentity.finalParse(identityData)
+        
         self.identityMutable = try .init(
             wireFormat: values.decode(Data.self, forKey: .identityMutable)
         )
         //will deprecate
         let stored = try values.decode(Data.self, forKey: .agentDelegate)
         self.agentDelegate = try IdentityDelegate.finalParse(stored)
+        
         self.agentSignedData = try values.decode(
             Data.self,
             forKey: .agentSignedData)

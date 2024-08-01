@@ -16,7 +16,7 @@ struct ResourceTests {
         // Write your test here and use APIs like `#expect(...)` to check expected conditions.
         let date = Date(timeIntervalSinceNow: 3600 * 24 * 14)
         let encoded = date.wireFormat
-        print("Encoded date width: \(encoded.count))")
+        print("Encoded date width: \(encoded.count)")
 
         let decoded = try Date.finalParse(encoded)
 
