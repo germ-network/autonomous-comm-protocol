@@ -47,13 +47,12 @@ extension CoreIdentity: LinearEncodable {
             try LinearEncoder
             .decode(
                 TypedKeyMaterial.self,
-                (String?).self,
+                String.self,
                 DescribedImage.self,
                 SemanticVersion.self,
                 DeclaredWidthData.self,
                 input: input
             )
-        guard let name else { throw LinearEncodingError.unexpectedData }
 
         let result = try CoreIdentity(
             id: try .init(archive: id),
@@ -93,12 +92,12 @@ extension DescribedImage: LinearEncodable {
     public static func parse(_ input: Data) throws -> (DescribedImage, Int) {
         let (digest, altText, consumed) = try LinearEncoder.decode(
             TypedDigest.self,
-            String?.self,
+            OptionalString.self,
             input: input
         )
         let value = DescribedImage(
             imageDigest: digest,
-            altText: altText
+            altText: altText.string
         )
         return (value, consumed)
     }
@@ -106,7 +105,7 @@ extension DescribedImage: LinearEncodable {
     public var wireFormat: Data {
         get throws {
             try imageDigest.wireFormat
-                + altText.wireFormat
+                + OptionalString(altText).wireFormat
         }
     }
 }

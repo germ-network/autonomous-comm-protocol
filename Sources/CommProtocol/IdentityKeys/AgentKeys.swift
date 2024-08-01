@@ -108,6 +108,7 @@ public struct AgentPrivateKey: Sendable {
     ) throws -> CommProposal {
         let encodedAgentData = try agentData.encoded
 
+        print("Encoded agent data size: \(encodedAgentData)")
         let newAgentSignatureOver = AgentHandoff.NewAgentTBS(
             knownAgentKey: establishedAgent,
             newAgentIdentity: existingIdentity,

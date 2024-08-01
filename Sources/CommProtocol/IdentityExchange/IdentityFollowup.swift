@@ -45,13 +45,14 @@ public struct IdentityFollowup: Sendable {
 }
 
 //Stapled to every message
+
+//Not worth it yet to optimize out 3 bytes version + 1 byte isAppClip
 public struct AgentUpdate: Sendable, Equatable {
-    public let version: SemanticVersion?
-    public let isAppClip: Bool  //ommitted when false
+    public let version: SemanticVersion
+    public let isAppClip: Bool
     public let addresses: [ProtocolAddress]
     public let imageResource: Resource?
 }
-
 
 //remove
 extension AgentUpdate: Codable {}

@@ -38,7 +38,7 @@ extension SemanticVersion: LinearEncodable {
             UInt32.self,
             UInt32.self,
             UInt32.self,
-            (String?).self,
+            OptionalString.self,
             input: input
         )
 
@@ -46,7 +46,7 @@ extension SemanticVersion: LinearEncodable {
             major: major,
             minor: minor,
             patch: patch,
-            preReleaseSuffix: suffix
+            preReleaseSuffix: suffix.string
         )
         return (result, consumed)
     }
@@ -56,7 +56,7 @@ extension SemanticVersion: LinearEncodable {
             try major.wireFormat
                 + minor.wireFormat
                 + patch.wireFormat
-                + preReleaseSuffix.wireFormat
+                + OptionalString(preReleaseSuffix).wireFormat
         }
     }
 
@@ -89,55 +89,6 @@ extension UInt32: LinearEncodable {
         }
     }
 
-}
-
-//First byte encoding 0 if none, short suffix, overflow at 255 into a full DefinedBinary
-extension String?: LinearEncodable {
-    public static func parse(_ input: Data)
-        throws(LinearEncodingError) -> (String?, Int)
-    {
-        guard let prefix = input.first else {
-            throw .unexpectedEOF
-        }
-        let slice = input.suffix(from: input.startIndex + 1)
-        switch prefix {
-        case 0: return (nil, 1)
-        case UInt8.max:
-            let (wideData, consumed) = try DeclaredWidthData.parse(slice)
-            let result = wideData.body.utf8String
-            return (result, consumed + 1)
-        default:
-            guard input.count > prefix else {
-                throw .unexpectedEOF
-            }
-            let width = Int(UInt8(prefix))
-            let string = slice.prefix(width).utf8String
-            return (string, width + 1)
-        }
-    }
-
-    public var wireFormat: Data {
-        get throws {
-            guard let self else {
-                return .init([UInt8(0)])
-            }
-            let encoded = self.utf8Data
-            if encoded.count < UInt8.max {
-                return [UInt8(encoded.count)] + encoded
-            } else {
-                let wideEncoded = try DeclaredWidthData(body: encoded)
-                return [UInt8.max] + wideEncoded.wireFormat
-            }
-        }
-    }
-}
-
-extension String {
-    public var wireFormat: Data {
-        get throws {
-            try (self as String?).wireFormat
-        }
-    }
 }
 
 extension UInt32 {

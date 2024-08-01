@@ -44,38 +44,37 @@ public struct Resource: Sendable {
 
 extension Resource: LinearEncodable {
     public static func parse(_ input: Data) throws -> (Resource, Int) {
-        let (identifier, host, keyData, expiration, consumed) = try LinearEncoder.decode(
-            (String?).self,
-            (String?).self,
+        let (id, host, keyData, expiration, consumed) = try LinearEncoder.decode(
+            String.self,
+            String.self,
             DeclaredWidthData.self,
             Date.self,
             input: input
         )
-        guard let identifier, let host else {
-            throw LinearEncodingError.unexpectedData
-        }
-        
+
         let result = Resource(
-            identifier: identifier,
+            identifier: id,
             host: host,
             symmetricKey: .init(data: keyData.body),
             expiration: expiration
         )
-        
+
         return (result, consumed)
     }
 
     public var wireFormat: Data {
         get throws {
             try identifier.wireFormat
-            + host.wireFormat
-            + DeclaredWidthData(body: symmetricKey.rawRepresentation).wireFormat
-            + expiration.wireFormat
+                + host.wireFormat
+                + DeclaredWidthData(body: symmetricKey.rawRepresentation).wireFormat
+                + expiration.wireFormat
         }
     }
-
-
 }
+
+//extension Optional: LinearEncodable {
+//
+//}
 
 //we transform the date into a
 extension Date: LinearEncodable {
