@@ -73,10 +73,11 @@ extension UInt32: LinearEncodable {
         if prefix < UInt8.max {
             return (.init(prefix), 1)
         } else {
-            let (result, consumed) = try UInt32.parse(
-                input.suffix(from: input.startIndex + 1)
+            let result = try UInt32(
+                dataRepresentation: input.suffix(from: input.startIndex + 1)
             )
-            return (result, consumed + 1)
+
+            return (result, 1 + MemoryLayout<UInt32>.size)
         }
     }
 
@@ -131,6 +132,14 @@ extension String?: LinearEncodable {
     }
 }
 
+extension String {
+    public var wireFormat: Data {
+        get throws {
+            try (self as String?).wireFormat
+        }
+    }
+}
+
 extension UInt32 {
     var dataRepresentation: Data {
         var endian = bigEndian
@@ -138,11 +147,12 @@ extension UInt32 {
     }
 
     init(dataRepresentation: Data) throws(LinearEncodingError) {
-        guard dataRepresentation.count == MemoryLayout<UInt32>.size else {
+        let copy = Data(dataRepresentation)  //in case a slice is passed in
+        guard copy.count == MemoryLayout<UInt32>.size else {
             throw .incorrectDataLength
         }
 
-        let bigEndian = dataRepresentation.withUnsafeBytes { rawBuffer in
+        let bigEndian = copy.withUnsafeBytes { rawBuffer in
             rawBuffer.load(as: UInt32.self)
         }
 

@@ -5,8 +5,8 @@
 //  Created by Mark Xue on 7/29/24.
 //
 
-import Foundation
 import CryptoKit
+import Foundation
 import Testing
 
 @testable import CommProtocol
@@ -49,7 +49,7 @@ struct CommProposalTests {
             return
         }
     }
-    
+
     @Test func testSameAgentErrors() throws {
         let mockMessage = Mocks.mockMessage()
         let mockContext = try TypedDigest.mock()
@@ -58,9 +58,9 @@ struct CommProposalTests {
             context: mockContext
         )
         let wireProposal = try proposal.wireFormat
-        
+
         let wrongKey = AgentPrivateKey(algorithm: .curve25519)
-        
+
         #expect(throws: ProtocolError.authenticationError) {
             let _ = try CommProposal.parseAndValidate(
                 wireProposal,
@@ -123,7 +123,7 @@ struct CommProposalTests {
         #expect(validated.newAgent == newAgent.publicKey)
         #expect(validated.agentData == newAgentData)
     }
-    
+
     @Test func testSameIdentityErrors() async throws {
         let mockContext = try TypedDigest.mock()
 
@@ -203,12 +203,14 @@ struct CommProposalTests {
             context: mockContext,
             updateMessage: mockMessage
         )
-        
-        guard case .newIdentity(
-            let identity,
-            let signedIdentity,
-            let validatedAgentHandoff
-        ) = outcome else {
+
+        guard
+            case .newIdentity(
+                let identity,
+                let signedIdentity,
+                let validatedAgentHandoff
+            ) = outcome
+        else {
             #expect(Bool(false))
             return
         }

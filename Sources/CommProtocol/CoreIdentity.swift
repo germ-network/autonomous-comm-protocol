@@ -69,7 +69,7 @@ extension CoreIdentity: LinearEncodable {
     public var wireFormat: Data {
         get throws {
             try id.id.wireFormat
-                + (name as String?).wireFormat
+                + name.wireFormat
                 + describedImage.wireFormat
                 + version.wireFormat
                 + nonce.wireFormat

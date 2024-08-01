@@ -218,4 +218,3 @@ public enum CommProposal: LinearEncodable {
         )
     }
 }
-

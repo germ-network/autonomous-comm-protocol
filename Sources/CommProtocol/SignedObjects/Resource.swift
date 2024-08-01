@@ -10,23 +10,23 @@ import Foundation
 
 //local representation of the resource
 //signed to prevent wire injection of a malicious URI
-public struct Resource: Sendable, Codable {
+public struct Resource: Sendable {
     public struct Constants {
         public static let minExpiration = TimeInterval(24 * 3600)
     }
 
     public let identifier: String  //base64url decodes to digest of the ciphertext
-    public let plaintextDigest: Data
     public let host: String
     public let symmetricKey: SymmetricKey
     public let expiration: Date
 
     public init(
-        identifier: String, plaintextDigest: Data, host: String, symmetricKey: SymmetricKey,
+        identifier: String,
+        host: String,
+        symmetricKey: SymmetricKey,
         expiration: Date
     ) {
         self.identifier = identifier
-        self.plaintextDigest = plaintextDigest
         self.host = host
         self.symmetricKey = symmetricKey
         self.expiration = expiration
@@ -42,8 +42,62 @@ public struct Resource: Sendable, Codable {
     }
 }
 
+extension Resource: LinearEncodable {
+    public static func parse(_ input: Data) throws -> (Resource, Int) {
+        let (identifier, host, keyData, expiration, consumed) = try LinearEncoder.decode(
+            (String?).self,
+            (String?).self,
+            DeclaredWidthData.self,
+            Date.self,
+            input: input
+        )
+        guard let identifier, let host else {
+            throw LinearEncodingError.unexpectedData
+        }
+        
+        let result = Resource(
+            identifier: identifier,
+            host: host,
+            symmetricKey: .init(data: keyData.body),
+            expiration: expiration
+        )
+        
+        return (result, consumed)
+    }
+
+    public var wireFormat: Data {
+        get throws {
+            try identifier.wireFormat
+            + host.wireFormat
+            + DeclaredWidthData(body: symmetricKey.rawRepresentation).wireFormat
+            + expiration.wireFormat
+        }
+    }
+
+
+}
+
+//we transform the date into a
+extension Date: LinearEncodable {
+    public static func parse(_ input: Data) throws -> (Date, Int) {
+        let (hours, consumed) = try UInt32.parse(input)
+        return (
+            Date(timeIntervalSince1970: Double(hours) * 3600),
+            consumed
+        )
+    }
+
+    public var wireFormat: Data {
+        UInt32((timeIntervalSince1970 / 3600).rounded())
+            .wireFormat
+    }
+
+}
+
 extension Resource: Equatable {}
 
+//TODO: remove when removed from AgentHello
+extension Resource: Codable {}
 extension SymmetricKey: Codable {
     public init(from decoder: Decoder) throws {
         let value = try decoder.singleValueContainer()

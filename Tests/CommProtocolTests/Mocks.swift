@@ -52,7 +52,6 @@ extension Resource {
     static func mock() -> Self {
         .init(
             identifier: UUID().uuidString,
-            plaintextDigest: SymmetricKey(size: .bits256).rawRepresentation,
             host: "example.com",
             symmetricKey: SymmetricKey(size: .bits256),
             expiration: Date.distantFuture

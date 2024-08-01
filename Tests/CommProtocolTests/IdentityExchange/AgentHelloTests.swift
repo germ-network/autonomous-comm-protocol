@@ -61,7 +61,7 @@ struct AgentHelloTests {
         let encoded = try agentHello.encoded
         //Not as critical, but output for comparison
         print("AgentHello size: \(encoded.count)")
-        
+
         let reencoded: AgentHello = try encoded.decoded()
 
         let validatedHello = try reencoded.validated()
