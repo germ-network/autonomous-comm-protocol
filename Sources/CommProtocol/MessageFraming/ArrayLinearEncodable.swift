@@ -20,7 +20,7 @@ extension Array: LinearEncodable where Element: LinearEncodable {
             var traverseIndex = 1
             for _ in 0..<prefix {
                 let (value, consumed) = try Element.parse(
-                    input.suffix(input.startIndex + traverseIndex)
+                    input.suffix(from: input.startIndex + traverseIndex)
                 )
                 result.append(value)
                 traverseIndex += consumed
