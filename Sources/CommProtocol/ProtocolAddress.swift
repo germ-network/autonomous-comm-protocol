@@ -49,6 +49,37 @@ extension ProtocolAddress: Identifiable {
     public var id: String { serviceHost + identifier }
 }
 
+extension ProtocolAddress: LinearEncodable {
+    public static func parse(_ input: Data) throws -> (ProtocolAddress, Int) {
+        let (
+            identifier,
+            host,
+            expiration,
+            consumed
+        ) = try LinearEncoder.decode(
+            String.self,
+            String.self,
+            Date.self,
+            input: input
+        )
+        let address = ProtocolAddress(
+            identifier: identifier,
+            serviceHost: host,
+            expiration: expiration
+        )
+
+        return (address, consumed)
+    }
+
+    public var wireFormat: Data {
+        get throws {
+            try identifier.wireFormat
+                + serviceHost.wireFormat
+                + expiration.wireFormat
+        }
+    }
+}
+
 //extension ProtocolAddress: SHA2Hashable {
 //    public func sha2Hash(into hasher: inout SHA256) {
 //        identifier.sha2Hash(into: &hasher)

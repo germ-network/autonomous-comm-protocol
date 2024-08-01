@@ -73,10 +73,7 @@ public struct AgentHandoff {
             throw ProtocolError.authenticationError
         }
 
-        return try JSONDecoder().decode(
-            AgentUpdate.self,
-            from: encodedAgentData.body
-        )
+        return try AgentUpdate.finalParse(encodedAgentData.body)
     }
 }
 

@@ -106,7 +106,7 @@ public struct AgentPrivateKey: Sendable {
         agentData: AgentUpdate,
         updateMessage: Data
     ) throws -> CommProposal {
-        let encodedAgentData = try agentData.encoded
+        let encodedAgentData = try agentData.wireFormat
 
         print("Encoded agent data size: \(encodedAgentData)")
         let newAgentSignatureOver = AgentHandoff.NewAgentTBS(
@@ -136,7 +136,7 @@ public struct AgentPrivateKey: Sendable {
         agentData: AgentUpdate,
         updateMessage: Data
     ) throws -> CommProposal {
-        let encodedAgentData = try agentData.encoded
+        let encodedAgentData = try agentData.wireFormat
 
         let newAgentSignatureOver = AgentHandoff.NewAgentTBS(
             knownAgentKey: establishedAgent,

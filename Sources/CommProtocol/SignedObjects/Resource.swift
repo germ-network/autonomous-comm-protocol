@@ -72,10 +72,6 @@ extension Resource: LinearEncodable {
     }
 }
 
-//extension Optional: LinearEncodable {
-//
-//}
-
 //we transform the date into a
 extension Date: LinearEncodable {
     public static func parse(_ input: Data) throws -> (Date, Int) {

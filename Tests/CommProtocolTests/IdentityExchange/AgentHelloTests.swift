@@ -60,7 +60,6 @@ struct AgentHelloTests {
     @Test func testAgentHello() throws {
         let encoded = try agentHello.encoded
         //Not as critical, but output for comparison
-        print("AgentHello size: \(encoded.count)")
 
         let reencoded: AgentHello = try encoded.decoded()
 
