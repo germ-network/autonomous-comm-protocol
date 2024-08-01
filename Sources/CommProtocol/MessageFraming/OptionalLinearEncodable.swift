@@ -17,7 +17,9 @@ extension Optional: LinearEncodable where Wrapped: LinearEncodable {
         case 0:
             return (nil, 1)
         case 1:
-            let (result, consumed) = try Wrapped.parse(input)
+            let (result, consumed) =
+                try Wrapped
+                .parse(input.suffix(from: input.startIndex + 1))
             return (result, consumed + 1)
         default: throw LinearEncodingError.unexpectedData
         }

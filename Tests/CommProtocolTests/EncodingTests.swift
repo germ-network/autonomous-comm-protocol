@@ -38,30 +38,50 @@ struct EncodingTests {
         #expect(encodedFalse.count == 1)
         let decoded = try Bool.finalParse(encodedFalse)
         #expect(!decoded)
-        
+
         let encodedTrue = true.wireFormat
         #expect(encodedTrue.count == 1)
         let decodedTrue = try Bool.finalParse(encodedTrue)
         #expect(decodedTrue)
-        
+
         #expect(throws: LinearEncodingError.unexpectedData) {
             let _ = try Bool.finalParse(.init([2]))
         }
     }
-    
+
     @Test func testAddress() throws {
         let address = ProtocolAddress.mock()
         let encoded = try address.wireFormat
         let decoded = try ProtocolAddress.finalParse(encoded)
-        
+
         #expect(decoded == address)
     }
-    
+
     @Test func testAddresses() throws {
         let single: [ProtocolAddress] = [.mock()]
         let encodedSingle = try single.wireFormat
         let decodedSingle = try [ProtocolAddress].finalParse(encodedSingle)
-        
-        
+        #expect(decodedSingle == single)
+
+        let double: [ProtocolAddress] = [.mock(), .mock()]
+        let encodedDouble = try double.wireFormat
+        let decodedDouble = try [ProtocolAddress].finalParse(encodedDouble)
+        #expect(decodedDouble == double)
+    }
+
+    @Test func testResource() throws {
+        let nilResource: Resource? = nil
+        let encodedNil = try nilResource.wireFormat
+        let decodedNil = try (Resource?).finalParse(encodedNil)
+        #expect(decodedNil == nil)
+
+        let resource: Resource = .mock()
+        let encodedBare = try resource.wireFormat
+        let decodedBare = try Resource.finalParse(encodedBare)
+        #expect(resource == decodedBare)
+
+        let encodedWrapped = try (resource as Resource?).wireFormat
+        #expect(encodedWrapped.count == encodedBare.count + 1)
+        let decodedWrapped = try (Resource?).finalParse(encodedWrapped)
     }
 }
