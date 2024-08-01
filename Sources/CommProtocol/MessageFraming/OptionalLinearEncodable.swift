@@ -28,7 +28,7 @@ extension Optional: LinearEncodable where Wrapped: LinearEncodable {
             switch self {
             case .none: Data([UInt8(0)])
             case .some(let wrapped):
-                try Data([UInt8(0)]) + wrapped.wireFormat
+                try Data([UInt8(1)]) + wrapped.wireFormat
             }
         }
     }

@@ -39,11 +39,12 @@ extension Array: LinearEncodable where Element: LinearEncodable {
                 return Data([UInt8(0)])
             }
 
-            let encoded = try reduce(Data()) { partialResult, element in
+            let prefix = Data([UInt8(count)])
+            let encoded = try reduce(prefix) { partialResult, element in
                 try partialResult + element.wireFormat
             }
 
-            return Data([UInt8(1)]) + encoded
+            return encoded
         }
     }
 

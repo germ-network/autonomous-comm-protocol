@@ -25,7 +25,9 @@ extension LinearEncodable {
 
     public static func finalParse(_ input: Data) throws -> Self {
         let (result, remainder) = try optionalParse(input)
-        guard remainder == nil else { throw LinearEncodingError.unexpectedData }
+        guard remainder == nil else {
+            throw LinearEncodingError.unexpectedData
+        }
         return result
     }
 

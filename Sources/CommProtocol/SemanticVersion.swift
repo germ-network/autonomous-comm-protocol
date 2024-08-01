@@ -74,7 +74,10 @@ extension UInt32: LinearEncodable {
             return (.init(prefix), 1)
         } else {
             let result = try UInt32(
-                dataRepresentation: input.suffix(from: input.startIndex + 1)
+                dataRepresentation:
+                    input
+                    .suffix(from: input.startIndex + 1)
+                    .prefix(MemoryLayout<UInt32>.size)
             )
 
             return (result, 1 + MemoryLayout<UInt32>.size)

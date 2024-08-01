@@ -84,7 +84,7 @@ extension AgentUpdate: LinearEncodable {
             try version.wireFormat
                 + isAppClip.wireFormat
                 + addresses.wireFormat
-                + imageResource.wireFormat
+                + (imageResource as Resource?).wireFormat
         }
     }
 
