@@ -9,7 +9,7 @@ import CryptoKit
 import Foundation
 
 public struct SignedObject<Content: LinearEncodable>: Sendable {
-    let content: Content
+    public let content: Content
     let signature: TypedSignature
 }
 
