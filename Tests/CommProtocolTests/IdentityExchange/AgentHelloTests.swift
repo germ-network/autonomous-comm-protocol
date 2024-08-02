@@ -21,10 +21,8 @@ struct AgentHelloTests {
 
     init() throws {
         (privateKey, coreIdentity, signedIdentity) =
-            try IdentityPrivateKey
-            .create(
-                name: UUID().uuidString,
-                describedImage: DescribedImage.mock())
+            try Mocks
+            .mockIdentity()
 
         (agentKey, signedDelegation) =
             try privateKey
