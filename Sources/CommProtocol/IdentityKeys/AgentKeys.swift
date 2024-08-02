@@ -50,7 +50,7 @@ public struct AgentPrivateKey: Sendable {
 
     public func createAgentHello(
         signedIdentity: SignedObject<CoreIdentity>,
-        identityMutable: DeprecateSignedObject<IdentityMutableData>,
+        identityMutable: SignedObject<IdentityMutableData>,
         agentDelegate: IdentityDelegate,
         agentTBS: AgentHello.AgentTBS
     ) throws -> AgentHello {
@@ -225,35 +225,6 @@ public struct AgentPublicKey: Sendable {
             throw ProtocolError.typedKeyArchiveMismatch
         }
     }
-
-    //Deprecate?
-    //presume subject (identity) key will separately verify
-
-    func validate<T>(
-        signedObject: DeprecateSignedObject<T>
-    ) throws -> T where T: DeprecateSignableObject, T: Codable {
-        guard T.type.signer == .agent else {
-            throw ProtocolError.incorrectSigner
-        }
-        return try JSONDecoder().decode(
-            T.self,
-            from: signedObject.validate(for: publicKey)
-        )
-    }
-
-    func validate<T>(
-        signedObject: DeprecateSignedObject<T>?
-    ) throws -> T? where T: DeprecateSignableObject, T: Codable {
-        guard let signedObject else { return nil }
-        guard T.type.signer == .agent else {
-            throw ProtocolError.incorrectSigner
-        }
-        return try JSONDecoder().decode(
-            T.self,
-            from: signedObject.validate(for: publicKey)
-        )
-    }
-
 }
 
 extension AgentPublicKey: Hashable {

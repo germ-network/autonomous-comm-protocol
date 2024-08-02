@@ -14,7 +14,7 @@ import Foundation
 public protocol DefinedWidthBinary: WireFormat, LinearEncodable {
     associatedtype Prefix: DefinedWidthPrefix
     var wireFormat: Data { get }
-    //where checkedData has the expected width
+    //where checkedData has the exected width
     init(prefix: Prefix, checkedData: Data) throws(LinearEncodingError)
     static func parse(_ input: Data) throws -> (Self, Int)
 }

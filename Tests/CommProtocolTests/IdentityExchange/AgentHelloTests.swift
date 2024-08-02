@@ -65,7 +65,7 @@ struct AgentHelloTests {
         let reencoded: AgentHello = try encoded.decoded()
 
         let validatedHello = try reencoded.validated()
-        
+
         #expect(validatedHello.coreIdentity == coreIdentity)
         #expect(validatedHello.agentKey == agentKey.publicKey)
         #expect(validatedHello.mutableData == validatedHello.mutableData)

@@ -12,7 +12,7 @@ import Foundation
 public struct AgentHello: Sendable {
     //Identity
     let signedIdentity: SignedObject<CoreIdentity>
-    let identityMutable: DeprecateSignedObject<IdentityMutableData>
+    let identityMutable: SignedObject<IdentityMutableData>
 
     //Agent
     let agentDelegate: IdentityDelegate
@@ -32,7 +32,7 @@ public struct AgentHello: Sendable {
 
     init(
         signedIdentity: SignedObject<CoreIdentity>,
-        identityMutable: DeprecateSignedObject<IdentityMutableData>,
+        identityMutable: SignedObject<IdentityMutableData>,
         agentDelegate: IdentityDelegate,
         agentSignedData: Data,
         agentSignature: Data  //bare signature, not typed signature
@@ -84,7 +84,7 @@ public struct AgentHello: Sendable {
         return .init(
             coreIdentity: identity,
             signedIdentity: signedIdentity,
-            mutableData: try identityMutable.validate(for: identityKey.publicKey),
+            mutableData: try identityKey.validate(signedObject: identityMutable),
             agentKey: agentKey,
             agentData: try agentSignedData.decoded()
         )
@@ -100,14 +100,13 @@ extension AgentHello: Codable {
         let values = try decoder.container(keyedBy: CodingKeys.self)
         let identityData = try values.decode(Data.self, forKey: .signedIdentity)
         self.signedIdentity = try SignedObject<CoreIdentity>.finalParse(identityData)
-        
-        self.identityMutable = try .init(
-            wireFormat: values.decode(Data.self, forKey: .identityMutable)
-        )
+
+        let identityMutableData = try values.decode(Data.self, forKey: .identityMutable)
+        self.identityMutable = try SignedObject<IdentityMutableData>.finalParse(identityMutableData)
         //will deprecate
         let stored = try values.decode(Data.self, forKey: .agentDelegate)
         self.agentDelegate = try IdentityDelegate.finalParse(stored)
-        
+
         self.agentSignedData = try values.decode(
             Data.self,
             forKey: .agentSignedData)

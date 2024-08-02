@@ -126,9 +126,9 @@ public struct IdentityHandoff {
     public var wireFormat: Data {
         get throws {
             try signedNewIdentity.wireFormat
-            + predecessorSignature.wireFormat
-            + newAgentKey.wireFormat
-            + successorSignature.wireFormat
+                + predecessorSignature.wireFormat
+                + newAgentKey.wireFormat
+                + successorSignature.wireFormat
         }
     }
 

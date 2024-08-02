@@ -101,3 +101,27 @@ extension SemanticVersion {
         )
     }
 }
+
+extension IdentityMutableData {
+    public static func mock() -> Self {
+        .init(
+            counter: UInt16.random(in: 0...(.max)),
+            pronouns: [TestPronouns.random().rawValue, TestPronouns.random().rawValue],
+            aboutText: nil
+        )
+    }
+}
+
+enum TestPronouns: String, CaseIterable {
+    case he = "he/him"
+    case she = "she/her"
+    case they = "they/them"
+
+    static func random() -> Self {
+        switch UInt8.random(in: 0...2) {
+        case 0: .he
+        case 1: .she
+        default: .they
+        }
+    }
+}

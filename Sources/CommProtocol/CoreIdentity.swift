@@ -122,10 +122,6 @@ extension Data {
     }
 }
 
-extension CoreIdentity: DeprecateSignableObject {
-    public static let type: SignableObjectTypes = .identityRepresentation
-}
-
 extension SignedObject<CoreIdentity> {
     public func verifiedIdentity() throws -> CoreIdentity {
         //have to decode the credentialData to get the public key
@@ -145,10 +141,40 @@ public enum HashAlgorithms: UInt8, DefinedWidthPrefix {
     }
 }
 
-public struct IdentityMutableData: DeprecateSignableObject, Codable, Sendable, Equatable {
-    public static let type: SignableObjectTypes = .identityMutableData
-    public var type: SignableObjectTypes = .identityMutableData
+public struct IdentityMutableData: Sendable, Equatable {
     public let counter: UInt16  //for predecence defined by the sender/signer
-    public let pronouns: [String]?
+    public let pronouns: [String]
     public let aboutText: String?
+}
+
+extension IdentityMutableData: LinearEncodable {
+    public static func parse(_ input: Data) throws -> (
+        IdentityMutableData,
+        Int
+    ) {
+        let prefix = input.prefix(MemoryLayout<UInt16>.size)
+        let counter = try UInt16(dataRepresentation: prefix)
+
+        let (pronouns, aboutText, consumed) = try LinearEncoder.decode(
+            [String].self,
+            OptionalString.self,
+            input: input.suffix(from: input.startIndex + MemoryLayout<UInt16>.size)
+        )
+
+        let result = IdentityMutableData(
+            counter: counter,
+            pronouns: pronouns,
+            aboutText: aboutText.string
+        )
+
+        return (result, consumed + MemoryLayout<UInt16>.size)
+    }
+
+    public var wireFormat: Data {
+        get throws {
+            try counter.dataRepresentation
+                + pronouns.wireFormat
+                + OptionalString(aboutText).wireFormat
+        }
+    }
 }

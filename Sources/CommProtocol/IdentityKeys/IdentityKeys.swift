@@ -118,7 +118,7 @@ public struct IdentityPrivateKey: Sendable {
 
     public func sign(
         maybeMutableData: IdentityMutableData?
-    ) throws -> DeprecateSignedObject<IdentityMutableData>? {
+    ) throws -> SignedObject<IdentityMutableData>? {
         guard let mutableData = maybeMutableData else { return nil }
 
         return try sign(mutableData: mutableData)
@@ -126,14 +126,17 @@ public struct IdentityPrivateKey: Sendable {
 
     public func sign(
         mutableData: IdentityMutableData
-    ) throws -> DeprecateSignedObject<IdentityMutableData> {
-
-        let encoded = try mutableData.encoded
-
-        return .init(
-            signature: try sign(input: encoded),
-            body: encoded
+    ) throws -> SignedObject<IdentityMutableData> {
+        .init(
+            content: mutableData,
+            signature: try sign(input: mutableData.wireFormat)
         )
+        //        let encoded = try mutableData.encoded
+        //
+        //        return .init(
+        //            signature: try sign(input: encoded),
+        //            body: encoded
+        //        )
     }
 
     //for local storage
@@ -195,15 +198,16 @@ public struct IdentityPublicKey: Sendable {
     //MARK: Implementation
     func validate<C>(signedObject: SignedObject<C>) throws -> C {
         guard keyType == signedObject.signature.signingAlgorithm,
-              publicKey.isValidSignature(
+            publicKey.isValidSignature(
                 signedObject.signature.signature,
                 for: try signedObject.content.wireFormat
-              ) else {
+            )
+        else {
             throw ProtocolError.authenticationError
         }
         return signedObject.content
     }
-    
+
     func validate(signature: TypedSignature, for body: Data) throws {
         guard keyType == signature.signingAlgorithm,
             publicKey.isValidSignature(signature.signature, for: body)

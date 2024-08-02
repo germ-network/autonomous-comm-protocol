@@ -28,15 +28,13 @@ extension SignedObject: LinearEncodable {
             consumed
         )
     }
-    
+
     public var wireFormat: Data {
         get throws {
             try content.wireFormat + signature.wireFormat
         }
     }
 }
-
-
 
 //Deprecate from here down
 public enum Signers {
@@ -86,74 +84,5 @@ public struct TypedSignature: DefinedWidthBinary, Sendable {
     init(signingAlgorithm: SigningKeyAlgorithm, signature: Data) {
         self.signingAlgorithm = signingAlgorithm
         self.signature = signature
-    }
-}
-
-//ensure signed objects state their type
-public protocol DeprecateSignableObject {
-    static var type: SignableObjectTypes { get }
-}
-
-///Encodes a wireformat of:
-///[Byte indicating body type]
-///[Byte indicating signature width][Signature bytes]
-///[Body data]
-public struct DeprecateSignedObject<S: DeprecateSignableObject>: Sendable {
-    public let signature: TypedSignature
-    public let body: Data  //signature is over this particular encoding of SignableObject
-
-    init(signature: TypedSignature, body: Data) {
-        self.signature = signature
-        self.body = body
-    }
-
-    public var wireFormat: Data {
-        [S.type.rawValue] + signature.wireFormat + body
-    }
-
-    init(wireFormat: Data) throws {
-        guard let first = wireFormat.first,
-            let readBodyType = SignableObjectTypes(rawValue: first),
-            wireFormat.count > 1
-        else {
-            throw LinearEncodingError.invalidTypedSignature
-        }
-        guard readBodyType == S.type else {
-            throw LinearEncodingError.invalidTypedKey
-        }
-        let (signature, body) =
-            try TypedSignature
-            .continuingParse(Data(wireFormat[1...]))
-        self.signature = signature
-        self.body = body
-    }
-
-    func validate(
-        for signer: any PublicSigningKey
-    ) throws -> Data {
-        guard signature.signingAlgorithm == type(of: signer).signingAlgorithm else {
-            throw LinearEncodingError.invalidTypedKey
-        }
-        guard signer.isValidSignature(signature.signature, for: body) else {
-            throw ProtocolError.authenticationError
-        }
-        return body
-    }
-}
-
-extension DeprecateSignedObject where S: Decodable {
-    public func validate(
-        for signer: any PublicSigningKey
-    ) throws -> S {
-        try validate(for: signer).decoded()
-    }
-}
-
-extension DeprecateSignedObject where S: WireFormat {
-    public func validate(
-        for signer: any PublicSigningKey
-    ) throws -> S {
-        let value: Data = try validate(for: signer)
-        return try .init(wireFormat: value)
     }
 }
