@@ -32,7 +32,7 @@ struct APITests {
                 try identityKey
                 .sign(mutableData: .mock()),
             agentDelegate: signedDelegation,
-            agentTBS: .mock()
+            newAgentData: .mock()
         )
     }
 

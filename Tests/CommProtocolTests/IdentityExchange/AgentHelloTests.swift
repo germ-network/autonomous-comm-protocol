@@ -34,7 +34,7 @@ struct AgentHelloTests {
                 try privateKey
                 .sign(mutableData: .mock()),
             agentDelegate: signedDelegation,
-            agentTBS: .mock()
+            newAgentData: .mock()
         )
     }
 

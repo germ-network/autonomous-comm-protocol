@@ -43,6 +43,13 @@ extension LinearEncodable {
     }
 }
 
+//allows us to parse LinearEncodable in a functional interface
+extension Data {
+    public func parseWireFormat<L: LinearEncodable>() throws -> L {
+        try L.finalParse(self)
+    }
+}
+
 public struct LinearEncoder {
     static func decode<T: LinearEncodable, U: LinearEncodable>(
         _ firstType: T.Type,

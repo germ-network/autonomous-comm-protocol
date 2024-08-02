@@ -24,7 +24,7 @@ struct EncodingTests {
     @Test func testOptString() throws {
         let nilString: String? = nil
         let encodedNil = try OptionalString(nilString).wireFormat
-        let decodedNil = try OptionalString.finalParse(encodedNil)
+        let decodedNil: OptionalString = try encodedNil.parseWireFormat()
         #expect(decodedNil.string == nil)
 
         let string = UUID().uuidString
