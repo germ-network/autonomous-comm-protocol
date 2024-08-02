@@ -59,7 +59,7 @@ public struct TypedSignature: DefinedWidthBinary, Sendable {
 }
 
 //ensure signed objects state their type
-public protocol SignableObject {
+public protocol DeprecateSignableObject {
     static var type: SignableObjectTypes { get }
 }
 
@@ -67,7 +67,7 @@ public protocol SignableObject {
 ///[Byte indicating body type]
 ///[Byte indicating signature width][Signature bytes]
 ///[Body data]
-public struct SignedObject<S: SignableObject>: Sendable {
+public struct DeprecateSignedObject<S: DeprecateSignableObject>: Sendable {
     public let signature: TypedSignature
     public let body: Data  //signature is over this particular encoding of SignableObject
 
@@ -110,7 +110,7 @@ public struct SignedObject<S: SignableObject>: Sendable {
     }
 }
 
-extension SignedObject where S: Decodable {
+extension DeprecateSignedObject where S: Decodable {
     public func validate(
         for signer: any PublicSigningKey
     ) throws -> S {
@@ -118,7 +118,7 @@ extension SignedObject where S: Decodable {
     }
 }
 
-extension SignedObject where S: WireFormat {
+extension DeprecateSignedObject where S: WireFormat {
     public func validate(
         for signer: any PublicSigningKey
     ) throws -> S {

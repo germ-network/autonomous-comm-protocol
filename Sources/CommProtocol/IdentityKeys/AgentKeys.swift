@@ -50,7 +50,7 @@ public struct AgentPrivateKey: Sendable {
 
     public func createAgentHello(
         signedIdentity: SignedIdentity,
-        identityMutable: SignedObject<IdentityMutableData>,
+        identityMutable: DeprecateSignedObject<IdentityMutableData>,
         agentDelegate: IdentityDelegate,
         agentTBS: AgentHello.AgentTBS
     ) throws -> AgentHello {
@@ -230,8 +230,8 @@ public struct AgentPublicKey: Sendable {
     //presume subject (identity) key will separately verify
 
     func validate<T>(
-        signedObject: SignedObject<T>
-    ) throws -> T where T: SignableObject, T: Codable {
+        signedObject: DeprecateSignedObject<T>
+    ) throws -> T where T: DeprecateSignableObject, T: Codable {
         guard T.type.signer == .agent else {
             throw ProtocolError.incorrectSigner
         }
@@ -242,8 +242,8 @@ public struct AgentPublicKey: Sendable {
     }
 
     func validate<T>(
-        signedObject: SignedObject<T>?
-    ) throws -> T? where T: SignableObject, T: Codable {
+        signedObject: DeprecateSignedObject<T>?
+    ) throws -> T? where T: DeprecateSignableObject, T: Codable {
         guard let signedObject else { return nil }
         guard T.type.signer == .agent else {
             throw ProtocolError.incorrectSigner

@@ -10,7 +10,7 @@ import Foundation
 //Stripped nonessential data out of the helloReply / Welcome and send it in a second message within the newly constructed group / session
 //TODO: Sha2 hashable
 public struct IdentityFollowup: Sendable {
-    public var signedMutableFields: SignedObject<IdentityMutableData>?
+    public var signedMutableFields: DeprecateSignedObject<IdentityMutableData>?
     public let imageResource: Resource?
     public let agentSignedData: Data  //AgentTBS encoded
     public let agentSignature: Data
@@ -24,7 +24,7 @@ public struct IdentityFollowup: Sendable {
     }
 
     public init(
-        signedMutableFields: SignedObject<IdentityMutableData>? = nil,
+        signedMutableFields: DeprecateSignedObject<IdentityMutableData>? = nil,
         imageResource: Resource?,
         agentSignedData: Data,
         agentSignature: Data,

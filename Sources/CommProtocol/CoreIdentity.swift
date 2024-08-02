@@ -122,7 +122,7 @@ extension Data {
     }
 }
 
-extension CoreIdentity: SignableObject {
+extension CoreIdentity: DeprecateSignableObject {
     public static let type: SignableObjectTypes = .identityRepresentation
 }
 
@@ -172,7 +172,7 @@ public enum HashAlgorithms: UInt8, DefinedWidthPrefix {
     }
 }
 
-public struct IdentityMutableData: SignableObject, Codable, Sendable, Equatable {
+public struct IdentityMutableData: DeprecateSignableObject, Codable, Sendable, Equatable {
     public static let type: SignableObjectTypes = .identityMutableData
     public var type: SignableObjectTypes = .identityMutableData
     public let counter: UInt16  //for predecence defined by the sender/signer

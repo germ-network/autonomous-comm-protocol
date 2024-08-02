@@ -118,7 +118,7 @@ public struct IdentityPrivateKey: Sendable {
 
     public func sign(
         maybeMutableData: IdentityMutableData?
-    ) throws -> SignedObject<IdentityMutableData>? {
+    ) throws -> DeprecateSignedObject<IdentityMutableData>? {
         guard let mutableData = maybeMutableData else { return nil }
 
         return try sign(mutableData: mutableData)
@@ -126,7 +126,7 @@ public struct IdentityPrivateKey: Sendable {
 
     public func sign(
         mutableData: IdentityMutableData
-    ) throws -> SignedObject<IdentityMutableData> {
+    ) throws -> DeprecateSignedObject<IdentityMutableData> {
 
         let encoded = try mutableData.encoded
 

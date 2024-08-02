@@ -12,7 +12,7 @@ import Foundation
 public struct AgentHello: Sendable {
     //Identity
     let signedIdentity: SignedIdentity
-    let identityMutable: SignedObject<IdentityMutableData>
+    let identityMutable: DeprecateSignedObject<IdentityMutableData>
 
     //Agent
     let agentDelegate: IdentityDelegate
@@ -32,7 +32,7 @@ public struct AgentHello: Sendable {
 
     init(
         signedIdentity: SignedIdentity,
-        identityMutable: SignedObject<IdentityMutableData>,
+        identityMutable: DeprecateSignedObject<IdentityMutableData>,
         agentDelegate: IdentityDelegate,
         agentSignedData: Data,
         agentSignature: Data  //bare signature, not typed signature
