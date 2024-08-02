@@ -52,14 +52,14 @@ public struct AgentPrivateKey: Sendable {
         signedIdentity: SignedObject<CoreIdentity>,
         identityMutable: SignedObject<IdentityMutableData>,
         agentDelegate: IdentityDelegate,
-        agentTBS: AgentHello.NewAgentData
+        newAgentData: AgentHello.NewAgentData
     ) throws -> AgentHello {
         .init(
             signedIdentity: signedIdentity,
             identityMutable: identityMutable,
             agentDelegate: agentDelegate,
             signedAgentData: try sign(
-                newAgentData: agentTBS,
+                newAgentData: newAgentData,
                 identity: try signedIdentity.verifiedIdentity().id
             )
         )

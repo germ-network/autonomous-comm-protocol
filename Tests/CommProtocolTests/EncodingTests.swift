@@ -91,7 +91,7 @@ struct EncodingTests {
         let decoded = try IdentityMutableData.finalParse(encoded)
         #expect(decoded == content)
     }
-    
+
     //not currently used
     @Test func testSessionSuitesFixedEncoding() async throws {
         for suite in SessionEncryptionSuites.allCases {

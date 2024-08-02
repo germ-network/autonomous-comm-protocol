@@ -52,8 +52,13 @@ extension SessionEncryptionSuites: LinearEncodable {
 
 // for MLS, data value is an encoded MLS KeyPackage message
 public struct TypedKeyPackage: Equatable {
-    let suite: SessionEncryptionSuites
-    let keyPackage: Data
+    public let suite: SessionEncryptionSuites
+    public let keyPackage: Data
+
+    public init(suite: SessionEncryptionSuites, keyPackage: Data) {
+        self.suite = suite
+        self.keyPackage = keyPackage
+    }
 }
 
 extension TypedKeyPackage: LinearEncodable {

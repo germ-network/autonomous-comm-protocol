@@ -117,14 +117,6 @@ public struct IdentityPrivateKey: Sendable {
     }
 
     public func sign(
-        maybeMutableData: IdentityMutableData?
-    ) throws -> SignedObject<IdentityMutableData>? {
-        guard let mutableData = maybeMutableData else { return nil }
-
-        return try sign(mutableData: mutableData)
-    }
-
-    public func sign(
         mutableData: IdentityMutableData
     ) throws -> SignedObject<IdentityMutableData> {
         .init(

@@ -28,13 +28,27 @@ public struct AgentHello: Sendable {
         public let imageResource: Resource?
         public let expiration: Date
 
+        public init(
+            version: SemanticVersion, isAppClip: Bool, addresses: [ProtocolAddress],
+            keyChoices: KeyPackageChoices, imageResource: Resource?, expiration: Date
+        ) {
+            self.version = version
+            self.isAppClip = isAppClip
+            self.addresses = addresses
+            self.keyChoices = keyChoices
+            self.imageResource = imageResource
+            self.expiration = expiration
+        }
+
         //fold in the identity key when we sign it
-        func formatForSigning(with identityKey: IdentityPublicKey) throws -> Data {
+        func formatForSigning(
+            with identityKey: IdentityPublicKey
+        ) throws -> Data {
             try identityKey.id.wireFormat + wireFormat
         }
     }
 
-    init(
+    public init(
         signedIdentity: SignedObject<CoreIdentity>,
         identityMutable: SignedObject<IdentityMutableData>,
         agentDelegate: IdentityDelegate,

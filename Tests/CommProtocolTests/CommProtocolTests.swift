@@ -5,8 +5,8 @@
 //  Created by Mark @ Germ on 7/31/24.
 //
 
-import Testing
 import CommProtocol
+import Testing
 
 ///exercise the public api
 struct APITests {
@@ -35,7 +35,7 @@ struct APITests {
             agentTBS: .mock()
         )
     }
-    
+
     @Test func testLifecycle() throws {
         let validated = try agentHello.validated()
     }

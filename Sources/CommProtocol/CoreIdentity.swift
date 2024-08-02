@@ -145,6 +145,12 @@ public struct IdentityMutableData: Sendable, Equatable {
     public let counter: UInt16  //for predecence defined by the sender/signer
     public let pronouns: [String]
     public let aboutText: String?
+
+    public init(counter: UInt16, pronouns: [String], aboutText: String?) {
+        self.counter = counter
+        self.pronouns = pronouns
+        self.aboutText = aboutText
+    }
 }
 
 extension IdentityMutableData: LinearEncodable {
