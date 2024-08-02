@@ -113,6 +113,3 @@ extension UInt32 {
         self = .init(bigEndian: bigEndian)
     }
 }
-
-//TODO: remove
-extension SemanticVersion: Codable {}

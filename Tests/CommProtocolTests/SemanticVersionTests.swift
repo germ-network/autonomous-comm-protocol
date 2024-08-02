@@ -15,10 +15,9 @@ struct Test {
     @Test func testSemVerCoding() throws {
         let semVer = SemanticVersion.mock()
 
-        let reencoded: SemanticVersion =
-            try semVer
-            .encoded.decoded()
+        let encoded = try semVer.wireFormat
+        let decoded = try SemanticVersion.finalParse(encoded)
 
-        #expect(semVer == reencoded)
+        #expect(semVer == decoded)
     }
 }

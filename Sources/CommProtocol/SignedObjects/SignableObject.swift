@@ -36,34 +36,6 @@ extension SignedObject: LinearEncodable {
     }
 }
 
-//Deprecate from here down
-public enum Signers {
-    case identity
-    case agent
-}
-
-public enum SignableObjectTypes: UInt8, Codable, Sendable {
-    case identityRepresentation
-    case identityDelegate
-    case identityMutableData
-    case identityPropose  //designate a successor
-    case identitySuccessor  //designate
-
-    case agentHello
-    case agentPropose
-    case agentSuccession
-    case agentAttached  //new addresses, etc
-
-    var signer: Signers {
-        switch self {
-        case .identityRepresentation, .identityDelegate, .identityMutableData, .identityPropose,
-            .identitySuccessor:
-            .identity
-        case .agentHello, .agentPropose, .agentSuccession, .agentAttached: .agent
-        }
-    }
-}
-
 //like TypedKeyMaterial, prepend a byte that indicates length of the body
 public struct TypedSignature: DefinedWidthBinary, Sendable {
     public typealias Prefix = SigningKeyAlgorithm

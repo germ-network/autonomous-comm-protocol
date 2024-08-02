@@ -90,18 +90,3 @@ extension Date: LinearEncodable {
 }
 
 extension Resource: Equatable {}
-
-//TODO: remove when removed from AgentHello
-extension Resource: Codable {}
-extension SymmetricKey: Codable {
-    public init(from decoder: Decoder) throws {
-        let value = try decoder.singleValueContainer()
-        let symmetricKeyData = try value.decode(Data.self)
-        self.init(data: symmetricKeyData)
-    }
-
-    public func encode(to encoder: Encoder) throws {
-        var value = encoder.singleValueContainer()
-        try value.encode(self.rawRepresentation)
-    }
-}
