@@ -1,13 +1,12 @@
+//
+//  EncodingTests.swift
+//  CommProtocol
+//
+//  Created by Mark @ Germ on 7/31/24.
+//
+
 import Testing
+import CommProtocol
 
-@testable import CommProtocol
+///exercise the public api
 
-struct SessionEncryptionSuitesTests {
-    @Test func fixedEncoding() async throws {
-        for suite in SessionEncryptionSuites.allCases {
-            #expect(suite.fixedWidth.count == 2)
-            let decoded = try SessionEncryptionSuites(fixedWidth: suite.fixedWidth)
-            #expect(suite == decoded)
-        }
-    }
-}
