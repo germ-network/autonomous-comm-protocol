@@ -13,10 +13,9 @@ import Foundation
 extension AgentUpdate {
     static func mock() -> Self {
         .init(
-            version: .init(major: 1, minor: 1, patch: 1),
+            version: .mock(),
             isAppClip: true,
-            addresses: [.mock()],
-            imageResource: .mock()
+            addresses: [.mock()]
         )
     }
 }

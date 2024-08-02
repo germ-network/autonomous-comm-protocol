@@ -9,6 +9,7 @@ import CryptoKit
 import Foundation
 
 ///Format for a card that gets symmetrically encrypted and exchanged
+///No covering signature (just AEAD to a key directly exchanged), so all contents need to be covered by a signature
 public struct AgentHello: Sendable {
     //Identity
     let signedIdentity: SignedObject<CoreIdentity>
@@ -25,12 +26,16 @@ public struct AgentHello: Sendable {
         public let isAppClip: Bool
         public let addresses: [ProtocolAddress]
         public let keyChoices: KeyPackageChoices
-        public let imageResource: Resource?
+        public let imageResource: Resource
         public let expiration: Date
 
         public init(
-            version: SemanticVersion, isAppClip: Bool, addresses: [ProtocolAddress],
-            keyChoices: KeyPackageChoices, imageResource: Resource?, expiration: Date
+            version: SemanticVersion,
+            isAppClip: Bool,
+            addresses: [ProtocolAddress],
+            keyChoices: KeyPackageChoices,
+            imageResource: Resource,
+            expiration: Date
         ) {
             self.version = version
             self.isAppClip = isAppClip
@@ -158,7 +163,7 @@ extension AgentHello.NewAgentData: LinearEncodable {
             Bool.self,
             [ProtocolAddress].self,
             KeyPackageChoices.self,
-            (Resource?).self,
+            Resource.self,
             Date.self,
             input: input
         )
@@ -189,6 +194,3 @@ extension AgentHello.NewAgentData: LinearEncodable {
 
 //mainly for testability
 extension AgentHello.NewAgentData: Equatable {}
-
-// public struct AgentHelloReply: Codable, Sendable {
-// }

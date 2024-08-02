@@ -51,7 +51,6 @@ public struct AgentUpdate: Sendable, Equatable {
     public let version: SemanticVersion
     public let isAppClip: Bool
     public let addresses: [ProtocolAddress]
-    public let imageResource: Resource?
 }
 
 extension AgentUpdate: LinearEncodable {
@@ -60,21 +59,18 @@ extension AgentUpdate: LinearEncodable {
             version,
             isAppClip,
             addresses,
-            imageResource,
             consumed
         ) = try LinearEncoder.decode(
             SemanticVersion.self,
             Bool.self,
             [ProtocolAddress].self,
-            (Resource?).self,
             input: input
         )
 
         let result = AgentUpdate(
             version: version,
             isAppClip: isAppClip,
-            addresses: addresses,
-            imageResource: imageResource
+            addresses: addresses
         )
         return (result, consumed)
     }
@@ -84,7 +80,6 @@ extension AgentUpdate: LinearEncodable {
             try version.wireFormat
                 + isAppClip.wireFormat
                 + addresses.wireFormat
-                + (imageResource as Resource?).wireFormat
         }
     }
 

@@ -101,21 +101,18 @@ public struct AgentPrivateKey: Sendable {
         agentData: AgentUpdate,
         updateMessage: Data
     ) throws -> CommProposal {
-        let encodedAgentData = try agentData.wireFormat
-
-        print("Encoded agent data size: \(encodedAgentData)")
-        let newAgentSignatureOver = AgentHandoff.NewAgentTBS(
+        let newAgentSignatureOver = try AgentHandoff.NewAgentTBS(
             knownAgentKey: establishedAgent,
             newAgentIdentity: existingIdentity,
             context: context,
-            agentData: encodedAgentData,
-            updateMessage: updateMessage
+            updateMessage: updateMessage,
+            agentData: agentData
         ).formatForSigning
         let newAgentSignature = try sign(input: newAgentSignatureOver)
 
         let agentHandoff = AgentHandoff(
             knownAgentSignature: establishedSignature,
-            encodedAgentData: try .init(body: encodedAgentData),
+            agentData: agentData,
             newAgentSignature: newAgentSignature
         )
 
@@ -131,20 +128,18 @@ public struct AgentPrivateKey: Sendable {
         agentData: AgentUpdate,
         updateMessage: Data
     ) throws -> CommProposal {
-        let encodedAgentData = try agentData.wireFormat
-
-        let newAgentSignatureOver = AgentHandoff.NewAgentTBS(
+        let newAgentSignatureOver = try AgentHandoff.NewAgentTBS(
             knownAgentKey: establishedAgent,
             newAgentIdentity: newIdentity,
             context: context,
-            agentData: encodedAgentData,
-            updateMessage: updateMessage
+            updateMessage: updateMessage,
+            agentData: agentData
         ).formatForSigning
         let newAgentSignature = try sign(input: newAgentSignatureOver)
 
         let agentHandoff = AgentHandoff(
             knownAgentSignature: establishedAgentSignature,
-            encodedAgentData: try .init(body: encodedAgentData),
+            agentData: agentData,
             newAgentSignature: newAgentSignature
         )
 
@@ -152,6 +147,13 @@ public struct AgentPrivateKey: Sendable {
     }
 
     //MARK: Implementation
+    func sign(resource: Resource) throws -> SignedObject<Resource> {
+        .init(
+            content: resource,
+            signature: try sign(input: resource.wireFormat)
+        )
+    }
+
     private func sign(input: Data) throws -> TypedSignature {
         try .init(prefix: type, checkedData: privateKey.signature(for: input))
     }

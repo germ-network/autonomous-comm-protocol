@@ -118,7 +118,7 @@ public enum CommProposal: LinearEncodable {
                 [ProposalType.sameAgent.rawValue]
                     + typedSignature.wireFormat
             case .sameIdentity(let identityDelegate, let agentHandoff):
-                [ProposalType.sameIdentity.rawValue]
+                try [ProposalType.sameIdentity.rawValue]
                     + identityDelegate.wireFormat
                     + agentHandoff.wireFormat
             case .newIdentity(let identityHandoff, let agentHandoff):

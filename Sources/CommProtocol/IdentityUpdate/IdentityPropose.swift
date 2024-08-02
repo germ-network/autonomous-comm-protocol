@@ -122,6 +122,7 @@ public struct IdentityHandoff {
     }
     let newAgentKey: AgentPublicKey
     let successorSignature: TypedSignature
+    let imageResource: SignedObject<Resource>
 
     public var wireFormat: Data {
         get throws {
@@ -129,6 +130,7 @@ public struct IdentityHandoff {
                 + predecessorSignature.wireFormat
                 + newAgentKey.wireFormat
                 + successorSignature.wireFormat
+                + imageResource.wireFormat
         }
     }
 
@@ -136,6 +138,7 @@ public struct IdentityHandoff {
         let newIdentity: CoreIdentity
         let signedNewIdentity: SignedObject<CoreIdentity>
         let newAgentKey: AgentPublicKey
+        let imageResource: Resource
     }
 
     func validate(
@@ -174,10 +177,13 @@ public struct IdentityHandoff {
             throw ProtocolError.authenticationError
         }
 
+        let verfiedResource = try newAgentKey.validate(signedObject: imageResource)
+
         return .init(
             newIdentity: newIdentity,
             signedNewIdentity: signedNewIdentity,
-            newAgentKey: newAgentKey
+            newAgentKey: newAgentKey,
+            imageResource: verfiedResource
         )
     }
 }
@@ -189,12 +195,14 @@ extension IdentityHandoff: LinearEncodable {
             predecessorSignature,
             newAgentKeyMaterial,
             successorSignature,
+            imageResource,
             consumed
         ) = try LinearEncoder.decode(
             SignedObject<CoreIdentity>.self,
             TypedSignature.self,
             TypedKeyMaterial.self,
             TypedSignature.self,
+            SignedObject<Resource>.self,
             input: input
         )
 
@@ -203,7 +211,8 @@ extension IdentityHandoff: LinearEncodable {
                 signedNewIdentity: signedNewIdentity,
                 predecessorSignature: predecessorSignature,
                 newAgentKey: AgentPublicKey(archive: newAgentKeyMaterial),
-                successorSignature: successorSignature
+                successorSignature: successorSignature,
+                imageResource: imageResource
             ),
             consumed
         )

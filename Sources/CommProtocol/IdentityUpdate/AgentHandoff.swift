@@ -21,27 +21,35 @@ public struct AgentHandoff {
 
     struct NewAgentTBS {
         static let discriminator = Data("successorAgent".utf8)
+        //All of these are injected and already known
         let knownAgentKey: AgentPublicKey
-        let newAgentIdentity: IdentityPublicKey  //known or conveyed in the IdentityHandoff
-        let context: TypedDigest  //known
-        let agentData: Data
-        let updateMessage: Data  // stapled in the message AD
+        let newAgentIdentity: IdentityPublicKey
+        let context: TypedDigest
+        let updateMessage: Data
+
+        //transmitted in this object
+        let agentData: AgentUpdate
 
         var formatForSigning: Data {
-            knownAgentKey.wireFormat
-                + newAgentIdentity.id.wireFormat
-                + context.wireFormat
-                + agentData
-                + updateMessage
+            get throws {
+                try knownAgentKey.wireFormat
+                    + newAgentIdentity.id.wireFormat
+                    + context.wireFormat
+                    + updateMessage
+                    + agentData.wireFormat
+
+            }
         }
     }
-    let encodedAgentData: DeclaredWidthData
+    let agentData: AgentUpdate
     let newAgentSignature: TypedSignature
 
     public var wireFormat: Data {
-        knownAgentSignature.wireFormat
-            + encodedAgentData.wireFormat
-            + newAgentSignature.wireFormat
+        get throws {
+            try knownAgentSignature.wireFormat
+                + agentData.wireFormat
+                + newAgentSignature.wireFormat
+        }
     }
 
     public struct Validated {
@@ -56,12 +64,12 @@ public struct AgentHandoff {
         context: TypedDigest,
         updateMessage: Data
     ) throws -> AgentUpdate {
-        let signatureBody = NewAgentTBS(
+        let signatureBody = try NewAgentTBS(
             knownAgentKey: knownAgent,
             newAgentIdentity: newAgentIdentity,
             context: context,
-            agentData: encodedAgentData.body,
-            updateMessage: updateMessage
+            updateMessage: updateMessage,
+            agentData: agentData
         )
         .formatForSigning
         guard
@@ -73,7 +81,7 @@ public struct AgentHandoff {
             throw ProtocolError.authenticationError
         }
 
-        return try AgentUpdate.finalParse(encodedAgentData.body)
+        return agentData
     }
 }
 
@@ -81,19 +89,19 @@ extension AgentHandoff: LinearEncodable {
     public static func parse(_ input: Data) throws -> (AgentHandoff, Int) {
         let (
             knownAgentSignature,
-            encodedAgentData,
+            agentData,
             newAgentSignature,
             consumed
         ) = try LinearEncoder.decode(
             TypedSignature.self,
-            DeclaredWidthData.self,
+            AgentUpdate.self,
             TypedSignature.self,
             input: input
         )
         return (
             .init(
                 knownAgentSignature: knownAgentSignature,
-                encodedAgentData: encodedAgentData,
+                agentData: agentData,
                 newAgentSignature: newAgentSignature
             ),
             consumed

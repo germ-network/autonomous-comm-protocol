@@ -93,7 +93,8 @@ public struct IdentityPrivateKey: Sendable {
         existingIdentity: IdentityPublicKey,
         startSignature: TypedSignature,
         signedIdentity: SignedObject<CoreIdentity>,
-        context: TypedDigest
+        context: TypedDigest,
+        imageResource: Resource
     ) throws -> (AgentPrivateKey, IdentityHandoff) {
         let newAgent = AgentPrivateKey(algorithm: .curve25519)
         let newAgentPubKey = newAgent.publicKey
@@ -106,11 +107,14 @@ public struct IdentityPrivateKey: Sendable {
 
         let successorSignature = try sign(input: newIdentitySignatureBody.formatForSigning)
 
+        let signedResource = try newAgent.sign(resource: imageResource)
+
         let handoff = IdentityHandoff(
             signedNewIdentity: signedIdentity,
             predecessorSignature: startSignature,
             newAgentKey: newAgentPubKey,
-            successorSignature: successorSignature
+            successorSignature: successorSignature,
+            imageResource: signedResource
         )
 
         return (newAgent, handoff)

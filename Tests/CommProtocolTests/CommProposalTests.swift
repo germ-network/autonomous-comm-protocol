@@ -174,7 +174,8 @@ struct CommProposalTests {
             existingIdentity: knownIdentityKey.publicKey,
             startSignature: knownIdentitySignature,
             signedIdentity: signedNextIdentity,
-            context: mockContext
+            context: mockContext,
+            imageResource: .mock()
         )
 
         let mockMessage = Mocks.mockMessage()
