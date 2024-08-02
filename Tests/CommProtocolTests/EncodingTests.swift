@@ -84,4 +84,11 @@ struct EncodingTests {
         #expect(encodedWrapped.count == encodedBare.count + 1)
         let decodedWrapped = try (Resource?).finalParse(encodedWrapped)
     }
+
+    @Test func testIdentityMutable() throws {
+        let content: IdentityMutableData = .mock()
+        let encoded = try content.wireFormat
+        let decoded = try IdentityMutableData.finalParse(encoded)
+        #expect(decoded == content)
+    }
 }

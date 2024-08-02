@@ -16,32 +16,34 @@ public struct AgentHello: Sendable {
 
     //Agent
     let agentDelegate: IdentityDelegate
-    let agentSignedData: Data  //AgentTBS encoded
-    let agentSignature: Data
+    let signedAgentData: SignedObject<NewAgentData>
 
     //what the agent signs
-    public struct AgentTBS: Sendable, Codable {
+    public struct NewAgentData: Sendable {
         //prepend the identity key when signing
         public let version: SemanticVersion
-        public let isAppClip: Bool?  //ommitted when false
+        public let isAppClip: Bool
         public let addresses: [ProtocolAddress]
         public let keyChoices: KeyPackageChoices
         public let imageResource: Resource?
         public let expiration: Date
+
+        //fold in the identity key when we sign it
+        func formatForSigning(with identityKey: IdentityPublicKey) throws -> Data {
+            try identityKey.id.wireFormat + wireFormat
+        }
     }
 
     init(
         signedIdentity: SignedObject<CoreIdentity>,
         identityMutable: SignedObject<IdentityMutableData>,
         agentDelegate: IdentityDelegate,
-        agentSignedData: Data,
-        agentSignature: Data  //bare signature, not typed signature
+        signedAgentData: SignedObject<NewAgentData>
     ) {
         self.signedIdentity = signedIdentity
         self.identityMutable = identityMutable
         self.agentDelegate = agentDelegate
-        self.agentSignedData = agentSignedData
-        self.agentSignature = agentSignature
+        self.signedAgentData = signedAgentData
     }
 
     public struct Validated: Sendable {
@@ -49,14 +51,14 @@ public struct AgentHello: Sendable {
         public let signedIdentity: SignedObject<CoreIdentity>
         public let mutableData: IdentityMutableData
         public let agentKey: AgentPublicKey
-        public let agentData: AgentTBS
+        public let agentData: NewAgentData
 
         init(
             coreIdentity: CoreIdentity,
             signedIdentity: SignedObject<CoreIdentity>,
             mutableData: IdentityMutableData,
             agentKey: AgentPublicKey,
-            agentData: AgentTBS
+            agentData: NewAgentData
         ) {
             self.coreIdentity = coreIdentity
             self.signedIdentity = signedIdentity
@@ -74,60 +76,105 @@ public struct AgentHello: Sendable {
             context: nil
         )
 
-        guard
-            agentKey.publicKey.isValidSignature(
-                agentSignature,
-                for: identityKey.id.wireFormat + agentSignedData
-            )
-        else { throw ProtocolError.authenticationError }
+        let agentData = try agentKey.validate(
+            signedAgentData: signedAgentData,
+            for: identityKey
+        )
 
         return .init(
             coreIdentity: identity,
             signedIdentity: signedIdentity,
             mutableData: try identityKey.validate(signedObject: identityMutable),
             agentKey: agentKey,
-            agentData: try agentSignedData.decoded()
+            agentData: agentData
         )
     }
 }
 
-extension AgentHello: Codable {
-    public enum CodingKeys: CodingKey {
-        case signedIdentity, identityMutable, agentDelegate, agentSignedData, agentSignature
+extension AgentHello: LinearEncodable {
+    public static func parse(_ input: Data) throws -> (AgentHello, Int) {
+        let (
+            signedIdentity,
+            identityMutable,
+            agentDelegate,
+            signedAgentData,
+            consumed
+        ) = try LinearEncoder.decode(
+            SignedObject<CoreIdentity>.self,
+            SignedObject<IdentityMutableData>.self,
+            IdentityDelegate.self,
+            SignedObject<NewAgentData>.self,
+            input: input
+        )
+
+        let result = AgentHello(
+            signedIdentity: signedIdentity,
+            identityMutable: identityMutable,
+            agentDelegate: agentDelegate,
+            signedAgentData: signedAgentData
+        )
+        return (result, consumed)
     }
 
-    public init(from decoder: Decoder) throws {
-        let values = try decoder.container(keyedBy: CodingKeys.self)
-        let identityData = try values.decode(Data.self, forKey: .signedIdentity)
-        self.signedIdentity = try SignedObject<CoreIdentity>.finalParse(identityData)
+    public var wireFormat: Data {
+        get throws {
+            try signedIdentity.wireFormat
+                + identityMutable.wireFormat
+                + agentDelegate.wireFormat
+                + signedAgentData.wireFormat
+        }
+    }
+}
 
-        let identityMutableData = try values.decode(Data.self, forKey: .identityMutable)
-        self.identityMutable = try SignedObject<IdentityMutableData>.finalParse(identityMutableData)
-        //will deprecate
-        let stored = try values.decode(Data.self, forKey: .agentDelegate)
-        self.agentDelegate = try IdentityDelegate.finalParse(stored)
+extension AgentHello.NewAgentData: LinearEncodable {
+    public static func parse(_ input: Data) throws -> (
+        AgentHello.NewAgentData,
+        Int
+    ) {
+        let (
+            version,
+            isAppClip,
+            addresses,
+            keyChoices,
+            imageResource,
+            expiration,
+            consumed
+        ) = try LinearEncoder.decode(
+            SemanticVersion.self,
+            Bool.self,
+            [ProtocolAddress].self,
+            KeyPackageChoices.self,
+            (Resource?).self,
+            Date.self,
+            input: input
+        )
 
-        self.agentSignedData = try values.decode(
-            Data.self,
-            forKey: .agentSignedData)
-        self.agentSignature = try values.decode(
-            Data.self,
-            forKey: .agentSignature)
+        let result = Self(
+            version: version,
+            isAppClip: isAppClip,
+            addresses: addresses,
+            keyChoices: keyChoices,
+            imageResource: imageResource,
+            expiration: expiration
+        )
 
+        return (result, consumed)
     }
 
-    public func encode(to encoder: Encoder) throws {
-        var values = encoder.container(keyedBy: CodingKeys.self)
-        try values.encode(signedIdentity.wireFormat, forKey: .signedIdentity)
-        try values.encode(identityMutable.wireFormat, forKey: .identityMutable)
-        try values.encode(agentDelegate.wireFormat, forKey: .agentDelegate)
-        try values.encode(agentSignedData, forKey: .agentSignedData)
-        try values.encode(agentSignature, forKey: .agentSignature)
+    public var wireFormat: Data {
+        get throws {
+            try version.wireFormat
+                + isAppClip.wireFormat
+                + addresses.wireFormat
+                + keyChoices.wireFormat
+                + imageResource.wireFormat
+                + expiration.wireFormat
+        }
     }
 }
 
 //mainly for testability
-extension AgentHello.AgentTBS: Equatable {}
+extension AgentHello.NewAgentData: Equatable {}
 
 // public struct AgentHelloReply: Codable, Sendable {
 // }

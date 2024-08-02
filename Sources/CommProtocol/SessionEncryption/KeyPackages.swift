@@ -10,6 +10,7 @@ import Foundation
 public enum SessionEncryptionSuites: UInt8, Codable, Equatable, Sendable, CaseIterable {
     case mlsCurve25519ChaChaPoly = 1
 
+    //notice: unused
     //match the RFC 9420 cipher suite
     var fixedWidth: Data {
         switch self {
@@ -31,5 +32,47 @@ public enum SessionEncryptionSuites: UInt8, Codable, Equatable, Sendable, CaseIt
     }
 }
 
-public typealias KeyPackageChoices = [SessionEncryptionSuites: Data]
+extension SessionEncryptionSuites: LinearEncodable {
+    static public func parse(_ input: Data) throws(LinearEncodingError) -> (
+        SessionEncryptionSuites,
+        Int
+    ) {
+        guard let prefix = input.first,
+            let suite = SessionEncryptionSuites(rawValue: prefix)
+        else {
+            throw LinearEncodingError.unexpectedData
+        }
+        return (suite, 1)
+    }
+
+    public var wireFormat: Data {
+        .init([rawValue])
+    }
+}
+
 // for MLS, data value is an encoded MLS KeyPackage message
+public struct TypedKeyPackage: Equatable {
+    let suite: SessionEncryptionSuites
+    let keyPackage: Data
+}
+
+extension TypedKeyPackage: LinearEncodable {
+    static public func parse(_ input: Data) throws -> (TypedKeyPackage, Int) {
+        let (suite, declaredWidth, consumed) = try LinearEncoder.decode(
+            SessionEncryptionSuites.self,
+            DeclaredWidthData.self,
+            input: input
+        )
+
+        let value = TypedKeyPackage(suite: suite, keyPackage: declaredWidth.body)
+        return (value, consumed)
+    }
+
+    public var wireFormat: Data {
+        get throws {
+            try [suite.rawValue] + DeclaredWidthData(body: keyPackage).wireFormat
+        }
+    }
+}
+
+public typealias KeyPackageChoices = [TypedKeyPackage]

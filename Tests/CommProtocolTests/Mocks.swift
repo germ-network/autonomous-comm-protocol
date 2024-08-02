@@ -125,3 +125,21 @@ enum TestPronouns: String, CaseIterable {
         }
     }
 }
+
+extension AgentHello.NewAgentData {
+    static func mock() -> Self {
+        .init(
+            version: .init(major: 1, minor: 1, patch: 1),
+            isAppClip: false,
+            addresses: [.mock()],
+            keyChoices: [
+                .init(
+                    suite: .mlsCurve25519ChaChaPoly,
+                    keyPackage: Mocks.mockMessage()
+                )
+            ],
+            imageResource: .mock(),
+            expiration: .distantFuture
+        )
+    }
+}

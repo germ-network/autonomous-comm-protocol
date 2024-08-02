@@ -152,13 +152,11 @@ extension IdentityMutableData: LinearEncodable {
         IdentityMutableData,
         Int
     ) {
-        let prefix = input.prefix(MemoryLayout<UInt16>.size)
-        let counter = try UInt16(dataRepresentation: prefix)
-
-        let (pronouns, aboutText, consumed) = try LinearEncoder.decode(
+        let (counter, pronouns, aboutText, consumed) = try LinearEncoder.decode(
+            UInt16.self,
             [String].self,
             OptionalString.self,
-            input: input.suffix(from: input.startIndex + MemoryLayout<UInt16>.size)
+            input: input.suffix(from: input.startIndex)
         )
 
         let result = IdentityMutableData(
@@ -167,7 +165,7 @@ extension IdentityMutableData: LinearEncodable {
             aboutText: aboutText.string
         )
 
-        return (result, consumed + MemoryLayout<UInt16>.size)
+        return (result, consumed)
     }
 
     public var wireFormat: Data {

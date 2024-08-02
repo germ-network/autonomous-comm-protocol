@@ -70,7 +70,7 @@ public enum CommProposal: LinearEncodable {
                 knownAgent.publicKey.isValidSignature(
                     signature.signature,
                     for: updateMessage + context.wireFormat),
-                signature.signingAlgorithm == knownAgent.type
+                signature.signingAlgorithm == knownAgent.keyType
             else {
                 throw ProtocolError.authenticationError
             }

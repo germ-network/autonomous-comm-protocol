@@ -131,12 +131,6 @@ public struct IdentityPrivateKey: Sendable {
             content: mutableData,
             signature: try sign(input: mutableData.wireFormat)
         )
-        //        let encoded = try mutableData.encoded
-        //
-        //        return .init(
-        //            signature: try sign(input: encoded),
-        //            body: encoded
-        //        )
     }
 
     //for local storage

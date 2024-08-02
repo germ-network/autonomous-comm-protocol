@@ -52,21 +52,16 @@ public struct AgentPrivateKey: Sendable {
         signedIdentity: SignedObject<CoreIdentity>,
         identityMutable: SignedObject<IdentityMutableData>,
         agentDelegate: IdentityDelegate,
-        agentTBS: AgentHello.AgentTBS
+        agentTBS: AgentHello.NewAgentData
     ) throws -> AgentHello {
-        let identityKey = try signedIdentity.verifiedIdentity().id
-
-        let encodedTBS = try agentTBS.encoded
-        let signature = try privateKey.signature(
-            for: identityKey.id.wireFormat + encodedTBS
-        )
-
-        return .init(
+        .init(
             signedIdentity: signedIdentity,
             identityMutable: identityMutable,
             agentDelegate: agentDelegate,
-            agentSignedData: encodedTBS,
-            agentSignature: signature
+            signedAgentData: try sign(
+                newAgentData: agentTBS,
+                identity: try signedIdentity.verifiedIdentity().id
+            )
         )
     }
 
@@ -161,6 +156,19 @@ public struct AgentPrivateKey: Sendable {
         try .init(prefix: type, checkedData: privateKey.signature(for: input))
     }
 
+    private func sign(
+        newAgentData: AgentHello.NewAgentData,
+        identity: IdentityPublicKey
+    ) throws -> SignedObject<AgentHello.NewAgentData> {
+        .init(
+            content: newAgentData,
+            signature: try sign(
+                input: newAgentData.formatForSigning(
+                    with: identity
+                )
+            )
+        )
+    }
     //
     //    public func sign(transition: SignedAgentTransition.Transition)
     //    throws -> (encoded: Data, signature: Data) {
@@ -200,7 +208,7 @@ public struct AgentPublicKey: Sendable {
     public let id: TypedKeyMaterial
 
     public var wireFormat: Data { id.wireFormat }
-    public var type: SigningKeyAlgorithm {
+    public var keyType: SigningKeyAlgorithm {
         Swift.type(of: publicKey).signingAlgorithm
     }
 
@@ -224,6 +232,37 @@ public struct AgentPublicKey: Sendable {
         default:
             throw ProtocolError.typedKeyArchiveMismatch
         }
+    }
+
+    //MARK: Implementation
+    func validate<C>(signedObject: SignedObject<C>) throws -> C {
+        guard keyType == signedObject.signature.signingAlgorithm,
+            publicKey.isValidSignature(
+                signedObject.signature.signature,
+                for: try signedObject.content.wireFormat
+            )
+        else {
+            throw ProtocolError.authenticationError
+        }
+        return signedObject.content
+    }
+
+    func validate(
+        signedAgentData: SignedObject<AgentHello.NewAgentData>,
+        for identity: IdentityPublicKey
+    ) throws -> AgentHello.NewAgentData {
+        let signatureBody =
+            try signedAgentData
+            .content.formatForSigning(with: identity)
+        guard keyType == signedAgentData.signature.signingAlgorithm,
+            publicKey.isValidSignature(
+                signedAgentData.signature.signature,
+                for: signatureBody
+            )
+        else {
+            throw ProtocolError.authenticationError
+        }
+        return signedAgentData.content
     }
 }
 

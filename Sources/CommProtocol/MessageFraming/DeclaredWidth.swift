@@ -28,6 +28,19 @@ extension UInt16 {
     }
 }
 
+extension UInt16: LinearEncodable {
+    static public func parse(_ input: Data) throws -> (UInt16, Int) {
+        let prefix = input.prefix(MemoryLayout<UInt16>.size)
+        let counter = try UInt16(dataRepresentation: prefix)
+
+        return (counter, MemoryLayout<UInt16>.size)
+    }
+
+    public var wireFormat: Data {
+        dataRepresentation
+    }
+}
+
 struct DeclaredWidthData: Sendable, Equatable {
     let width: UInt16
     let body: Data
