@@ -126,38 +126,11 @@ extension CoreIdentity: DeprecateSignableObject {
     public static let type: SignableObjectTypes = .identityRepresentation
 }
 
-public struct SignedIdentity: Sendable {
-    let encodedIdentity: Data  //Linear encoded CoreIdentity, freeze what's signed over
-    let signature: TypedSignature
-
+extension SignedObject<CoreIdentity> {
     public func verifiedIdentity() throws -> CoreIdentity {
         //have to decode the credentialData to get the public key
-        let coreIdentity: CoreIdentity = try CoreIdentity.finalParse(encodedIdentity)
-        try coreIdentity.id.validate(signature: signature, for: encodedIdentity)
-
-        return coreIdentity
+        try content.id.validate(signedObject: self)
     }
-}
-
-extension SignedIdentity: LinearEncodable {
-    public static func parse(_ input: Data) throws -> (SignedIdentity, Int) {
-        let (_, consumed) = try CoreIdentity.parse(input)
-        let encodedIdentity = input.prefix(consumed)
-
-        let slice = input.suffix(from: input.startIndex + consumed)
-        let (signature, secondConsumed) = try TypedSignature.parse(slice)
-
-        let result = SignedIdentity(
-            encodedIdentity: encodedIdentity,
-            signature: signature
-        )
-        return (result, consumed + secondConsumed)
-    }
-
-    public var wireFormat: Data {
-        encodedIdentity + signature.wireFormat
-    }
-
 }
 
 public enum HashAlgorithms: UInt8, DefinedWidthPrefix {

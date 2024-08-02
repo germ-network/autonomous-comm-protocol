@@ -9,7 +9,7 @@ import Foundation
 
 ///A format for consuming a stream of binary data into a known structure, with some branch points
 
-public protocol LinearEncodable {
+public protocol LinearEncodable: Sendable {
     static func parse(_ input: Data) throws -> (Self, Int)
     var wireFormat: Data { get throws }
 }

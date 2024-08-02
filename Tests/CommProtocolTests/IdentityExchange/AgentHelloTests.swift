@@ -14,7 +14,7 @@ import Testing
 struct AgentHelloTests {
     let privateKey: IdentityPrivateKey
     let coreIdentity: CoreIdentity
-    let signedIdentity: SignedIdentity
+    let signedIdentity: SignedObject<CoreIdentity>
     let mutableFields: IdentityMutableData
     let agentKey: AgentPrivateKey
     let signedDelegation: IdentityDelegate
@@ -65,9 +65,8 @@ struct AgentHelloTests {
         let reencoded: AgentHello = try encoded.decoded()
 
         let validatedHello = try reencoded.validated()
-
+        
         #expect(validatedHello.coreIdentity == coreIdentity)
-        #expect(validatedHello.signedIdentity.wireFormat == signedIdentity.wireFormat)
         #expect(validatedHello.agentKey == agentKey.publicKey)
         #expect(validatedHello.mutableData == validatedHello.mutableData)
         #expect(validatedHello.agentData == agentTBS)

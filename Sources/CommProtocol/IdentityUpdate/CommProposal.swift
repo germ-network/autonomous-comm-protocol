@@ -53,7 +53,7 @@ public enum CommProposal: LinearEncodable {
     public enum Validated {
         case sameAgent
         case sameIdentity(AgentHandoff.Validated)
-        case newIdentity(CoreIdentity, SignedIdentity, AgentHandoff.Validated)
+        case newIdentity(CoreIdentity, SignedObject<CoreIdentity>, AgentHandoff.Validated)
     }
 
     public static func parseAndValidate(
@@ -122,7 +122,7 @@ public enum CommProposal: LinearEncodable {
                     + identityDelegate.wireFormat
                     + agentHandoff.wireFormat
             case .newIdentity(let identityHandoff, let agentHandoff):
-                [ProposalType.newIdentity.rawValue]
+                try [ProposalType.newIdentity.rawValue]
                     + identityHandoff.wireFormat
                     + agentHandoff.wireFormat
             }

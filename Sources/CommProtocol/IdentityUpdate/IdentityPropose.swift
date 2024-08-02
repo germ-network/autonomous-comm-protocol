@@ -93,7 +93,7 @@ extension IdentityDelegate: LinearEncodable {
 
 ///package the elements you need for a identity handoff
 public struct IdentityHandoff {
-    let signedNewIdentity: SignedIdentity
+    let signedNewIdentity: SignedObject<CoreIdentity>
     //over new identity pub Key + verb + TypedDigest
     struct PredecessorTBS {  // can just
         static let discriminator = Data("proposeIdentity".utf8)
@@ -124,15 +124,17 @@ public struct IdentityHandoff {
     let successorSignature: TypedSignature
 
     public var wireFormat: Data {
-        signedNewIdentity.wireFormat
+        get throws {
+            try signedNewIdentity.wireFormat
             + predecessorSignature.wireFormat
             + newAgentKey.wireFormat
             + successorSignature.wireFormat
+        }
     }
 
     struct Validated {
         let newIdentity: CoreIdentity
-        let signedNewIdentity: SignedIdentity
+        let signedNewIdentity: SignedObject<CoreIdentity>
         let newAgentKey: AgentPublicKey
     }
 
@@ -189,7 +191,7 @@ extension IdentityHandoff: LinearEncodable {
             successorSignature,
             consumed
         ) = try LinearEncoder.decode(
-            SignedIdentity.self,
+            SignedObject<CoreIdentity>.self,
             TypedSignature.self,
             TypedKeyMaterial.self,
             TypedSignature.self,

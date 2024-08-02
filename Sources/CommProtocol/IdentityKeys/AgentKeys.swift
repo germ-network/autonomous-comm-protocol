@@ -49,7 +49,7 @@ public struct AgentPrivateKey: Sendable {
     }
 
     public func createAgentHello(
-        signedIdentity: SignedIdentity,
+        signedIdentity: SignedObject<CoreIdentity>,
         identityMutable: DeprecateSignedObject<IdentityMutableData>,
         agentDelegate: IdentityDelegate,
         agentTBS: AgentHello.AgentTBS

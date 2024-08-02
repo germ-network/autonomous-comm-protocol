@@ -11,7 +11,7 @@ import Foundation
 ///Format for a card that gets symmetrically encrypted and exchanged
 public struct AgentHello: Sendable {
     //Identity
-    let signedIdentity: SignedIdentity
+    let signedIdentity: SignedObject<CoreIdentity>
     let identityMutable: DeprecateSignedObject<IdentityMutableData>
 
     //Agent
@@ -31,7 +31,7 @@ public struct AgentHello: Sendable {
     }
 
     init(
-        signedIdentity: SignedIdentity,
+        signedIdentity: SignedObject<CoreIdentity>,
         identityMutable: DeprecateSignedObject<IdentityMutableData>,
         agentDelegate: IdentityDelegate,
         agentSignedData: Data,
@@ -46,14 +46,14 @@ public struct AgentHello: Sendable {
 
     public struct Validated: Sendable {
         public let coreIdentity: CoreIdentity  //from the SignedIdentity
-        public let signedIdentity: SignedIdentity
+        public let signedIdentity: SignedObject<CoreIdentity>
         public let mutableData: IdentityMutableData
         public let agentKey: AgentPublicKey
         public let agentData: AgentTBS
 
         init(
             coreIdentity: CoreIdentity,
-            signedIdentity: SignedIdentity,
+            signedIdentity: SignedObject<CoreIdentity>,
             mutableData: IdentityMutableData,
             agentKey: AgentPublicKey,
             agentData: AgentTBS
@@ -99,7 +99,7 @@ extension AgentHello: Codable {
     public init(from decoder: Decoder) throws {
         let values = try decoder.container(keyedBy: CodingKeys.self)
         let identityData = try values.decode(Data.self, forKey: .signedIdentity)
-        self.signedIdentity = try SignedIdentity.finalParse(identityData)
+        self.signedIdentity = try SignedObject<CoreIdentity>.finalParse(identityData)
         
         self.identityMutable = try .init(
             wireFormat: values.decode(Data.self, forKey: .identityMutable)

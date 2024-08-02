@@ -39,7 +39,7 @@ struct Mocks {
     static func mockIdentity() throws -> (
         IdentityPrivateKey,
         CoreIdentity,
-        SignedIdentity
+        SignedObject<CoreIdentity>
     ) {
         try IdentityPrivateKey.create(
             name: UUID().uuidString,

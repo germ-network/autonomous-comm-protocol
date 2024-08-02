@@ -14,7 +14,7 @@ import Testing
 struct CommProposalTests {
     let knownIdentityKey: IdentityPrivateKey
     let knownIdentity: CoreIdentity
-    let knownSignedIdentity: SignedIdentity
+    let knownSignedIdentity: SignedObject<CoreIdentity>
     let knownAgent: AgentPrivateKey
 
     init() throws {
