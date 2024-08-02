@@ -120,19 +120,10 @@ public struct IdentityHandoff {
                 + newAgentKey.wireFormat
         }
     }
+    let identityMutable: IdentityMutableData
     let newAgentKey: AgentPublicKey
     let successorSignature: TypedSignature
     let imageResource: SignedObject<Resource>
-
-    public var wireFormat: Data {
-        get throws {
-            try signedNewIdentity.wireFormat
-                + predecessorSignature.wireFormat
-                + newAgentKey.wireFormat
-                + successorSignature.wireFormat
-                + imageResource.wireFormat
-        }
-    }
 
     struct Validated {
         let newIdentity: CoreIdentity
@@ -193,6 +184,7 @@ extension IdentityHandoff: LinearEncodable {
         let (
             signedNewIdentity,
             predecessorSignature,
+            identityMutable,
             newAgentKeyMaterial,
             successorSignature,
             imageResource,
@@ -200,6 +192,7 @@ extension IdentityHandoff: LinearEncodable {
         ) = try LinearEncoder.decode(
             SignedObject<CoreIdentity>.self,
             TypedSignature.self,
+            IdentityMutableData.self,
             TypedKeyMaterial.self,
             TypedSignature.self,
             SignedObject<Resource>.self,
@@ -210,11 +203,23 @@ extension IdentityHandoff: LinearEncodable {
             try .init(
                 signedNewIdentity: signedNewIdentity,
                 predecessorSignature: predecessorSignature,
+                identityMutable: identityMutable,
                 newAgentKey: AgentPublicKey(archive: newAgentKeyMaterial),
                 successorSignature: successorSignature,
                 imageResource: imageResource
             ),
             consumed
         )
+    }
+    
+    public var wireFormat: Data {
+        get throws {
+            try signedNewIdentity.wireFormat
+                + predecessorSignature.wireFormat
+                + identityMutable.wireFormat
+                + newAgentKey.wireFormat
+                + successorSignature.wireFormat
+                + imageResource.wireFormat
+        }
     }
 }

@@ -93,6 +93,7 @@ public struct IdentityPrivateKey: Sendable {
         existingIdentity: IdentityPublicKey,
         startSignature: TypedSignature,
         signedIdentity: SignedObject<CoreIdentity>,
+        identityMutable: IdentityMutableData,
         context: TypedDigest,
         imageResource: Resource
     ) throws -> (AgentPrivateKey, IdentityHandoff) {
@@ -112,6 +113,7 @@ public struct IdentityPrivateKey: Sendable {
         let handoff = IdentityHandoff(
             signedNewIdentity: signedIdentity,
             predecessorSignature: startSignature,
+            identityMutable: identityMutable,
             newAgentKey: newAgentPubKey,
             successorSignature: successorSignature,
             imageResource: signedResource

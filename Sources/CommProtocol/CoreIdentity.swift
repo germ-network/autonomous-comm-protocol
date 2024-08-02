@@ -182,3 +182,44 @@ extension IdentityMutableData: LinearEncodable {
         }
     }
 }
+
+//Shared across AgentHello and AgentHelloReply when getting a
+public struct IdentityIntroduction {
+    let signedIdentity: SignedObject<CoreIdentity>
+    let identityMutable: SignedObject<IdentityMutableData>
+    let agentDelegate: IdentityDelegate
+    
+}
+
+extension IdentityIntroduction:LinearEncodable {
+    static public func parse(_ input: Data) throws -> (IdentityIntroduction, Int) {
+        let (
+            signedIdentity,
+            identityMutable,
+            agentDelegate,
+            consumed
+        ) = try LinearEncoder.decode(
+            SignedObject<CoreIdentity>.self,
+            SignedObject<IdentityMutableData>.self,
+            IdentityDelegate.self,
+            input: input
+        )
+        
+        return (
+            .init(
+                signedIdentity: signedIdentity,
+                identityMutable: identityMutable,
+                agentDelegate: agentDelegate
+            ) ,
+            consumed
+        )
+    }
+    
+    public var wireFormat: Data {
+        get throws {
+            try signedIdentity.wireFormat
+                + identityMutable.wireFormat
+                + agentDelegate.wireFormat
+        }
+    }
+}
