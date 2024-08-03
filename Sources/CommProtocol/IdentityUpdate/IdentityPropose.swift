@@ -7,8 +7,6 @@
 
 import Foundation
 
-///Need:
-///* knownIdentity signature over new Agent
 public struct IdentityDelegate: Sendable {
     let newAgentId: TypedKeyMaterial
 
@@ -47,25 +45,34 @@ public struct IdentityDelegate: Sendable {
     }
 }
 
-extension IdentityDelegate: LinearEncodable {
-    public static func parse(
-        _ input: Data
-    ) throws -> (IdentityDelegate, Int) {
-        let (agent, signature, consumed) = try LinearEncoder.decode(
-            TypedKeyMaterial.self,
-            TypedSignature.self,
-            input: input
-        )
-        return (
-            .init(
-                newAgentId: agent,
-                knownIdentitySignature: signature
-            ),
-            consumed
-        )
-    }
+extension IdentityDelegate: LinearEncodedPair {
+    var first: TypedKeyMaterial { newAgentId }
+    var second: TypedSignature { knownIdentitySignature }
 
+    init(first: TypedKeyMaterial, second: TypedSignature) throws {
+        self.init(newAgentId: first, knownIdentitySignature: second)
+    }
 }
+
+//extension IdentityDelegate: LinearEncodable {
+//    public static func parse(
+//        _ input: Data
+//    ) throws -> (IdentityDelegate, Int) {
+//        let (agent, signature, consumed) = try LinearEncoder.decode(
+//            TypedKeyMaterial.self,
+//            TypedSignature.self,
+//            input: input
+//        )
+//        return (
+//            .init(
+//                newAgentId: agent,
+//                knownIdentitySignature: signature
+//            ),
+//            consumed
+//        )
+//    }
+//
+//}
 
 /////First of 4 signing steps to hand off an identity to a new identity
 /////Previous Identity key over new identity pub Key + context

@@ -70,9 +70,9 @@ struct AgentHelloTests {
         )
 
         let modifiedTBSHello = AgentHello(
-            signedIdentity: agentHello.signedIdentity,
-            identityMutable: agentHello.identityMutable,
-            agentDelegate: agentHello.agentDelegate,
+            signedIdentity: agentHello.introduction.signedIdentity,
+            identityMutable: agentHello.introduction.identityMutable,
+            agentDelegate: agentHello.introduction.agentDelegate,
             signedAgentData: modifiedSignedAgentData
         )
 

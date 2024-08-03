@@ -11,12 +11,7 @@ import Foundation
 ///Format for a card that gets symmetrically encrypted and exchanged
 ///No covering signature (just AEAD to a key directly exchanged), so all contents need to be covered by a signature
 public struct AgentHello: Sendable {
-    //Identity
-    let signedIdentity: SignedObject<CoreIdentity>
-    let identityMutable: SignedObject<IdentityMutableData>
-
-    //Agent
-    let agentDelegate: IdentityDelegate
+    let introduction: IdentityIntroduction
     let signedAgentData: SignedObject<NewAgentData>
 
     //what the agent signs
@@ -59,9 +54,11 @@ public struct AgentHello: Sendable {
         agentDelegate: IdentityDelegate,
         signedAgentData: SignedObject<NewAgentData>
     ) {
-        self.signedIdentity = signedIdentity
-        self.identityMutable = identityMutable
-        self.agentDelegate = agentDelegate
+        self.introduction = .init(
+            signedIdentity: signedIdentity,
+            identityMutable: identityMutable,
+            agentDelegate: agentDelegate
+        )
         self.signedAgentData = signedAgentData
     }
 
@@ -88,60 +85,34 @@ public struct AgentHello: Sendable {
     }
 
     public func validated() throws -> Validated {
-        let identity = try signedIdentity.verifiedIdentity()
-        let identityKey = identity.id
-        let agentKey = try agentDelegate.validate(
-            knownIdentity: identityKey,
-            context: nil
-        )
+        let (identity, identityMutable, agentKey) = try introduction.validated(context: nil)
 
         let agentData = try agentKey.validate(
             signedAgentData: signedAgentData,
-            for: identityKey
+            for: identity.id
         )
 
         return .init(
             coreIdentity: identity,
-            signedIdentity: signedIdentity,
-            mutableData: try identityKey.validate(signedObject: identityMutable),
+            signedIdentity: introduction.signedIdentity,
+            mutableData: identityMutable,
             agentKey: agentKey,
             agentData: agentData
         )
     }
 }
 
-extension AgentHello: LinearEncodable {
-    public static func parse(_ input: Data) throws -> (AgentHello, Int) {
-        let (
-            signedIdentity,
-            identityMutable,
-            agentDelegate,
-            signedAgentData,
-            consumed
-        ) = try LinearEncoder.decode(
-            SignedObject<CoreIdentity>.self,
-            SignedObject<IdentityMutableData>.self,
-            IdentityDelegate.self,
-            SignedObject<NewAgentData>.self,
-            input: input
-        )
+extension AgentHello: LinearEncodedPair {
+    var first: IdentityIntroduction { introduction }
+    var second: SignedObject<NewAgentData> { signedAgentData }
 
-        let result = AgentHello(
-            signedIdentity: signedIdentity,
-            identityMutable: identityMutable,
-            agentDelegate: agentDelegate,
-            signedAgentData: signedAgentData
+    init(first: IdentityIntroduction, second: SignedObject<NewAgentData>) throws {
+        self.init(
+            signedIdentity: first.signedIdentity,
+            identityMutable: first.identityMutable,
+            agentDelegate: first.agentDelegate,
+            signedAgentData: second
         )
-        return (result, consumed)
-    }
-
-    public var wireFormat: Data {
-        get throws {
-            try signedIdentity.wireFormat
-                + identityMutable.wireFormat
-                + agentDelegate.wireFormat
-                + signedAgentData.wireFormat
-        }
     }
 }
 

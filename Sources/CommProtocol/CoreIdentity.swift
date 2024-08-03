@@ -184,42 +184,43 @@ extension IdentityMutableData: LinearEncodable {
 }
 
 //Shared across AgentHello and AgentHelloReply when getting a
-public struct IdentityIntroduction {
+struct IdentityIntroduction {
     let signedIdentity: SignedObject<CoreIdentity>
     let identityMutable: SignedObject<IdentityMutableData>
     let agentDelegate: IdentityDelegate
 
-}
-
-extension IdentityIntroduction: LinearEncodable {
-    static public func parse(_ input: Data) throws -> (IdentityIntroduction, Int) {
-        let (
-            signedIdentity,
-            identityMutable,
-            agentDelegate,
-            consumed
-        ) = try LinearEncoder.decode(
-            SignedObject<CoreIdentity>.self,
-            SignedObject<IdentityMutableData>.self,
-            IdentityDelegate.self,
-            input: input
-        )
+    func validated(context: TypedDigest?) throws -> (
+        CoreIdentity,
+        IdentityMutableData,
+        AgentPublicKey
+    ) {
+        let verifiedIdentity = try signedIdentity.verifiedIdentity()
 
         return (
-            .init(
-                signedIdentity: signedIdentity,
-                identityMutable: identityMutable,
-                agentDelegate: agentDelegate
-            ),
-            consumed
+            verifiedIdentity,
+            try verifiedIdentity.id.validate(signedObject: identityMutable),
+            try agentDelegate.validate(
+                knownIdentity: verifiedIdentity.id,
+                context: context
+            )
         )
     }
+}
 
-    public var wireFormat: Data {
-        get throws {
-            try signedIdentity.wireFormat
-                + identityMutable.wireFormat
-                + agentDelegate.wireFormat
-        }
+extension IdentityIntroduction: LinearEncodedTriple {
+    var first: SignedObject<CoreIdentity> { signedIdentity }
+    var second: SignedObject<IdentityMutableData> { identityMutable }
+    var third: IdentityDelegate { agentDelegate }
+
+    init(
+        first: SignedObject<CoreIdentity>,
+        second: SignedObject<IdentityMutableData>,
+        third: IdentityDelegate
+    ) throws {
+        self.init(
+            signedIdentity: first,
+            identityMutable: second,
+            agentDelegate: third
+        )
     }
 }
