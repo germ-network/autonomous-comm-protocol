@@ -85,27 +85,18 @@ public struct AgentHandoff {
     }
 }
 
-extension AgentHandoff: LinearEncodable {
-    public static func parse(_ input: Data) throws -> (AgentHandoff, Int) {
-        let (
-            knownAgentSignature,
-            agentData,
-            newAgentSignature,
-            consumed
-        ) = try LinearEncoder.decode(
-            TypedSignature.self,
-            AgentUpdate.self,
-            TypedSignature.self,
-            input: input
-        )
-        return (
-            .init(
-                knownAgentSignature: knownAgentSignature,
-                agentData: agentData,
-                newAgentSignature: newAgentSignature
-            ),
-            consumed
+extension AgentHandoff: LinearEncodedTriple {
+    var first: TypedSignature { knownAgentSignature }
+    var second: AgentUpdate { agentData }
+    var third: TypedSignature { newAgentSignature }
+
+    init(first: TypedSignature, second: AgentUpdate, third: TypedSignature)
+        throws
+    {
+        self.init(
+            knownAgentSignature: first,
+            agentData: second,
+            newAgentSignature: third
         )
     }
-
 }

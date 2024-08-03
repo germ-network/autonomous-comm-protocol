@@ -53,34 +53,12 @@ public struct AgentUpdate: Sendable, Equatable {
     public let addresses: [ProtocolAddress]
 }
 
-extension AgentUpdate: LinearEncodable {
-    public static func parse(_ input: Data) throws -> (AgentUpdate, Int) {
-        let (
-            version,
-            isAppClip,
-            addresses,
-            consumed
-        ) = try LinearEncoder.decode(
-            SemanticVersion.self,
-            Bool.self,
-            [ProtocolAddress].self,
-            input: input
-        )
+extension AgentUpdate: LinearEncodedTriple {
+    var first: SemanticVersion { version }
+    var second: Bool { isAppClip }
+    var third: [ProtocolAddress] { addresses }
 
-        let result = AgentUpdate(
-            version: version,
-            isAppClip: isAppClip,
-            addresses: addresses
-        )
-        return (result, consumed)
+    init(first: SemanticVersion, second: Bool, third: [ProtocolAddress]) throws {
+        self.init(version: first, isAppClip: second, addresses: third)
     }
-
-    public var wireFormat: Data {
-        get throws {
-            try version.wireFormat
-                + isAppClip.wireFormat
-                + addresses.wireFormat
-        }
-    }
-
 }

@@ -75,5 +75,4 @@ extension LinearEncodedTriple {
                 + third.wireFormat
         }
     }
-
 }

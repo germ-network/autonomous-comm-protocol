@@ -153,33 +153,13 @@ public struct IdentityMutableData: Sendable, Equatable {
     }
 }
 
-extension IdentityMutableData: LinearEncodable {
-    public static func parse(_ input: Data) throws -> (
-        IdentityMutableData,
-        Int
-    ) {
-        let (counter, pronouns, aboutText, consumed) = try LinearEncoder.decode(
-            UInt16.self,
-            [String].self,
-            OptionalString.self,
-            input: input.suffix(from: input.startIndex)
-        )
+extension IdentityMutableData: LinearEncodedTriple {
+    var first: UInt16 { counter }
+    var second: [String] { pronouns }
+    var third: String? { aboutText }
 
-        let result = IdentityMutableData(
-            counter: counter,
-            pronouns: pronouns,
-            aboutText: aboutText.string
-        )
-
-        return (result, consumed)
-    }
-
-    public var wireFormat: Data {
-        get throws {
-            try counter.dataRepresentation
-                + pronouns.wireFormat
-                + OptionalString(aboutText).wireFormat
-        }
+    init(first: UInt16, second: [String], third: String?) throws {
+        self.init(counter: first, pronouns: second, aboutText: third)
     }
 }
 
