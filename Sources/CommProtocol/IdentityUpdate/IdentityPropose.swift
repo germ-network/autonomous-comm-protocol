@@ -186,47 +186,29 @@ public struct IdentityHandoff {
     }
 }
 
-extension IdentityHandoff: LinearEncodable {
-    public static func parse(_ input: Data) throws -> (IdentityHandoff, Int) {
-        let (
-            signedNewIdentity,
-            predecessorSignature,
-            identityMutable,
-            newAgentKeyMaterial,
-            successorSignature,
-            imageResource,
-            consumed
-        ) = try LinearEncoder.decode(
-            SignedObject<CoreIdentity>.self,
-            TypedSignature.self,
-            IdentityMutableData.self,
-            TypedKeyMaterial.self,
-            TypedSignature.self,
-            SignedObject<Resource>.self,
-            input: input
-        )
+extension IdentityHandoff: LinearEncodedSextet {
+    var first: SignedObject<CoreIdentity> { signedNewIdentity }
+    var second: TypedSignature { predecessorSignature }
+    var third: IdentityMutableData { identityMutable }
+    var fourth: TypedKeyMaterial { newAgentKey.id }
+    var fifth: TypedSignature { successorSignature }
+    var sixth: SignedObject<Resource> { imageResource }
 
-        return (
-            try .init(
-                signedNewIdentity: signedNewIdentity,
-                predecessorSignature: predecessorSignature,
-                identityMutable: identityMutable,
-                newAgentKey: AgentPublicKey(archive: newAgentKeyMaterial),
-                successorSignature: successorSignature,
-                imageResource: imageResource
-            ),
-            consumed
+    init(
+        first: SignedObject<CoreIdentity>,
+        second: TypedSignature,
+        third: IdentityMutableData,
+        fourth: TypedKeyMaterial,
+        fifth: TypedSignature,
+        sixth: SignedObject<Resource>
+    ) throws {
+        self.init(
+            signedNewIdentity: first,
+            predecessorSignature: second,
+            identityMutable: third,
+            newAgentKey: try .init(archive: fourth),
+            successorSignature: fifth,
+            imageResource: sixth
         )
-    }
-
-    public var wireFormat: Data {
-        get throws {
-            try signedNewIdentity.wireFormat
-                + predecessorSignature.wireFormat
-                + identityMutable.wireFormat
-                + newAgentKey.wireFormat
-                + successorSignature.wireFormat
-                + imageResource.wireFormat
-        }
     }
 }

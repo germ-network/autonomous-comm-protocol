@@ -116,50 +116,30 @@ extension AgentHello: LinearEncodedPair {
     }
 }
 
-extension AgentHello.NewAgentData: LinearEncodable {
-    public static func parse(_ input: Data) throws -> (
-        AgentHello.NewAgentData,
-        Int
-    ) {
-        let (
-            version,
-            isAppClip,
-            addresses,
-            keyChoices,
-            imageResource,
-            expiration,
-            consumed
-        ) = try LinearEncoder.decode(
-            SemanticVersion.self,
-            Bool.self,
-            [ProtocolAddress].self,
-            KeyPackageChoices.self,
-            Resource.self,
-            Date.self,
-            input: input
+extension AgentHello.NewAgentData: LinearEncodedSextet {
+    var first: SemanticVersion { version }
+    var second: Bool { isAppClip }
+    var third: [ProtocolAddress] { addresses }
+    var fourth: KeyPackageChoices { keyChoices }
+    var fifth: Resource { imageResource }
+    var sixth: Date { expiration }
+
+    init(
+        first: SemanticVersion,
+        second: Bool,
+        third: [ProtocolAddress],
+        fourth: [TypedKeyPackage],
+        fifth: Resource,
+        sixth: Date
+    ) throws {
+        self.init(
+            version: first,
+            isAppClip: second,
+            addresses: third,
+            keyChoices: fourth,
+            imageResource: fifth,
+            expiration: sixth
         )
-
-        let result = Self(
-            version: version,
-            isAppClip: isAppClip,
-            addresses: addresses,
-            keyChoices: keyChoices,
-            imageResource: imageResource,
-            expiration: expiration
-        )
-
-        return (result, consumed)
-    }
-
-    public var wireFormat: Data {
-        get throws {
-            try version.wireFormat
-                + isAppClip.wireFormat
-                + addresses.wireFormat
-                + keyChoices.wireFormat
-                + imageResource.wireFormat
-                + expiration.wireFormat
-        }
     }
 }
 
