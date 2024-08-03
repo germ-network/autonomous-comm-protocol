@@ -24,5 +24,4 @@ extension Bool: LinearEncodable {
     public var wireFormat: Data {
         self ? Data([UInt8(1)]) : Data([UInt8(0)])
     }
-
 }

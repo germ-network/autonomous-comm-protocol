@@ -61,25 +61,6 @@ public struct TypedKeyPackage: Equatable, Sendable {
     }
 }
 
-//extension TypedKeyPackage: LinearEncodable {
-//    static public func parse(_ input: Data) throws -> (TypedKeyPackage, Int) {
-//        let (suite, declaredWidth, consumed) = try LinearEncoder.decode(
-//            SessionEncryptionSuites.self,
-//            DeclaredWidthData.self,
-//            input: input
-//        )
-//
-//        let value = TypedKeyPackage(suite: suite, keyPackage: declaredWidth.body)
-//        return (value, consumed)
-//    }
-//
-//    public var wireFormat: Data {
-//        get throws {
-//            try [suite.rawValue] + DeclaredWidthData(body: keyPackage).wireFormat
-//        }
-//    }
-//}
-
 extension TypedKeyPackage: LinearEncodedPair {
     var first: SessionEncryptionSuites { suite }
     var second: Data { keyPackage }

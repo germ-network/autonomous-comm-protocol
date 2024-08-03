@@ -29,18 +29,29 @@ public struct AgentHelloReply: Sendable {
     let sentTime: Date  //just as messages assert local send time
 }
 
-extension AgentHelloReply: LinearEncodable {
-    public static func parse(_ input: Data) throws -> (AgentHelloReply, Int) {
-        throw LinearEncodingError.notImplemented
+extension AgentHelloReply: LinearEncodedSextet {
+    var first: IdentityIntroduction { introduction }
+    var second: AgentUpdate { agentData }
+    var third: Resource { imageResource }
+    var fourth: Data { groupIdSeed }
+    var fifth: TypedSignature { agentSignatureWelcome }
+    var sixth: Date { sentTime }
+    
+    init(
+        first: IdentityIntroduction,
+        second: AgentUpdate,
+        third: Resource,
+        fourth: Data,
+        fifth: TypedSignature,
+        sixth: Date
+    ) throws {
+        self.init(
+            introduction: first,
+            agentData: second,
+            imageResource: third,
+            groupIdSeed: fourth,
+            agentSignatureWelcome: fifth,
+            sentTime: sixth
+        )
     }
-
-    public var wireFormat: Data {
-        get throws {
-            try introduction.wireFormat
-                + agentData.wireFormat
-                + imageResource.wireFormat
-                + DeclaredWidthData(body: groupIdSeed).wireFormat
-        }
-    }
-
 }

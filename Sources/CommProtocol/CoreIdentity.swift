@@ -24,7 +24,7 @@ public struct CoreIdentity: Sendable, Equatable {
     public let name: String
     public let describedImage: DescribedImage
     public let version: SemanticVersion
-    let nonce: DeclaredWidthData
+    let nonce: Data
 
     init(
         id: IdentityPublicKey,
@@ -37,48 +37,35 @@ public struct CoreIdentity: Sendable, Equatable {
         self.name = name
         self.describedImage = describedImage
         self.version = version
-        self.nonce = try .init(body: nonce)
+        self.nonce = nonce
     }
 }
 
-extension CoreIdentity: LinearEncodable {
-    public static func parse(_ input: Data) throws -> (CoreIdentity, Int) {
-        let (id, name, describedImage, version, nonce, consumed) =
-            try LinearEncoder
-            .decode(
-                TypedKeyMaterial.self,
-                String.self,
-                DescribedImage.self,
-                SemanticVersion.self,
-                DeclaredWidthData.self,
-                input: input
-            )
+extension CoreIdentity: LinearEncodedQuintuple {
+    var first: TypedKeyMaterial { id.id }
+    var second: String { name }
+    var third: DescribedImage { describedImage }
+    var fourth: SemanticVersion { version }
+    var fifth: Data { nonce }
 
-        let result = try CoreIdentity(
-            id: try .init(archive: id),
-            name: name,
-            describedImage: describedImage,
-            version: version,
-            nonce: nonce.body
+    init(
+        first: TypedKeyMaterial,
+        second: String,
+        third: DescribedImage,
+        fourth: SemanticVersion,
+        fifth: Data
+    ) throws {
+        try self.init(
+            id: .init(archive: first),
+            name: second,
+            describedImage: third,
+            version: fourth,
+            nonce: fifth
         )
-        return (result, consumed)
-
     }
-
-    public var wireFormat: Data {
-        get throws {
-            try id.id.wireFormat
-                + name.wireFormat
-                + describedImage.wireFormat
-                + version.wireFormat
-                + nonce.wireFormat
-        }
-    }
-
 }
 
 public struct DescribedImage: Equatable, Sendable {
-    //TODO: make this a typed digest
     public let imageDigest: TypedDigest
     public let altText: String?
 
@@ -88,25 +75,12 @@ public struct DescribedImage: Equatable, Sendable {
     }
 }
 
-extension DescribedImage: LinearEncodable {
-    public static func parse(_ input: Data) throws -> (DescribedImage, Int) {
-        let (digest, altText, consumed) = try LinearEncoder.decode(
-            TypedDigest.self,
-            OptionalString.self,
-            input: input
-        )
-        let value = DescribedImage(
-            imageDigest: digest,
-            altText: altText.string
-        )
-        return (value, consumed)
-    }
+extension DescribedImage: LinearEncodedPair {
+    var first: TypedDigest { imageDigest }
+    var second: OptionalString? { .init(altText) }
 
-    public var wireFormat: Data {
-        get throws {
-            try imageDigest.wireFormat
-                + OptionalString(altText).wireFormat
-        }
+    init(first: TypedDigest, second: OptionalString?) throws {
+        self.init(imageDigest: first, altText: second?.string)
     }
 }
 

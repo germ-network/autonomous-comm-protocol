@@ -42,33 +42,19 @@ public struct Resource: Sendable {
     }
 }
 
-extension Resource: LinearEncodable {
-    public static func parse(_ input: Data) throws -> (Resource, Int) {
-        let (id, host, keyData, expiration, consumed) = try LinearEncoder.decode(
-            String.self,
-            String.self,
-            DeclaredWidthData.self,
-            Date.self,
-            input: input
+extension Resource: LinearEncodedQuad {
+    var first: String { identifier }
+    var second: String { host }
+    var third: Data { symmetricKey.dataRepresentation }
+    var fourth: Date { expiration }
+    
+    init(first: String, second: String, third: Data, fourth: Date) throws {
+        try self.init(
+            identifier: first,
+            host: second,
+            symmetricKey: .init(rawRepresentation: third),
+            expiration: fourth
         )
-
-        let result = Resource(
-            identifier: id,
-            host: host,
-            symmetricKey: .init(data: keyData.body),
-            expiration: expiration
-        )
-
-        return (result, consumed)
-    }
-
-    public var wireFormat: Data {
-        get throws {
-            try identifier.wireFormat
-                + host.wireFormat
-                + DeclaredWidthData(body: symmetricKey.rawRepresentation).wireFormat
-                + expiration.wireFormat
-        }
     }
 }
 
