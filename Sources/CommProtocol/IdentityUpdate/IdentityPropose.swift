@@ -211,7 +211,7 @@ extension IdentityHandoff: LinearEncodable {
             consumed
         )
     }
-    
+
     public var wireFormat: Data {
         get throws {
             try signedNewIdentity.wireFormat

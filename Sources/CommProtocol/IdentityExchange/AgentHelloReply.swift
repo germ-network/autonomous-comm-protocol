@@ -18,31 +18,29 @@ import Foundation
 ///- we process the stapled application message containing the AgentHelloReply
 ///- check the contents of the AgentHelloReply
 
-
 public struct AgentHelloReply: Sendable {
     let introduction: IdentityIntroduction
     let agentData: AgentUpdate
     let imageResource: Resource
-    
+
     let groupIdSeed: Data
     let agentSignatureWelcome: TypedSignature
-    
-    let sentTime: Date //just as messages assert local send time
+
+    let sentTime: Date  //just as messages assert local send time
 }
 
 extension AgentHelloReply: LinearEncodable {
     public static func parse(_ input: Data) throws -> (AgentHelloReply, Int) {
         throw LinearEncodingError.notImplemented
     }
-    
+
     public var wireFormat: Data {
         get throws {
             try introduction.wireFormat
-            + agentData.wireFormat
-            + imageResource.wireFormat
-            + DeclaredWidthData(body: groupIdSeed).wireFormat
+                + agentData.wireFormat
+                + imageResource.wireFormat
+                + DeclaredWidthData(body: groupIdSeed).wireFormat
         }
     }
-    
-    
+
 }

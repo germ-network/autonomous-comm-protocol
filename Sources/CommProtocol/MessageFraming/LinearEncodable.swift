@@ -51,6 +51,7 @@ extension Data {
 }
 
 public struct LinearEncoder {
+    //can't yet deprecate as we use in the enum
     static func decode<T: LinearEncodable, U: LinearEncodable>(
         _ firstType: T.Type,
         _ secondType: U.Type,
@@ -239,6 +240,7 @@ public enum LinearEncodingError: Error, Equatable {
     case bodyTooLarge
     case unexpectedData
     case unexpectedEOF
+    case requiredValueMissing
     case notImplemented  //shim
 }
 
@@ -256,6 +258,7 @@ extension LinearEncodingError: LocalizedError {
         case .bodyTooLarge: "Data body too large"
         case .unexpectedData: "Additional data found at end of parse"
         case .unexpectedEOF: "Unexpected end of input"
+        case .requiredValueMissing: "Required Value Missing"
         case .notImplemented: "Not Implemented"
         }
     }

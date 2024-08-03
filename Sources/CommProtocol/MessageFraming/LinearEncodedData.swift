@@ -84,7 +84,7 @@ extension String: LinearEncodable {
     static public func parse(_ input: Data) throws -> (String, Int) {
         let (maybe, consumed) = try OptionalString.parse(input)
         guard let string = maybe.string else {
-            throw LinearEncodingError.unexpectedData
+            throw LinearEncodingError.requiredValueMissing
         }
         return (string, consumed)
     }
@@ -92,6 +92,22 @@ extension String: LinearEncodable {
     public var wireFormat: Data {
         get throws {
             try OptionalString(self).wireFormat
+        }
+    }
+}
+
+extension Data: LinearEncodable {
+    static public func parse(_ input: Data) throws -> (Data, Int) {
+        let (maybe, consumed) = try OptionalData.parse(input)
+        guard let data = maybe.data else {
+            throw LinearEncodingError.requiredValueMissing
+        }
+        return (data, consumed)
+    }
+
+    public var wireFormat: Data {
+        get throws {
+            try OptionalData(data: self).wireFormat
         }
     }
 }

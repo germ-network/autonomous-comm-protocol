@@ -51,7 +51,7 @@ extension SessionEncryptionSuites: LinearEncodable {
 }
 
 // for MLS, data value is an encoded MLS KeyPackage message
-public struct TypedKeyPackage: Equatable {
+public struct TypedKeyPackage: Equatable, Sendable {
     public let suite: SessionEncryptionSuites
     public let keyPackage: Data
 
@@ -61,22 +61,31 @@ public struct TypedKeyPackage: Equatable {
     }
 }
 
-extension TypedKeyPackage: LinearEncodable {
-    static public func parse(_ input: Data) throws -> (TypedKeyPackage, Int) {
-        let (suite, declaredWidth, consumed) = try LinearEncoder.decode(
-            SessionEncryptionSuites.self,
-            DeclaredWidthData.self,
-            input: input
-        )
+//extension TypedKeyPackage: LinearEncodable {
+//    static public func parse(_ input: Data) throws -> (TypedKeyPackage, Int) {
+//        let (suite, declaredWidth, consumed) = try LinearEncoder.decode(
+//            SessionEncryptionSuites.self,
+//            DeclaredWidthData.self,
+//            input: input
+//        )
+//
+//        let value = TypedKeyPackage(suite: suite, keyPackage: declaredWidth.body)
+//        return (value, consumed)
+//    }
+//
+//    public var wireFormat: Data {
+//        get throws {
+//            try [suite.rawValue] + DeclaredWidthData(body: keyPackage).wireFormat
+//        }
+//    }
+//}
 
-        let value = TypedKeyPackage(suite: suite, keyPackage: declaredWidth.body)
-        return (value, consumed)
-    }
+extension TypedKeyPackage: LinearEncodedPair {
+    var first: SessionEncryptionSuites { suite }
+    var second: Data { keyPackage }
 
-    public var wireFormat: Data {
-        get throws {
-            try [suite.rawValue] + DeclaredWidthData(body: keyPackage).wireFormat
-        }
+    init(first: SessionEncryptionSuites, second: Data) {
+        self.init(suite: first, keyPackage: second)
     }
 }
 

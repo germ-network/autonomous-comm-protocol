@@ -188,10 +188,10 @@ public struct IdentityIntroduction {
     let signedIdentity: SignedObject<CoreIdentity>
     let identityMutable: SignedObject<IdentityMutableData>
     let agentDelegate: IdentityDelegate
-    
+
 }
 
-extension IdentityIntroduction:LinearEncodable {
+extension IdentityIntroduction: LinearEncodable {
     static public func parse(_ input: Data) throws -> (IdentityIntroduction, Int) {
         let (
             signedIdentity,
@@ -204,17 +204,17 @@ extension IdentityIntroduction:LinearEncodable {
             IdentityDelegate.self,
             input: input
         )
-        
+
         return (
             .init(
                 signedIdentity: signedIdentity,
                 identityMutable: identityMutable,
                 agentDelegate: agentDelegate
-            ) ,
+            ),
             consumed
         )
     }
-    
+
     public var wireFormat: Data {
         get throws {
             try signedIdentity.wireFormat

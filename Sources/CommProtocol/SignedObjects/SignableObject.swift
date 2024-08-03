@@ -13,27 +13,14 @@ public struct SignedObject<Content: LinearEncodable>: Sendable {
     let signature: TypedSignature
 }
 
-extension SignedObject: LinearEncodable {
-    public static func parse(_ input: Data) throws -> (
-        SignedObject<Content>,
-        Int
-    ) {
-        let (content, signature, consumed) = try LinearEncoder.decode(
-            Content.self,
-            TypedSignature.self,
-            input: input
-        )
-        return (
-            .init(content: content, signature: signature),
-            consumed
-        )
+extension SignedObject: LinearEncodedPair {
+    var first: Content { content }
+    var second: TypedSignature { signature }
+
+    init(first: Content, second: TypedSignature) throws {
+        self.init(content: first, signature: second)
     }
 
-    public var wireFormat: Data {
-        get throws {
-            try content.wireFormat + signature.wireFormat
-        }
-    }
 }
 
 //like TypedKeyMaterial, prepend a byte that indicates length of the body
