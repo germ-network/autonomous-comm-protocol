@@ -77,26 +77,13 @@ public struct AgentPrivateKey: Sendable {
         return .sameAgent(typedSignature)
     }
 
-    ///Agent handoffs cross 3 isolation domains
+    ///Agent handoffs cross 2 isolation domains
     /// 1. start in IdentityPrivateKey creating a new agent
-    /// 2. the existing Agent signs the new agent Key
     /// 3. the new Agent completes it
-    public func startAgentHandoff(
-        newAgent: AgentPublicKey,
-        context: TypedDigest
-    ) throws -> TypedSignature {
-        let signatureOver = AgentHandoff.KnownAgentTBS(
-            newAgentKey: newAgent,
-            context: context
-        )
-        return try sign(input: signatureOver.formatForSigning)
-    }
-
     public func completeAgentHandoff(
         existingIdentity: IdentityPublicKey,
         identityDelegate: IdentityDelegate,
         establishedAgent: AgentPublicKey,
-        establishedSignature: TypedSignature,
         context: TypedDigest,
         agentData: AgentUpdate,
         updateMessage: Data
@@ -111,7 +98,6 @@ public struct AgentPrivateKey: Sendable {
         let newAgentSignature = try sign(input: newAgentSignatureOver)
 
         let agentHandoff = AgentHandoff(
-            knownAgentSignature: establishedSignature,
             agentData: agentData,
             newAgentSignature: newAgentSignature
         )
@@ -123,7 +109,6 @@ public struct AgentPrivateKey: Sendable {
         newIdentity: IdentityPublicKey,
         identityHandoff: IdentityHandoff,
         establishedAgent: AgentPublicKey,
-        establishedAgentSignature: TypedSignature,
         context: TypedDigest,
         agentData: AgentUpdate,
         updateMessage: Data
@@ -138,7 +123,6 @@ public struct AgentPrivateKey: Sendable {
         let newAgentSignature = try sign(input: newAgentSignatureOver)
 
         let agentHandoff = AgentHandoff(
-            knownAgentSignature: establishedAgentSignature,
             agentData: agentData,
             newAgentSignature: newAgentSignature
         )

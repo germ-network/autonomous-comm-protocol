@@ -35,7 +35,7 @@ struct ApplicationUpdate {
 
 enum ApplicationContent {
     case textMessage(AppTextMessage)
-    case identityFollowup(IdentityFollowup)
+    //    case identityFollowup(IdentityFollowup)
 }
 
 struct AppTextMessage {

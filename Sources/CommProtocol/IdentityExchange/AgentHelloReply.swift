@@ -37,7 +37,7 @@ extension AgentHelloReply: LinearEncodedSextet {
     var fourth: Data { groupIdSeed }
     var fifth: TypedSignature { agentSignatureWelcome }
     var sixth: Date { sentTime }
-    
+
     init(
         first: IdentityIntroduction,
         second: AgentUpdate,

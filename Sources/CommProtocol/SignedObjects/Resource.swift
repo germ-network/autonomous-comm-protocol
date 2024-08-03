@@ -47,7 +47,7 @@ extension Resource: LinearEncodedQuad {
     var second: String { host }
     var third: Data { symmetricKey.dataRepresentation }
     var fourth: Date { expiration }
-    
+
     init(first: String, second: String, third: Data, fourth: Date) throws {
         try self.init(
             identifier: first,

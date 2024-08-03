@@ -8,17 +8,6 @@
 import Foundation
 
 public struct AgentHandoff {
-    struct KnownAgentTBS {
-        static let discriminator = Data("proposeAgent".utf8)
-        let newAgentKey: AgentPublicKey
-        let context: TypedDigest
-
-        var formatForSigning: Data {
-            Self.discriminator + newAgentKey.wireFormat + context.wireFormat
-        }
-    }
-    let knownAgentSignature: TypedSignature
-
     struct NewAgentTBS {
         static let discriminator = Data("successorAgent".utf8)
         //All of these are injected and already known
@@ -46,8 +35,7 @@ public struct AgentHandoff {
 
     public var wireFormat: Data {
         get throws {
-            try knownAgentSignature.wireFormat
-                + agentData.wireFormat
+            try agentData.wireFormat
                 + newAgentSignature.wireFormat
         }
     }
@@ -85,18 +73,16 @@ public struct AgentHandoff {
     }
 }
 
-extension AgentHandoff: LinearEncodedTriple {
-    var first: TypedSignature { knownAgentSignature }
-    var second: AgentUpdate { agentData }
-    var third: TypedSignature { newAgentSignature }
+extension AgentHandoff: LinearEncodedPair {
+    var first: AgentUpdate { agentData }
+    var second: TypedSignature { newAgentSignature }
 
-    init(first: TypedSignature, second: AgentUpdate, third: TypedSignature)
+    init(first: AgentUpdate, second: TypedSignature)
         throws
     {
         self.init(
-            knownAgentSignature: first,
-            agentData: second,
-            newAgentSignature: third
+            agentData: first,
+            newAgentSignature: second
         )
     }
 }

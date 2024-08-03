@@ -92,16 +92,10 @@ struct CommProposalTests {
         let newAgentData = AgentUpdate.mock()
         let mockMessage = Mocks.mockMessage()
 
-        let existingSignature = try knownAgent.startAgentHandoff(
-            newAgent: newAgent.publicKey,
-            context: mockContext
-        )
-
         let proposal = try newAgent.completeAgentHandoff(
             existingIdentity: knownIdentity.id,
             identityDelegate: identityDelegate,
             establishedAgent: knownAgent.publicKey,
-            establishedSignature: existingSignature,
             context: mockContext,
             agentData: newAgentData,
             updateMessage: mockMessage
@@ -134,16 +128,10 @@ struct CommProposalTests {
         let newAgentData = AgentUpdate.mock()
         let mockMessage = Mocks.mockMessage()
 
-        let existingSignature = try knownAgent.startAgentHandoff(
-            newAgent: newAgent.publicKey,
-            context: mockContext
-        )
-
         let proposal = try newAgent.completeAgentHandoff(
             existingIdentity: knownIdentity.id,
             identityDelegate: identityDelegate,
             establishedAgent: knownAgent.publicKey,
-            establishedSignature: existingSignature,
             context: mockContext,
             agentData: newAgentData,
             updateMessage: mockMessage
@@ -180,16 +168,11 @@ struct CommProposalTests {
         )
 
         let mockMessage = Mocks.mockMessage()
-        let existingAgentSignature = try knownAgent.startAgentHandoff(
-            newAgent: newAgent.publicKey,
-            context: mockContext
-        )
 
         let proposal = try newAgent.completeIdentityHandoff(
             newIdentity: nextIdentity.id,
             identityHandoff: identityHandoff,
             establishedAgent: knownAgent.publicKey,
-            establishedAgentSignature: existingAgentSignature,
             context: mockContext,
             agentData: .mock(),
             updateMessage: mockMessage

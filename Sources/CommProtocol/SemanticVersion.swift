@@ -37,7 +37,7 @@ extension SemanticVersion: LinearEncodedQuad {
     var second: UInt32 { minor }
     var third: UInt32 { patch }
     var fourth: OptionalString { .init(preReleaseSuffix) }
-    
+
     init(first: UInt32, second: UInt32, third: UInt32, fourth: OptionalString) throws {
         self.init(
             major: first,
