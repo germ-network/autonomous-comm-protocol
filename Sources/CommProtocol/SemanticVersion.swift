@@ -59,6 +59,7 @@ extension UInt32: LinearEncodable {
         if prefix < UInt8.max {
             return (.init(prefix), 1)
         } else {
+            // the UInt32 initializer will check width and make a copy
             let result = try UInt32(
                 dataRepresentation:
                     input

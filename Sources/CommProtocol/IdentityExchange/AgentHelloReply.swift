@@ -23,6 +23,7 @@ public struct AgentHelloReply: Sendable {
     let agentData: AgentUpdate
     let imageResource: Resource
 
+    ///A seed to be mixed into the initial pair of agent id's to derive the underlying group Id
     let groupIdSeed: Data
     let agentSignatureWelcome: TypedSignature
 
