@@ -14,7 +14,7 @@ struct APITests {
     let coreIdentity: CoreIdentity
     let signedIdentity: SignedObject<CoreIdentity>
     let agentKey: AgentPrivateKey
-    let signedDelegation: IdentityDelegate
+    let signedIntroduction: SignedObject<IdentityIntroduction.Contents>
     let agentHello: AgentHello
 
     init() throws {
@@ -22,18 +22,22 @@ struct APITests {
             try Mocks
             .mockIdentity()
 
-        (agentKey, signedDelegation) =
+        (agentKey, signedIntroduction) =
             try identityKey
-            .createAgentDelegate(context: nil)
+            .createHelloDelegate(
+                identityMutable: .mock(),
+                context: nil
+            )
 
         agentHello = try agentKey.createAgentHello(
             signedIdentity: signedIdentity,
-            identityMutable:
-                try identityKey
-                .sign(mutableData: .mock()),
-            agentDelegate: signedDelegation,
-            newAgentData: .mock()
+            signedContents: signedIntroduction,
+            signedAgentData: try agentKey.sign(
+                helloData: .mock(),
+                for: coreIdentity.id
+            )
         )
+
     }
 
     @Test func testLifecycle() throws {

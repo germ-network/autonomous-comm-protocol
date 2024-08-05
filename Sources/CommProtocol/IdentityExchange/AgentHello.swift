@@ -17,26 +17,17 @@ public struct AgentHello: Sendable {
     //what the agent signs
     public struct NewAgentData: Sendable {
         //prepend the identity key when signing
-        public let version: SemanticVersion
-        public let isAppClip: Bool
-        public let addresses: [ProtocolAddress]
+        public let agentUpdate: AgentUpdate
         public let keyChoices: KeyPackageChoices
-        public let imageResource: Resource
         public let expiration: Date
 
         public init(
-            version: SemanticVersion,
-            isAppClip: Bool,
-            addresses: [ProtocolAddress],
+            agentUpdate: AgentUpdate,
             keyChoices: KeyPackageChoices,
-            imageResource: Resource,
             expiration: Date
         ) {
-            self.version = version
-            self.isAppClip = isAppClip
-            self.addresses = addresses
+            self.agentUpdate = agentUpdate
             self.keyChoices = keyChoices
-            self.imageResource = imageResource
             self.expiration = expiration
         }
 
@@ -50,14 +41,12 @@ public struct AgentHello: Sendable {
 
     public init(
         signedIdentity: SignedObject<CoreIdentity>,
-        identityMutable: SignedObject<IdentityMutableData>,
-        agentDelegate: IdentityDelegate,
+        signedContents: SignedObject<IdentityIntroduction.Contents>,
         signedAgentData: SignedObject<NewAgentData>
     ) {
         self.introduction = .init(
             signedIdentity: signedIdentity,
-            identityMutable: identityMutable,
-            agentDelegate: agentDelegate
+            signedContents: signedContents
         )
         self.signedAgentData = signedAgentData
     }
@@ -85,9 +74,9 @@ public struct AgentHello: Sendable {
     }
 
     public func validated() throws -> Validated {
-        let (identity, identityMutable, agentKey) = try introduction.validated(context: nil)
+        let (identity, contents) = try introduction.validated(context: nil)
 
-        let agentData = try agentKey.validate(
+        let agentData = try contents.agentKey.validate(
             signedAgentData: signedAgentData,
             for: identity.id
         )
@@ -95,8 +84,8 @@ public struct AgentHello: Sendable {
         return .init(
             coreIdentity: identity,
             signedIdentity: introduction.signedIdentity,
-            mutableData: identityMutable,
-            agentKey: agentKey,
+            mutableData: contents.mutableData,
+            agentKey: contents.agentKey,
             agentData: agentData
         )
     }
@@ -106,39 +95,32 @@ extension AgentHello: LinearEncodedPair {
     var first: IdentityIntroduction { introduction }
     var second: SignedObject<NewAgentData> { signedAgentData }
 
-    init(first: IdentityIntroduction, second: SignedObject<NewAgentData>) throws {
+    init(
+        first: IdentityIntroduction,
+        second: SignedObject<NewAgentData>
+    ) throws {
         self.init(
             signedIdentity: first.signedIdentity,
-            identityMutable: first.identityMutable,
-            agentDelegate: first.agentDelegate,
+            signedContents: first.signedContents,
             signedAgentData: second
         )
     }
 }
 
-extension AgentHello.NewAgentData: LinearEncodedSextet {
-    var first: SemanticVersion { version }
-    var second: Bool { isAppClip }
-    var third: [ProtocolAddress] { addresses }
-    var fourth: KeyPackageChoices { keyChoices }
-    var fifth: Resource { imageResource }
-    var sixth: Date { expiration }
+extension AgentHello.NewAgentData: LinearEncodedTriple {
+    var first: AgentUpdate { agentUpdate }
+    var second: KeyPackageChoices { keyChoices }
+    var third: Date { expiration }
 
     init(
-        first: SemanticVersion,
-        second: Bool,
-        third: [ProtocolAddress],
-        fourth: [TypedKeyPackage],
-        fifth: Resource,
-        sixth: Date
+        first: AgentUpdate,
+        second: [TypedKeyPackage],
+        third: Date
     ) throws {
         self.init(
-            version: first,
-            isAppClip: second,
-            addresses: third,
-            keyChoices: fourth,
-            imageResource: fifth,
-            expiration: sixth
+            agentUpdate: first,
+            keyChoices: second,
+            expiration: third
         )
     }
 }

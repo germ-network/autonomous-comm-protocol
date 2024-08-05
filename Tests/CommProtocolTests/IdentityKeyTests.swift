@@ -25,6 +25,8 @@ struct IdentityKeyTests {
     }
 
     @Test func testCreation() async throws {
+        try print("CoreIdentity size \(coreIdentity.wireFormat.count)")
+        try print("Signed CoreIdentity size \(signedIdentity.wireFormat.count)")
 
         let rehydrated: IdentityPrivateKey = try .init(archive: privateKey.archive)
         #expect(privateKey.archive == rehydrated.archive)

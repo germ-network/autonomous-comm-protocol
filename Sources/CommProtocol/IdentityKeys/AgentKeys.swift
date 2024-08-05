@@ -48,21 +48,30 @@ public struct AgentPrivateKey: Sendable {
         publicKey = .init(concrete: concrete.publicKey)
     }
 
+    //usually implicitly authorized by the session, but need direct signing in the AgentHello
+    public func sign(
+        helloData: AgentHello.NewAgentData,
+        for identity: IdentityPublicKey
+    ) throws -> SignedObject<AgentHello.NewAgentData> {
+        .init(
+            content: helloData,
+            signature: try sign(
+                input: helloData.formatForSigning(
+                    with: identity
+                )
+            )
+        )
+    }
+
     public func createAgentHello(
         signedIdentity: SignedObject<CoreIdentity>,
-        identityMutable: SignedObject<IdentityMutableData>,
-        agentDelegate: IdentityDelegate,
-        newAgentData: AgentHello.NewAgentData
+        signedContents: SignedObject<IdentityIntroduction.Contents>,
+        signedAgentData: SignedObject<AgentHello.NewAgentData>
     ) throws -> AgentHello {
         .init(
             signedIdentity: signedIdentity,
-            identityMutable: identityMutable,
-            agentDelegate: agentDelegate,
-            signedAgentData: try sign(
-                newAgentData: newAgentData,
-                identity: try signedIdentity.verifiedIdentity().id
-            )
-        )
+            signedContents: signedContents,
+            signedAgentData: signedAgentData)
     }
 
     public func proposeLeafNode(

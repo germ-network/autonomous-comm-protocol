@@ -12,29 +12,31 @@ import Testing
 @testable import CommProtocol
 
 struct AgentHelloTests {
-    let privateKey: IdentityPrivateKey
+    let identityKey: IdentityPrivateKey
     let coreIdentity: CoreIdentity
     let signedIdentity: SignedObject<CoreIdentity>
     let agentKey: AgentPrivateKey
-    let signedDelegation: IdentityDelegate
+    let signedIntroduction: SignedObject<IdentityIntroduction.Contents>
     let agentHello: AgentHello
 
     init() throws {
-        (privateKey, coreIdentity, signedIdentity) =
+        (identityKey, coreIdentity, signedIdentity) =
             try Mocks
             .mockIdentity()
 
-        (agentKey, signedDelegation) =
-            try privateKey
-            .createAgentDelegate(context: nil)
+        (agentKey, signedIntroduction) =
+            try identityKey
+            .createHelloDelegate(
+                identityMutable: .mock(),
+                context: nil
+            )
 
         agentHello = try agentKey.createAgentHello(
             signedIdentity: signedIdentity,
-            identityMutable:
-                try privateKey
-                .sign(mutableData: .mock()),
-            agentDelegate: signedDelegation,
-            newAgentData: .mock()
+            signedContents: signedIntroduction,
+            signedAgentData: try agentKey.sign(
+                helloData: .mock(), for: coreIdentity.id
+            )
         )
     }
 
@@ -56,14 +58,19 @@ struct AgentHelloTests {
 
     @Test func testAgentHelloFailure() throws {
         let agentData = agentHello.signedAgentData.content
+
+        let modifedData = AgentUpdate(
+            version: agentData.agentUpdate.version,
+            isAppClip: !agentData.agentUpdate.isAppClip,  //invert
+            addresses: agentData.agentUpdate.addresses
+        )
+
         let modifiedTBS = AgentHello.NewAgentData(
-            version: agentData.version,
-            isAppClip: true,
-            addresses: agentData.addresses,
+            agentUpdate: modifedData,
             keyChoices: agentData.keyChoices,
-            imageResource: agentData.imageResource,
             expiration: agentData.expiration
         )
+
         let modifiedSignedAgentData = SignedObject<AgentHello.NewAgentData>(
             content: modifiedTBS,
             signature: agentHello.signedAgentData.signature
@@ -71,8 +78,7 @@ struct AgentHelloTests {
 
         let modifiedTBSHello = AgentHello(
             signedIdentity: agentHello.introduction.signedIdentity,
-            identityMutable: agentHello.introduction.identityMutable,
-            agentDelegate: agentHello.introduction.agentDelegate,
+            signedContents: agentHello.introduction.signedContents,
             signedAgentData: modifiedSignedAgentData
         )
 

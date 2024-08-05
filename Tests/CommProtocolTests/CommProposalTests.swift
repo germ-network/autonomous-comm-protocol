@@ -123,7 +123,9 @@ struct CommProposalTests {
 
         let (newAgent, identityDelegate) =
             try knownIdentityKey
-            .createAgentDelegate(context: mockContext)
+            .createAgentDelegate(
+                context: mockContext
+            )
 
         let newAgentData = AgentUpdate.mock()
         let mockMessage = Mocks.mockMessage()
