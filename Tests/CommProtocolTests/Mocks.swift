@@ -5,13 +5,12 @@
 //  Created by Mark @ Germ on 7/30/24.
 //
 
+import CommProtocol
 import CryptoKit
 import Foundation
 
-@testable import CommProtocol
-
 extension AgentUpdate {
-    static func mock() -> Self {
+    public static func mock() -> Self {
         .init(
             version: .mock(),
             isAppClip: true,
@@ -70,23 +69,22 @@ extension TypedDigest {
 extension DescribedImage {
     public static func mock() throws -> Self {
         .init(
-            imageDigest: try .mock(),
-            altText: "description"
-        )
+            imageData: SymmetricKey(size: .bits256).rawRepresentation,
+            altText: "description")
     }
 }
 
-extension CoreIdentity {
-    public static func mock(newIdentity: IdentityPublicKey) throws -> Self {
-        try .init(
-            id: newIdentity,
-            name: UUID().uuidString,
-            describedImage: try .mock(),
-            version: CoreIdentity.Constants.currentVersion,
-            nonce: SymmetricKey(size: .bits128).rawRepresentation
-        )
-    }
-}
+//extension CoreIdentity {
+//    public static func mock(newIdentity: IdentityPublicKey) throws -> Self {
+//        //use the API to do so instead of internal methods
+//        let (_, identity, _) = try IdentityPrivateKey.create(
+//            name: UUID().uuidString,
+//            describedImage: try .mock()
+//        )
+//
+//        return identity
+//    }
+//}
 
 extension SemanticVersion {
     public static func mock() -> Self {

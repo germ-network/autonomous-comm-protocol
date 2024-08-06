@@ -71,7 +71,7 @@ public struct AgentPrivateKey: Sendable {
             introduction: introduction,
             signedAgentData: signedAgentData)
     }
-    
+
     public func createAgentHelloReply(
         introduction: IdentityIntroduction,
         agentData: AgentUpdate,
@@ -79,7 +79,7 @@ public struct AgentPrivateKey: Sendable {
         welcomeMessage: Data
     ) throws -> AgentHelloReply {
         let signature = try sign(input: welcomeMessage)
-        
+
         return .init(
             introduction: introduction,
             agentData: agentData,

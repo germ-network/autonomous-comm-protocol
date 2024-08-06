@@ -29,7 +29,6 @@ import Foundation
 ///# 2. Application Messages staple an application agent update
 /// [Application Update][Application Content]
 
-
 enum ApplicationContent {
     case textMessage(AppTextMessage)
 }

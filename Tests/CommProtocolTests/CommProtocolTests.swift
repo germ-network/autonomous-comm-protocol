@@ -5,11 +5,10 @@
 //  Created by Mark @ Germ on 7/31/24.
 //
 
-import Foundation
 import CommProtocol
-import Testing
 import CryptoKit
-
+import Foundation
+import Testing
 
 ///exercise the public api
 struct APITests {
@@ -47,19 +46,19 @@ struct APITests {
     @Test func testLifecycle() throws {
         let validated = try agentHello.validated()
     }
-    
+
     @Test func testResource() throws {
         let resource = Resource.mock()
         let resourceURL = resource.url
         #expect(resourceURL?.host() == resource.host)
         #expect(resourceURL?.scheme == "https")
         #expect(resourceURL?.path() == "/api/card/fetch/" + resource.identifier)
-        
+
         let keyFragment = try #require(resourceURL?.fragment())
         let keyData = try #require(Data(base64URLEncoded: keyFragment))
         #expect(SymmetricKey(data: keyData) == resource.symmetricKey)
     }
-    
+
     @Test func testAddress() throws {
         let addressA = ProtocolAddress.mock()
         let addressB = ProtocolAddress.mock()

@@ -15,6 +15,12 @@ public struct AgentUpdate: Sendable, Equatable {
     public let isAppClip: Bool
     public let addresses: [ProtocolAddress]
 
+    public init(version: SemanticVersion, isAppClip: Bool, addresses: [ProtocolAddress]) {
+        self.version = version
+        self.isAppClip = isAppClip
+        self.addresses = addresses
+    }
+
     func formatForSigning(
         updateMessage: Data,
         context: TypedDigest

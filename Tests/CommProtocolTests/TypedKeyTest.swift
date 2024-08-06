@@ -48,29 +48,29 @@ struct TypedKeyTests {
         let typed = try TypedKeyMaterial(
             algorithm: .chaCha20Poly1305,
             symmetricKey: untyped256key)
-        
+
         let _ = try TypedKeyMaterial(
             algorithm: .aesGCM256,
             symmetricKey: untyped256key)
-        
+
         let received = try TypedKeyMaterial(wireFormat: typed.wireFormat)
 
         #expect(received.algorithm == .chaCha20Poly1305)
         #expect(received.keyData == untyped256key.rawRepresentation)
-        
+
         #expect(throws: LinearEncodingError.self) {
             let _ = try TypedKeyMaterial(
                 algorithm: .chaCha20Poly1305,
                 symmetricKey: shortKey)
         }
-        
+
         #expect(throws: LinearEncodingError.self) {
             let _ = try TypedKeyMaterial(
                 prefix: .chaCha20Poly1305,
                 checkedData: shortKey.rawRepresentation
             )
         }
-        
+
         #expect(throws: LinearEncodingError.self) {
             let _ = try TypedKeyMaterial(
                 algorithm: .hpkeEncapCurve25519Sha256ChachaPoly,
@@ -111,7 +111,7 @@ struct TypedKeyTests {
 
         let decrypted = try hpkeReceiver.open(message)
         #expect(decrypted == Data(plaintext.utf8))
-        
+
         #expect(throws: LinearEncodingError.self) {
             let _ = try TypedKeyMaterial(
                 encapAlgorithm: .aesGCM256,

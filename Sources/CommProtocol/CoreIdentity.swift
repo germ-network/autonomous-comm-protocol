@@ -69,8 +69,13 @@ public struct DescribedImage: Equatable, Sendable {
     public let imageDigest: TypedDigest
     public let altText: String?
 
-    public init(imageDigest: TypedDigest, altText: String?) {
+    init(imageDigest: TypedDigest, altText: String?) {
         self.imageDigest = imageDigest
+        self.altText = altText
+    }
+
+    public init(imageData: Data, altText: String?) {
+        self.imageDigest = .init(prefix: .sha256, over: imageData)
         self.altText = altText
     }
 }

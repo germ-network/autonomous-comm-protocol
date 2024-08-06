@@ -27,8 +27,7 @@ public struct AgentHelloReply: Sendable {
     let agentSignatureWelcome: TypedSignature
 
     let sentTime: Date  //just as messages assert local send time
-    
-    
+
 }
 
 extension AgentHelloReply: LinearEncodedQuintuple {
