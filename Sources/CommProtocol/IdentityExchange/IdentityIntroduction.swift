@@ -18,11 +18,11 @@ public struct IdentityIntroduction {
     //remainder of data the new Identity signs over
     public struct Contents {
         let mutableData: IdentityMutableData
+        let imageResource: Resource
         let agentKey: AgentPublicKey
 
         func formatForSigning(context: TypedDigest?) throws -> Data {
-            try mutableData.wireFormat + agentKey.wireFormat
-                + (context?.wireFormat ?? .init())
+            try wireFormat + (context?.wireFormat ?? .init())
         }
     }
 
@@ -31,7 +31,10 @@ public struct IdentityIntroduction {
         Contents
     ) {
         let verifiedIdentity = try signedIdentity.verifiedIdentity()
-        let contents = try verifiedIdentity.id.validate(signedObject: signedContents)
+        let contents = try verifiedIdentity.id.validate(
+            signedIntroduction: signedContents,
+            context: context
+        )
 
         return (verifiedIdentity, contents)
     }
@@ -52,14 +55,20 @@ extension IdentityIntroduction: LinearEncodedPair {
     }
 }
 
-extension IdentityIntroduction.Contents: LinearEncodedPair {
+extension IdentityIntroduction.Contents: LinearEncodedTriple {
     var first: IdentityMutableData { mutableData }
-    var second: TypedKeyMaterial { agentKey.id }
+    var second: Resource { imageResource }
+    var third: TypedKeyMaterial { agentKey.id }
 
-    init(first: IdentityMutableData, second: TypedKeyMaterial) throws {
+    init(
+        first: IdentityMutableData,
+        second: Resource,
+        third: TypedKeyMaterial
+    ) throws {
         try self.init(
             mutableData: first,
-            agentKey: .init(archive: second)
+            imageResource: second,
+            agentKey: .init(archive: third)
         )
     }
 }

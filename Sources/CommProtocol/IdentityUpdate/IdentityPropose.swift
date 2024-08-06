@@ -56,9 +56,9 @@ extension IdentityDelegate: LinearEncodedPair {
 
 ///package the elements you need for a identity handoff
 public struct IdentityHandoff {
-    let signedNewIdentity: SignedObject<CoreIdentity>
-    //over new identity pub Key + verb + TypedDigest
-    struct PredecessorTBS {  // can just
+    let introduction: IdentityIntroduction
+    //old key sign over over new identity pub Key + verb + TypedDigest
+    struct PredecessorTBS {
         static let discriminator = Data("proposeIdentity".utf8)
         let newIdentityPubKey: IdentityPublicKey
         let context: TypedDigest  //representing groupId
@@ -70,27 +70,10 @@ public struct IdentityHandoff {
     }
     let predecessorSignature: TypedSignature
 
-    struct SuccessorTBS {
-        static let discriminator = Data("successorIdentity".utf8)
-        let predecessorPubKey: IdentityPublicKey
-        let context: TypedDigest  //representing groupId
-        let newAgentKey: AgentPublicKey
-
-        var formatForSigning: Data {
-            Self.discriminator
-                + predecessorPubKey.id.wireFormat
-                + context.wireFormat
-                + newAgentKey.wireFormat
-        }
-    }
-    let identityMutable: IdentityMutableData
-    let newAgentKey: AgentPublicKey
-    let successorSignature: TypedSignature
-    let imageResource: SignedObject<Resource>
-
     struct Validated {
         let newIdentity: CoreIdentity
         let signedNewIdentity: SignedObject<CoreIdentity>
+        let newMutableData: IdentityMutableData
         let newAgentKey: AgentPublicKey
         let imageResource: Resource
     }
@@ -99,8 +82,7 @@ public struct IdentityHandoff {
         knownIdentity: IdentityPublicKey,
         context: TypedDigest
     ) throws -> Validated {
-        //verify self-contained new identity assertion
-        let newIdentity = try signedNewIdentity.verifiedIdentity()
+        let (newIdentity, introContents) = try introduction.validated(context: context)
 
         //verify predecessor signature over the new key + context
         let predecessorSignatureBody = PredecessorTBS(
@@ -116,55 +98,24 @@ public struct IdentityHandoff {
             throw ProtocolError.authenticationError
         }
 
-        //verify successor signature
-        let successorSignatureBody = SuccessorTBS(
-            predecessorPubKey: knownIdentity,
-            context: context,
-            newAgentKey: newAgentKey
-        ).formatForSigning
-        guard
-            newIdentity.id.publicKey.isValidSignature(
-                successorSignature.signature,
-                for: successorSignatureBody
-            )
-        else {
-            throw ProtocolError.authenticationError
-        }
-
-        let verfiedResource = try newAgentKey.validate(signedObject: imageResource)
-
         return .init(
             newIdentity: newIdentity,
-            signedNewIdentity: signedNewIdentity,
-            newAgentKey: newAgentKey,
-            imageResource: verfiedResource
+            signedNewIdentity: introduction.signedIdentity,
+            newMutableData: introContents.mutableData,
+            newAgentKey: introContents.agentKey,
+            imageResource: introContents.imageResource
         )
     }
 }
 
-extension IdentityHandoff: LinearEncodedSextet {
-    var first: SignedObject<CoreIdentity> { signedNewIdentity }
+extension IdentityHandoff: LinearEncodedPair {
+    var first: IdentityIntroduction { introduction }
     var second: TypedSignature { predecessorSignature }
-    var third: IdentityMutableData { identityMutable }
-    var fourth: TypedKeyMaterial { newAgentKey.id }
-    var fifth: TypedSignature { successorSignature }
-    var sixth: SignedObject<Resource> { imageResource }
 
-    init(
-        first: SignedObject<CoreIdentity>,
-        second: TypedSignature,
-        third: IdentityMutableData,
-        fourth: TypedKeyMaterial,
-        fifth: TypedSignature,
-        sixth: SignedObject<Resource>
-    ) throws {
+    init(first: IdentityIntroduction, second: TypedSignature) throws {
         self.init(
-            signedNewIdentity: first,
-            predecessorSignature: second,
-            identityMutable: third,
-            newAgentKey: try .init(archive: fourth),
-            successorSignature: fifth,
-            imageResource: sixth
+            introduction: first,
+            predecessorSignature: second
         )
     }
 }

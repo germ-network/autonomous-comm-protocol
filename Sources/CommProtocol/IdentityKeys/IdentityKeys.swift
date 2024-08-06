@@ -57,28 +57,24 @@ public struct IdentityPrivateKey: Sendable {
     //have to leave this framework to generate the update message
     //that we then pass to the agent in a variety of proposeAgentHandoff
     public func createHelloDelegate(
+        signedIdentity: SignedObject<CoreIdentity>,
         identityMutable: IdentityMutableData,
+        imageResource: Resource,
         context: TypedDigest?
     ) throws -> (
         AgentPrivateKey,
-        SignedObject<IdentityIntroduction.Contents>
+        IdentityIntroduction
     ) {
         let newAgent = AgentPrivateKey(algorithm: .curve25519)
 
-        let introductionContent = IdentityIntroduction.Contents(
-            mutableData: identityMutable,
-            agentKey: newAgent.publicKey
-        )
-        let signatureOver =
-            try introductionContent
-            .formatForSigning(context: context)
-
-        let signature = try sign(input: signatureOver)
         return (
             newAgent,
-            .init(
-                content: introductionContent,
-                signature: signature
+            try createIntroduction(
+                signedIdentity: signedIdentity,
+                newAgent: newAgent.publicKey,
+                identityMutable: identityMutable,
+                imageResource: imageResource,
+                context: context
             )
         )
     }
@@ -125,25 +121,18 @@ public struct IdentityPrivateKey: Sendable {
         imageResource: Resource
     ) throws -> (AgentPrivateKey, IdentityHandoff) {
         let newAgent = AgentPrivateKey(algorithm: .curve25519)
-        let newAgentPubKey = newAgent.publicKey
 
-        let newIdentitySignatureBody = IdentityHandoff.SuccessorTBS(
-            predecessorPubKey: existingIdentity,
-            context: context,
-            newAgentKey: newAgentPubKey
+        let introduction = try createIntroduction(
+            signedIdentity: signedIdentity,
+            newAgent: newAgent.publicKey,
+            identityMutable: identityMutable,
+            imageResource: imageResource,
+            context: context
         )
 
-        let successorSignature = try sign(input: newIdentitySignatureBody.formatForSigning)
-
-        let signedResource = try newAgent.sign(resource: imageResource)
-
         let handoff = IdentityHandoff(
-            signedNewIdentity: signedIdentity,
-            predecessorSignature: startSignature,
-            identityMutable: identityMutable,
-            newAgentKey: newAgentPubKey,
-            successorSignature: successorSignature,
-            imageResource: signedResource
+            introduction: introduction,
+            predecessorSignature: startSignature
         )
 
         return (newAgent, handoff)
@@ -181,6 +170,32 @@ public struct IdentityPrivateKey: Sendable {
         try .init(
             prefix: keyType,
             checkedData: privateKey.signature(for: input)
+        )
+    }
+
+    private func createIntroduction(
+        signedIdentity: SignedObject<CoreIdentity>,
+        newAgent: AgentPublicKey,
+        identityMutable: IdentityMutableData,
+        imageResource: Resource,
+        context: TypedDigest?
+    ) throws -> IdentityIntroduction {
+        let introductionContent = IdentityIntroduction.Contents(
+            mutableData: identityMutable,
+            imageResource: imageResource,
+            agentKey: newAgent
+        )
+
+        let signatureOver =
+            try introductionContent
+            .formatForSigning(context: context)
+
+        return .init(
+            signedIdentity: signedIdentity,
+            signedContents: .init(
+                content: introductionContent,
+                signature: try sign(input: signatureOver)
+            )
         )
     }
 }
@@ -233,6 +248,24 @@ public struct IdentityPublicKey: Sendable {
         else {
             throw ProtocolError.authenticationError
         }
+    }
+
+    func validate(
+        signedIntroduction: SignedObject<IdentityIntroduction.Contents>,
+        context: TypedDigest?
+    ) throws -> IdentityIntroduction.Contents {
+        let signatureOver = try signedIntroduction.content.formatForSigning(
+            context: context
+        )
+        guard keyType == signedIntroduction.signature.signingAlgorithm,
+            publicKey.isValidSignature(
+                signedIntroduction.signature.signature,
+                for: signatureOver
+            )
+        else {
+            throw ProtocolError.authenticationError
+        }
+        return signedIntroduction.content
     }
 }
 

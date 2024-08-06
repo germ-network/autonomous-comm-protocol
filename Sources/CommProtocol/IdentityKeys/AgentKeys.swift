@@ -64,26 +64,32 @@ public struct AgentPrivateKey: Sendable {
     }
 
     public func createAgentHello(
-        signedIdentity: SignedObject<CoreIdentity>,
-        signedContents: SignedObject<IdentityIntroduction.Contents>,
+        introduction: IdentityIntroduction,
         signedAgentData: SignedObject<AgentHello.NewAgentData>
     ) throws -> AgentHello {
         .init(
-            signedIdentity: signedIdentity,
-            signedContents: signedContents,
+            introduction: introduction,
             signedAgentData: signedAgentData)
     }
 
     public func proposeLeafNode(
-        update: Data,
+        leafNodeUpdate: Data,
+        agentUpdate: AgentUpdate,
         context: TypedDigest
     ) throws -> CommProposal {
-        let signature = try privateKey.signature(for: update + context.wireFormat)
-        let typedSignature: TypedSignature = .init(
-            signingAlgorithm: type,
-            signature: signature
+        let signature = try sign(
+            input: agentUpdate.formatForSigning(
+                updateMessage: leafNodeUpdate,
+                context: context
+            )
         )
-        return .sameAgent(typedSignature)
+
+        return .sameAgent(
+            .init(
+                content: agentUpdate,
+                signature: signature
+            )
+        )
     }
 
     ///Agent handoffs cross 2 isolation domains
@@ -242,6 +248,7 @@ public struct AgentPublicKey: Sendable {
         return signedObject.content
     }
 
+    //for Hello
     func validate(
         signedAgentData: SignedObject<AgentHello.NewAgentData>,
         for identity: IdentityPublicKey
@@ -252,12 +259,30 @@ public struct AgentPublicKey: Sendable {
         guard keyType == signedAgentData.signature.signingAlgorithm,
             publicKey.isValidSignature(
                 signedAgentData.signature.signature,
-                for: signatureBody
-            )
+                for: signatureBody)
         else {
             throw ProtocolError.authenticationError
         }
         return signedAgentData.content
+    }
+
+    func validate(
+        signedAgentUpdate: SignedObject<AgentUpdate>,
+        for updateMessage: Data,
+        context: TypedDigest
+    ) throws -> AgentUpdate {
+        let signatureBody = try signedAgentUpdate.content.formatForSigning(
+            updateMessage: updateMessage,
+            context: context
+        )
+        guard keyType == signedAgentUpdate.signature.signingAlgorithm,
+            publicKey.isValidSignature(
+                signedAgentUpdate.signature.signature,
+                for: signatureBody)
+        else {
+            throw ProtocolError.authenticationError
+        }
+        return signedAgentUpdate.content
     }
 }
 

@@ -28,8 +28,10 @@ struct CommProposalTests {
     @Test func testSameAgent() throws {
         let mockMessage = Mocks.mockMessage()
         let mockContext = try TypedDigest.mock()
+
         let proposal = try knownAgent.proposeLeafNode(
-            update: mockMessage,
+            leafNodeUpdate: mockMessage,
+            agentUpdate: .mock(),
             context: mockContext
         )
         let wireProposal = try proposal.wireFormat
@@ -54,7 +56,8 @@ struct CommProposalTests {
         let mockMessage = Mocks.mockMessage()
         let mockContext = try TypedDigest.mock()
         let proposal = try knownAgent.proposeLeafNode(
-            update: mockMessage,
+            leafNodeUpdate: mockMessage,
+            agentUpdate: .mock(),
             context: mockContext
         )
         let wireProposal = try proposal.wireFormat

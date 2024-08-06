@@ -40,14 +40,10 @@ public struct AgentHello: Sendable {
     }
 
     public init(
-        signedIdentity: SignedObject<CoreIdentity>,
-        signedContents: SignedObject<IdentityIntroduction.Contents>,
+        introduction: IdentityIntroduction,
         signedAgentData: SignedObject<NewAgentData>
     ) {
-        self.introduction = .init(
-            signedIdentity: signedIdentity,
-            signedContents: signedContents
-        )
+        self.introduction = introduction
         self.signedAgentData = signedAgentData
     }
 
@@ -100,8 +96,7 @@ extension AgentHello: LinearEncodedPair {
         second: SignedObject<NewAgentData>
     ) throws {
         self.init(
-            signedIdentity: first.signedIdentity,
-            signedContents: first.signedContents,
+            introduction: first,
             signedAgentData: second
         )
     }

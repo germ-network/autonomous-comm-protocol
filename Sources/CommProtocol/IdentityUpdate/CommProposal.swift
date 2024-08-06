@@ -39,8 +39,8 @@ import Foundation
 public enum CommProposal: LinearEncodable {
     //we don't, strictly speaking, need the type enum on the typed signature,
     //but this lets us parse the data structure without injecting the expected
-    //types into the
-    case sameAgent(TypedSignature)  //over the new update message
+    //types into our parse methods
+    case sameAgent(SignedObject<AgentUpdate>)  //over the new update message
     case sameIdentity(IdentityDelegate, AgentHandoff)  //used with multi-agents
     case newIdentity(IdentityHandoff, AgentHandoff)
 
@@ -51,7 +51,7 @@ public enum CommProposal: LinearEncodable {
     }
 
     public enum Validated {
-        case sameAgent
+        case sameAgent(AgentUpdate)
         case sameIdentity(AgentHandoff.Validated)
         case newIdentity(CoreIdentity, SignedObject<CoreIdentity>, AgentHandoff.Validated)
     }
@@ -63,20 +63,17 @@ public enum CommProposal: LinearEncodable {
         context: TypedDigest,
         updateMessage: Data
     ) throws -> Validated {
-        let result = try finalParse(input)
-        switch result {
-        case .sameAgent(let signature):
-            guard
-                knownAgent.publicKey.isValidSignature(
-                    signature.signature,
-                    for: updateMessage + context.wireFormat),
-                signature.signingAlgorithm == knownAgent.keyType
-            else {
-                throw ProtocolError.authenticationError
-            }
-            return .sameAgent
+        switch try finalParse(input) {
+        case .sameAgent(let signedObject):
+            .sameAgent(
+                try knownAgent.validate(
+                    signedAgentUpdate: signedObject,
+                    for: updateMessage,
+                    context: context
+                )
+            )
         case .sameIdentity(let identityDelegate, let agentHandoff):
-            return try validateSameIdentity(
+            try validateSameIdentity(
                 knownIdentity: knownIdentity,
                 knownAgent: knownAgent,
                 context: context,
@@ -85,7 +82,7 @@ public enum CommProposal: LinearEncodable {
                 agentHandoff: agentHandoff
             )
         case .newIdentity(let identityHandoff, let agentHandoff):
-            return try validateNewIdentity(
+            try validateNewIdentity(
                 knownIdentity: knownIdentity,
                 knownAgent: knownAgent,
                 context: context,
@@ -101,8 +98,8 @@ public enum CommProposal: LinearEncodable {
         let (type, remainder) = try ProposalType.continuingParse(input)
         switch type {
         case .sameAgent:
-            let (signature, width) = try TypedSignature.parse(remainder)
-            return (.sameAgent(signature), width + 1)
+            let (signedObject, width) = try SignedObject<AgentUpdate>.parse(remainder)
+            return (.sameAgent(signedObject), width + 1)
         case .sameIdentity:
             return try parseSameIdentity(remainder)
         case .newIdentity:
@@ -114,9 +111,9 @@ public enum CommProposal: LinearEncodable {
     public var wireFormat: Data {
         get throws {
             switch self {
-            case .sameAgent(let typedSignature):
-                [ProposalType.sameAgent.rawValue]
-                    + typedSignature.wireFormat
+            case .sameAgent(let signedObject):
+                try [ProposalType.sameAgent.rawValue]
+                    + signedObject.wireFormat
             case .sameIdentity(let identityDelegate, let agentHandoff):
                 try [ProposalType.sameIdentity.rawValue]
                     + identityDelegate.wireFormat
