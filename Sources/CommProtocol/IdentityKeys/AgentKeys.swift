@@ -71,6 +71,23 @@ public struct AgentPrivateKey: Sendable {
             introduction: introduction,
             signedAgentData: signedAgentData)
     }
+    
+    public func createAgentHelloReply(
+        introduction: IdentityIntroduction,
+        agentData: AgentUpdate,
+        groupIdSeed: Data,
+        welcomeMessage: Data
+    ) throws -> AgentHelloReply {
+        let signature = try sign(input: welcomeMessage)
+        
+        return .init(
+            introduction: introduction,
+            agentData: agentData,
+            groupIdSeed: groupIdSeed,
+            agentSignatureWelcome: signature,
+            sentTime: .init()
+        )
+    }
 
     public func proposeLeafNode(
         leafNodeUpdate: Data,

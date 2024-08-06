@@ -19,5 +19,16 @@ struct Test {
         let decoded = try SemanticVersion.finalParse(encoded)
 
         #expect(semVer == decoded)
+        
+        #expect(throws: LinearEncodingError.unexpectedEOF) {
+            let _ = try UInt32.parse(.init())
+        }
+        
+        
+        #expect(throws: LinearEncodingError.incorrectDataLength) {
+            let threeByte = Data([1,1,1])
+            let _ = try UInt32(dataRepresentation: threeByte)
+        }
+        
     }
 }

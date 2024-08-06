@@ -38,7 +38,7 @@ extension Data {
     /// Instantiates data by decoding a base64url string into base64
     ///
     /// - Parameter string: A base64url encoded string
-    init?(base64URLEncoded string: String) {
+    public init?(base64URLEncoded string: String) {
         self.init(base64Encoded: string.fromBase64URL)
     }
 
@@ -46,7 +46,7 @@ extension Data {
     ///
     /// - Returns: A string that is base64 encoded but made safe for passing
     ///            in as a query parameter into a URL string
-    func base64URLEncodedString() -> String {
+    public func base64URLEncodedString() -> String {
         base64EncodedString().toBase64URL
     }
 }

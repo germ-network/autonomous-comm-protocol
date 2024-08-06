@@ -103,18 +103,6 @@ extension SignedObject<CoreIdentity> {
     }
 }
 
-public enum HashAlgorithms: UInt8, DefinedWidthPrefix {
-    case sha256  //RFC 6234
-
-    public var contentByteSize: Int { digestWidth }
-
-    private var digestWidth: Int {
-        switch self {
-        case .sha256: 32
-        }
-    }
-}
-
 public struct IdentityMutableData: Sendable, Equatable {
     public let counter: UInt16  //for predecence defined by the sender/signer
     public let pronouns: [String]

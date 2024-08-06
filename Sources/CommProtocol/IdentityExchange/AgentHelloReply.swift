@@ -21,38 +21,36 @@ import Foundation
 public struct AgentHelloReply: Sendable {
     let introduction: IdentityIntroduction
     let agentData: AgentUpdate
-    let imageResource: Resource
 
     ///A seed to be mixed into the initial pair of agent id's to derive the underlying group Id
     let groupIdSeed: Data
     let agentSignatureWelcome: TypedSignature
 
     let sentTime: Date  //just as messages assert local send time
+    
+    
 }
 
-extension AgentHelloReply: LinearEncodedSextet {
+extension AgentHelloReply: LinearEncodedQuintuple {
     var first: IdentityIntroduction { introduction }
     var second: AgentUpdate { agentData }
-    var third: Resource { imageResource }
-    var fourth: Data { groupIdSeed }
-    var fifth: TypedSignature { agentSignatureWelcome }
-    var sixth: Date { sentTime }
+    var third: Data { groupIdSeed }
+    var fourth: TypedSignature { agentSignatureWelcome }
+    var fifth: Date { sentTime }
 
     init(
         first: IdentityIntroduction,
         second: AgentUpdate,
-        third: Resource,
-        fourth: Data,
-        fifth: TypedSignature,
-        sixth: Date
+        third: Data,
+        fourth: TypedSignature,
+        fifth: Date
     ) throws {
         self.init(
             introduction: first,
             agentData: second,
-            imageResource: third,
-            groupIdSeed: fourth,
-            agentSignatureWelcome: fifth,
-            sentTime: sixth
+            groupIdSeed: third,
+            agentSignatureWelcome: fourth,
+            sentTime: fifth
         )
     }
 }

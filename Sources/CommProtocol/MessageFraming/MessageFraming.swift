@@ -29,13 +29,9 @@ import Foundation
 ///# 2. Application Messages staple an application agent update
 /// [Application Update][Application Content]
 
-struct ApplicationUpdate {
-
-}
 
 enum ApplicationContent {
     case textMessage(AppTextMessage)
-    //    case identityFollowup(IdentityFollowup)
 }
 
 struct AppTextMessage {
