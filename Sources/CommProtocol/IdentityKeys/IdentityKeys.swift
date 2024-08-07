@@ -203,6 +203,8 @@ public struct IdentityPrivateKey: Sendable {
 public struct IdentityPublicKey: Sendable {
     let publicKey: any PublicSigningKey
     public let id: TypedKeyMaterial
+    
+    public var wireFormat: Data { id.wireFormat }
     public var keyType: SigningKeyAlgorithm {
         type(of: publicKey).signingAlgorithm
     }
