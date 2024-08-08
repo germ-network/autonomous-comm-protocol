@@ -31,7 +31,7 @@ public struct IdentityPrivateKey: Sendable {
         name: String,
         describedImage: DescribedImage,
         algorithm: SigningKeyAlgorithm = .curve25519
-    ) throws -> (IdentityPrivateKey, CoreIdentity, SignedObject<CoreIdentity>) {
+    ) throws -> (IdentityPrivateKey, SignedObject<CoreIdentity>) {
         let privateKey = IdentityPrivateKey(algorithm: algorithm)
         let coreIdentity = try CoreIdentity(
             id: privateKey.publicKey,
@@ -46,7 +46,6 @@ public struct IdentityPrivateKey: Sendable {
 
         return (
             privateKey,
-            coreIdentity,
             .init(
                 content: coreIdentity,
                 signature: signature
@@ -79,6 +78,7 @@ public struct IdentityPrivateKey: Sendable {
         )
     }
 
+    //TODO: consider deprecate?
     public func createAgentDelegate(context: TypedDigest?) throws -> (
         AgentPrivateKey,
         IdentityDelegate
@@ -203,7 +203,7 @@ public struct IdentityPrivateKey: Sendable {
 public struct IdentityPublicKey: Sendable {
     let publicKey: any PublicSigningKey
     public let id: TypedKeyMaterial
-    
+
     public var wireFormat: Data { id.wireFormat }
     public var keyType: SigningKeyAlgorithm {
         type(of: publicKey).signingAlgorithm
