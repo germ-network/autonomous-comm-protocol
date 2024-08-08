@@ -12,14 +12,14 @@ import Foundation
 ///Encapsulate the data needed to process a new identity
 public struct IdentityIntroduction {
     //Standalone object
-    let signedIdentity: SignedObject<CoreIdentity>
-    let signedContents: SignedObject<Contents>
+    public let signedIdentity: SignedObject<CoreIdentity>
+    public let signedContents: SignedObject<Contents>
 
     //remainder of data the new Identity signs over
     public struct Contents {
-        let mutableData: IdentityMutableData
-        let imageResource: Resource
-        let agentKey: AgentPublicKey
+        public let mutableData: IdentityMutableData
+        public let imageResource: Resource
+        public let agentKey: AgentPublicKey
 
         func formatForSigning(context: TypedDigest?) throws -> Data {
             try wireFormat + (context?.wireFormat ?? .init())
