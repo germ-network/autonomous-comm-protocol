@@ -13,11 +13,10 @@ import Testing
 
 struct IdentityKeyTests {
     let privateKey: IdentityPrivateKey
-    let coreIdentity: CoreIdentity
     let signedIdentity: SignedObject<CoreIdentity>
 
     init() throws {
-        (privateKey, coreIdentity, signedIdentity) =
+        (privateKey, signedIdentity) =
             try IdentityPrivateKey
             .create(
                 name: UUID().uuidString,
@@ -25,7 +24,7 @@ struct IdentityKeyTests {
     }
 
     @Test func testCreation() async throws {
-        try print("CoreIdentity size \(coreIdentity.wireFormat.count)")
+        try print("CoreIdentity size \(signedIdentity.content.wireFormat.count)")
         try print("Signed CoreIdentity size \(signedIdentity.wireFormat.count)")
 
         let rehydrated: IdentityPrivateKey = try .init(archive: privateKey.archive)

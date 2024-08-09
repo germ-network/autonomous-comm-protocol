@@ -12,7 +12,6 @@ import Testing
 
 struct TestAgentHelloReply {
     let identityKey: IdentityPrivateKey
-    let coreIdentity: CoreIdentity
     let signedIdentity: SignedObject<CoreIdentity>
     let agentKey: AgentPrivateKey
     let introduction: IdentityIntroduction
@@ -20,7 +19,7 @@ struct TestAgentHelloReply {
     let agentHelloReply: AgentHelloReply
 
     init() throws {
-        (identityKey, coreIdentity, signedIdentity) =
+        (identityKey, signedIdentity) =
             try Mocks
             .mockIdentity()
 

@@ -13,14 +13,13 @@ import Testing
 ///exercise the public api
 struct APITests {
     let identityKey: IdentityPrivateKey
-    let coreIdentity: CoreIdentity
     let signedIdentity: SignedObject<CoreIdentity>
     let agentKey: AgentPrivateKey
     let introduction: IdentityIntroduction
     let agentHello: AgentHello
 
     init() throws {
-        (identityKey, coreIdentity, signedIdentity) =
+        (identityKey, signedIdentity) =
             try Mocks
             .mockIdentity()
 
@@ -37,7 +36,7 @@ struct APITests {
             introduction: introduction,
             signedAgentData: try agentKey.sign(
                 helloData: .mock(),
-                for: coreIdentity.id
+                for: signedIdentity.content.id
             )
         )
 

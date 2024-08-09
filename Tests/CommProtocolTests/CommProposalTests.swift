@@ -13,12 +13,11 @@ import Testing
 
 struct CommProposalTests {
     let knownIdentityKey: IdentityPrivateKey
-    let knownIdentity: CoreIdentity
     let knownSignedIdentity: SignedObject<CoreIdentity>
     let knownAgent: AgentPrivateKey
 
     init() throws {
-        (knownIdentityKey, knownIdentity, knownSignedIdentity) =
+        (knownIdentityKey, knownSignedIdentity) =
             try Mocks
             .mockIdentity()
 
@@ -38,7 +37,7 @@ struct CommProposalTests {
 
         let validated = try CommProposal.parseAndValidate(
             wireProposal,
-            knownIdentity: knownIdentity.id,
+            knownIdentity: knownSignedIdentity.content.id,
             knownAgent: knownAgent.publicKey,
             context: mockContext,
             updateMessage: mockMessage
@@ -67,7 +66,7 @@ struct CommProposalTests {
         #expect(throws: ProtocolError.authenticationError) {
             let _ = try CommProposal.parseAndValidate(
                 wireProposal,
-                knownIdentity: knownIdentity.id,
+                knownIdentity: knownSignedIdentity.content.id,
                 knownAgent: wrongKey.publicKey,
                 context: mockContext,
                 updateMessage: mockMessage
@@ -77,7 +76,7 @@ struct CommProposalTests {
         #expect(throws: ProtocolError.authenticationError) {
             let _ = try CommProposal.parseAndValidate(
                 wireProposal,
-                knownIdentity: knownIdentity.id,
+                knownIdentity: knownSignedIdentity.content.id,
                 knownAgent: knownAgent.publicKey,
                 context: .mock(),
                 updateMessage: mockMessage
@@ -96,7 +95,7 @@ struct CommProposalTests {
         let mockMessage = Mocks.mockMessage()
 
         let proposal = try newAgent.completeAgentHandoff(
-            existingIdentity: knownIdentity.id,
+            existingIdentity: knownSignedIdentity.content.id,
             identityDelegate: identityDelegate,
             establishedAgent: knownAgent.publicKey,
             context: mockContext,
@@ -108,7 +107,7 @@ struct CommProposalTests {
 
         let outcome = try CommProposal.parseAndValidate(
             try proposal.wireFormat,
-            knownIdentity: knownIdentity.id,
+            knownIdentity: knownSignedIdentity.content.id,
             knownAgent: knownAgent.publicKey,
             context: mockContext,
             updateMessage: mockMessage
@@ -134,7 +133,7 @@ struct CommProposalTests {
         let mockMessage = Mocks.mockMessage()
 
         let proposal = try newAgent.completeAgentHandoff(
-            existingIdentity: knownIdentity.id,
+            existingIdentity: knownSignedIdentity.content.id,
             identityDelegate: identityDelegate,
             establishedAgent: knownAgent.publicKey,
             context: mockContext,
@@ -145,7 +144,7 @@ struct CommProposalTests {
         #expect(throws: ProtocolError.authenticationError) {
             let _ = try CommProposal.parseAndValidate(
                 try proposal.wireFormat,
-                knownIdentity: knownIdentity.id,
+                knownIdentity: knownSignedIdentity.content.id,
                 knownAgent: knownAgent.publicKey,
                 context: .mock(),
                 updateMessage: mockMessage
@@ -154,7 +153,7 @@ struct CommProposalTests {
     }
 
     @Test func testNewIdentity() async throws {
-        let (nextIdentityKey, nextIdentity, signedNextIdentity) = try Mocks.mockIdentity()
+        let (nextIdentityKey, signedNextIdentity) = try Mocks.mockIdentity()
 
         let mockContext = try TypedDigest.mock()
 
@@ -175,7 +174,7 @@ struct CommProposalTests {
         let mockMessage = Mocks.mockMessage()
 
         let proposal = try newAgent.completeIdentityHandoff(
-            newIdentity: nextIdentity.id,
+            newIdentity: signedNextIdentity.content.id,
             identityHandoff: identityHandoff,
             establishedAgent: knownAgent.publicKey,
             context: mockContext,
@@ -188,7 +187,7 @@ struct CommProposalTests {
 
         let outcome = try CommProposal.parseAndValidate(
             wireProposal,
-            knownIdentity: knownIdentity.id,
+            knownIdentity: knownSignedIdentity.content.id,
             knownAgent: knownAgent.publicKey,
             context: mockContext,
             updateMessage: mockMessage

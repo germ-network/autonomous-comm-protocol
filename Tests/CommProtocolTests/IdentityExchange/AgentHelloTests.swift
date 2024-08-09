@@ -13,14 +13,13 @@ import Testing
 
 struct AgentHelloTests {
     let identityKey: IdentityPrivateKey
-    let coreIdentity: CoreIdentity
     let signedIdentity: SignedObject<CoreIdentity>
     let agentKey: AgentPrivateKey
     let introduction: IdentityIntroduction
     let agentHello: AgentHello
 
     init() throws {
-        (identityKey, coreIdentity, signedIdentity) =
+        (identityKey, signedIdentity) =
             try Mocks
             .mockIdentity()
 
@@ -36,7 +35,7 @@ struct AgentHelloTests {
         agentHello = try agentKey.createAgentHello(
             introduction: introduction,
             signedAgentData: try agentKey.sign(
-                helloData: .mock(), for: coreIdentity.id
+                helloData: .mock(), for: signedIdentity.content.id
             )
         )
     }
@@ -50,7 +49,7 @@ struct AgentHelloTests {
 
         let validatedHello = try reencoded.validated()
 
-        #expect(validatedHello.coreIdentity == coreIdentity)
+        #expect(validatedHello.coreIdentity == signedIdentity.content)
         #expect(validatedHello.agentKey == agentKey.publicKey)
         #expect(validatedHello.mutableData == validatedHello.mutableData)
         #expect(validatedHello.agentData == agentHello.signedAgentData.content)

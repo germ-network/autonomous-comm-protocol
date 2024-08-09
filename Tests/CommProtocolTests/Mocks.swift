@@ -36,7 +36,6 @@ struct Mocks {
 
     static func mockIdentity() throws -> (
         IdentityPrivateKey,
-        CoreIdentity,
         SignedObject<CoreIdentity>
     ) {
         try IdentityPrivateKey.create(
