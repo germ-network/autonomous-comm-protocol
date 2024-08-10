@@ -5,7 +5,6 @@
 //  Created by Mark @ Germ on 7/30/24.
 //
 
-import CommProtocol
 import CryptoKit
 import Foundation
 
@@ -20,7 +19,7 @@ extension AgentUpdate {
 }
 
 extension ProtocolAddress {
-    static func mock() -> Self {
+    public static func mock() -> Self {
         .init(
             identifier: UUID().uuidString,
             serviceHost: UUID().uuidString,
@@ -29,12 +28,12 @@ extension ProtocolAddress {
     }
 }
 
-struct Mocks {
-    static func mockMessage() -> Data {
+public struct Mocks {
+    public static func mockMessage() -> Data {
         SymmetricKey(size: .bits256).rawRepresentation
     }
 
-    static func mockIdentity() throws -> (
+    public static func mockIdentity() throws -> (
         IdentityPrivateKey,
         SignedObject<CoreIdentity>
     ) {
@@ -46,7 +45,7 @@ struct Mocks {
 }
 
 extension Resource {
-    static func mock() -> Self {
+    public static func mock() -> Self {
         .init(
             identifier: UUID().uuidString,
             host: "example.com",
@@ -57,7 +56,7 @@ extension Resource {
 }
 
 extension TypedDigest {
-    static func mock() throws -> Self {
+    public static func mock() throws -> Self {
         try .init(
             prefix: .sha256,
             checkedData: SymmetricKey(size: .bits256).rawRepresentation
@@ -123,7 +122,7 @@ enum TestPronouns: String, CaseIterable {
 }
 
 extension AgentHello.NewAgentData {
-    static func mock() -> Self {
+    public static func mock() -> Self {
         .init(
             agentUpdate: .mock(),
             keyChoices: [
