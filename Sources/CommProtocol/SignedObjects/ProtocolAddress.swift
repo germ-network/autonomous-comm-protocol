@@ -7,7 +7,7 @@
 
 import Foundation
 
-public struct ProtocolAddress: Sendable, Equatable {
+public struct ProtocolAddress: Codable, Sendable, Equatable {
     public let identifier: String
     public let serviceHost: String
     public let expiration: Date
