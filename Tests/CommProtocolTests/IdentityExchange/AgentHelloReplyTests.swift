@@ -23,15 +23,18 @@ struct TestAgentHelloReply {
             try Mocks
             .mockIdentity()
 
-        let context = try TypedDigest.mock()
+        let remoteAgentKey = AgentPrivateKey(algorithm: .curve25519)
 
         (agentKey, introduction) =
             try identityKey
-            .createHelloDelegate(
+            .createNewDelegate(
                 signedIdentity: signedIdentity,
                 identityMutable: .mock(),
                 imageResource: .mock(),
-                context: context
+                agentType: .reply(
+                    agentId: remoteAgentKey.publicKey,
+                    seed: SymmetricKey(size: .bits128).rawRepresentation
+                )
             )
 
         agentHelloReply = try agentKey.createAgentHelloReply(

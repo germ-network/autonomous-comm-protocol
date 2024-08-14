@@ -25,11 +25,11 @@ struct AgentHelloTests {
 
         (agentKey, introduction) =
             try identityKey
-            .createHelloDelegate(
+            .createNewDelegate(
                 signedIdentity: signedIdentity,
                 identityMutable: .mock(),
                 imageResource: .mock(),
-                context: nil
+                agentType: .hello
             )
 
         agentHello = try agentKey.createAgentHello(

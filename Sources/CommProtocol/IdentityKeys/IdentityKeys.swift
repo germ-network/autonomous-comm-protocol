@@ -55,11 +55,11 @@ public struct IdentityPrivateKey: Sendable {
 
     //have to leave this framework to generate the update message
     //that we then pass to the agent in a variety of proposeAgentHandoff
-    public func createHelloDelegate(
+    public func createNewDelegate(
         signedIdentity: SignedObject<CoreIdentity>,
         identityMutable: IdentityMutableData,
         imageResource: Resource,
-        context: TypedDigest?
+        agentType: AgentTypes
     ) throws -> (
         AgentPrivateKey,
         IdentityIntroduction
@@ -73,7 +73,7 @@ public struct IdentityPrivateKey: Sendable {
                 newAgent: newAgent.publicKey,
                 identityMutable: identityMutable,
                 imageResource: imageResource,
-                context: context
+                context: agentType.generateContext(myAgentId: newAgent.publicKey)
             )
         )
     }
