@@ -53,7 +53,7 @@ struct OptionalData: LinearEncodable {
     }
 }
 
-struct OptionalString: LinearEncodable {
+public struct OptionalString: LinearEncodable {
     let string: String?
 
     init(_ string: String?) {
@@ -68,12 +68,12 @@ struct OptionalString: LinearEncodable {
         self.string = optionalData.data?.utf8String
     }
 
-    static func parse(_ input: Data) throws -> (OptionalString, Int) {
+    public static func parse(_ input: Data) throws -> (OptionalString, Int) {
         let (data, consumed) = try OptionalData.parse(input)
         return (.init(optionalData: data), consumed)
     }
 
-    var wireFormat: Data {
+    public var wireFormat: Data {
         get throws {
             try optionalData.wireFormat
         }

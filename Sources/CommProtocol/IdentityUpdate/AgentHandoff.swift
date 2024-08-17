@@ -74,10 +74,10 @@ public struct AgentHandoff {
 }
 
 extension AgentHandoff: LinearEncodedPair {
-    var first: AgentUpdate { agentData }
-    var second: TypedSignature { newAgentSignature }
+    public var first: AgentUpdate { agentData }
+    public var second: TypedSignature { newAgentSignature }
 
-    init(first: AgentUpdate, second: TypedSignature)
+    public init(first: AgentUpdate, second: TypedSignature)
         throws
     {
         self.init(

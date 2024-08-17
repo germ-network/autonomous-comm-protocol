@@ -8,7 +8,7 @@
 import Foundation
 
 ///let conforming types declare their types
-protocol LinearEncodedPair: LinearEncodable {
+public protocol LinearEncodedPair: LinearEncodable {
     associatedtype First: LinearEncodable
     associatedtype Second: LinearEncodable
 

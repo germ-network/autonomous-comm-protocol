@@ -92,10 +92,10 @@ public struct AgentHello: Sendable {
 }
 
 extension AgentHello: LinearEncodedPair {
-    var first: IdentityIntroduction { introduction }
-    var second: SignedObject<NewAgentData> { signedAgentData }
+    public var first: IdentityIntroduction { introduction }
+    public var second: SignedObject<NewAgentData> { signedAgentData }
 
-    init(
+    public init(
         first: IdentityIntroduction,
         second: SignedObject<NewAgentData>
     ) throws {

@@ -81,10 +81,10 @@ public struct DescribedImage: Equatable, Sendable {
 }
 
 extension DescribedImage: LinearEncodedPair {
-    var first: TypedDigest { imageDigest }
-    var second: OptionalString? { .init(altText) }
+    public var first: TypedDigest { imageDigest }
+    public var second: OptionalString? { .init(altText) }
 
-    init(first: TypedDigest, second: OptionalString?) throws {
+    public init(first: TypedDigest, second: OptionalString?) throws {
         self.init(imageDigest: first, altText: second?.string)
     }
 }

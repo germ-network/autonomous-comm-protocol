@@ -62,10 +62,10 @@ public struct TypedKeyPackage: Equatable, Sendable {
 }
 
 extension TypedKeyPackage: LinearEncodedPair {
-    var first: SessionEncryptionSuites { suite }
-    var second: Data { keyPackage }
+    public var first: SessionEncryptionSuites { suite }
+    public var second: Data { keyPackage }
 
-    init(first: SessionEncryptionSuites, second: Data) {
+    public init(first: SessionEncryptionSuites, second: Data) {
         self.init(suite: first, keyPackage: second)
     }
 }

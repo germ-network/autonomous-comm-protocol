@@ -14,10 +14,10 @@ public struct SignedObject<Content: LinearEncodable>: Sendable {
 }
 
 extension SignedObject: LinearEncodedPair {
-    var first: Content { content }
-    var second: TypedSignature { signature }
+    public var first: Content { content }
+    public var second: TypedSignature { signature }
 
-    init(first: Content, second: TypedSignature) throws {
+    public init(first: Content, second: TypedSignature) throws {
         self.init(content: first, signature: second)
     }
 

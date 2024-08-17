@@ -41,10 +41,10 @@ public struct IdentityIntroduction {
 }
 
 extension IdentityIntroduction: LinearEncodedPair {
-    var first: SignedObject<CoreIdentity> { signedIdentity }
-    var second: SignedObject<Contents> { signedContents }
+    public var first: SignedObject<CoreIdentity> { signedIdentity }
+    public var second: SignedObject<Contents> { signedContents }
 
-    init(
+    public init(
         first: SignedObject<CoreIdentity>,
         second: SignedObject<Contents>
     ) throws {

@@ -46,10 +46,10 @@ public struct IdentityDelegate: Sendable {
 }
 
 extension IdentityDelegate: LinearEncodedPair {
-    var first: TypedKeyMaterial { newAgentId }
-    var second: TypedSignature { knownIdentitySignature }
+    public var first: TypedKeyMaterial { newAgentId }
+    public var second: TypedSignature { knownIdentitySignature }
 
-    init(first: TypedKeyMaterial, second: TypedSignature) throws {
+    public init(first: TypedKeyMaterial, second: TypedSignature) throws {
         self.init(newAgentId: first, knownIdentitySignature: second)
     }
 }
@@ -109,10 +109,10 @@ public struct IdentityHandoff {
 }
 
 extension IdentityHandoff: LinearEncodedPair {
-    var first: IdentityIntroduction { introduction }
-    var second: TypedSignature { predecessorSignature }
+    public var first: IdentityIntroduction { introduction }
+    public var second: TypedSignature { predecessorSignature }
 
-    init(first: IdentityIntroduction, second: TypedSignature) throws {
+    public init(first: IdentityIntroduction, second: TypedSignature) throws {
         self.init(
             introduction: first,
             predecessorSignature: second
