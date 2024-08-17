@@ -12,7 +12,7 @@ public protocol LinearEncodedPair: LinearEncodable {
     associatedtype First: LinearEncodable
     associatedtype Second: LinearEncodable
 
-    var first: First { get }
+    var first: First { get throws }
     var second: Second { get }
 
     init(first: First, second: Second) throws
