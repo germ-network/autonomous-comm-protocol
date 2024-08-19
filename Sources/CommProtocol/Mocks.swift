@@ -121,16 +121,21 @@ enum TestPronouns: String, CaseIterable {
     }
 }
 
+extension MLSIntroduction {
+    public static func mock() -> Self {
+        .init(
+            suite: .mlsCurve25519ChaChaPoly,
+            kemPublicKeyData: SymmetricKey(size: .bits256).rawRepresentation,
+            encodedKeyPackage: Mocks.mockMessage()
+        )
+    }
+}
+
 extension AgentHello.NewAgentData {
     public static func mock() -> Self {
         .init(
             agentUpdate: .mock(),
-            keyChoices: [
-                .init(
-                    suite: .mlsCurve25519ChaChaPoly,
-                    keyPackage: Mocks.mockMessage()
-                )
-            ],
+            keyChoices: [.mock()],
             expiration: .distantFuture
         )
     }

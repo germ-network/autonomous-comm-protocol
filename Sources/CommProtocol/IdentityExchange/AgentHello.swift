@@ -18,12 +18,12 @@ public struct AgentHello: Sendable {
     public struct NewAgentData: Sendable {
         //prepend the identity key when signing
         public let agentUpdate: AgentUpdate
-        public let keyChoices: KeyPackageChoices
+        public let keyChoices: SessionIntroductionChoices
         public let expiration: Date
 
         public init(
             agentUpdate: AgentUpdate,
-            keyChoices: KeyPackageChoices,
+            keyChoices: SessionIntroductionChoices,
             expiration: Date
         ) {
             self.agentUpdate = agentUpdate
@@ -108,12 +108,12 @@ extension AgentHello: LinearEncodedPair {
 
 extension AgentHello.NewAgentData: LinearEncodedTriple {
     var first: AgentUpdate { agentUpdate }
-    var second: KeyPackageChoices { keyChoices }
+    var second: SessionIntroductionChoices { keyChoices }
     var third: Date { expiration }
 
     init(
         first: AgentUpdate,
-        second: [TypedKeyPackage],
+        second: SessionIntroductionChoices,
         third: Date
     ) throws {
         self.init(
