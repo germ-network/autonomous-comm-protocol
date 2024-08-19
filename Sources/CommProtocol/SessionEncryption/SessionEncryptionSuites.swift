@@ -7,7 +7,7 @@
 
 import Foundation
 
-public enum SessionEncryptionSuites: UInt8, Equatable, Sendable, CaseIterable {
+public enum SessionEncryptionSuites: UInt8, Equatable, Sendable, CaseIterable, Codable {
     case mlsCurve25519ChaChaPoly = 1
 
     //notice: unused
