@@ -32,7 +32,7 @@ struct TestAgentHelloReply {
                 identityMutable: .mock(),
                 imageResource: .mock(),
                 agentType: .reply(
-                    agentId: remoteAgentKey.publicKey,
+                    remoteAgentId: remoteAgentKey.publicKey,
                     seed: SymmetricKey(size: .bits128).rawRepresentation
                 )
             )
