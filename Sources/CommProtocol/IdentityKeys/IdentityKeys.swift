@@ -79,8 +79,8 @@ public struct IdentityPrivateKey: Sendable {
         )
     }
     
-    //TODO: consider deprecate?
-    public func createAgentDelegate(context: TypedDigest?) throws -> (
+    //We use this for same identity delegate
+    public func createAgentDelegate(context: TypedDigest) throws -> (
         AgentPrivateKey,
         IdentityDelegate
     ) {
