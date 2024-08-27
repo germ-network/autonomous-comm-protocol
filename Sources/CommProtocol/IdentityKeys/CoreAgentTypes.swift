@@ -18,9 +18,9 @@ public enum AgentTypes {
         case .hello: return nil
         case .reply(let remoteAgentId, let base):
             var hasher = SHA256()
+            hasher.update(data: base)
             hasher.update(data: remoteAgentId.wireFormat)
             hasher.update(data: myAgentId.wireFormat)
-            hasher.update(data: base)
             return try .init(prefix: .sha256, checkedData: hasher.finalize().data)
         }
     }
