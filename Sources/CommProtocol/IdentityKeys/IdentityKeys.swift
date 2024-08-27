@@ -53,6 +53,7 @@ public struct IdentityPrivateKey: Sendable {
         )
     }
 
+    //Used for both sides of the card exchange
     //have to leave this framework to generate the update message
     //that we then pass to the agent in a variety of proposeAgentHandoff
     public func createNewDelegate(
@@ -77,7 +78,7 @@ public struct IdentityPrivateKey: Sendable {
             )
         )
     }
-
+    
     //TODO: consider deprecate?
     public func createAgentDelegate(context: TypedDigest?) throws -> (
         AgentPrivateKey,
