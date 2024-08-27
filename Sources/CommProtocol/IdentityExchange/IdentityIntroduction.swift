@@ -26,7 +26,7 @@ public struct IdentityIntroduction {
         }
     }
 
-    func validated(context: TypedDigest?) throws -> (
+    public func validated(context: TypedDigest?) throws -> (
         CoreIdentity,
         Contents
     ) {
