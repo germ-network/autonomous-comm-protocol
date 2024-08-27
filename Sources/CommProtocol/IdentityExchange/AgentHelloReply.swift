@@ -19,14 +19,14 @@ import Foundation
 ///- check the contents of the AgentHelloReply
 
 public struct AgentHelloReply: Sendable {
-    let introduction: IdentityIntroduction
-    let agentData: AgentUpdate
+    public let introduction: IdentityIntroduction
+    public let agentData: AgentUpdate
 
     ///A seed to be mixed into the initial pair of agent id's to derive the underlying group Id
-    let groupIdSeed: Data
-    let agentSignatureWelcome: TypedSignature
+    public let groupIdSeed: Data
+    public let agentSignatureWelcome: TypedSignature
 
-    let sentTime: Date  //just as messages assert local send time
+    public let sentTime: Date  //just as messages assert local send time
 
 }
 
