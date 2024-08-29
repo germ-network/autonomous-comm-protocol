@@ -7,7 +7,7 @@
 
 import Foundation
 
-public struct IdentityDelegate: Sendable {
+public struct IdentityDelegate: Sendable, Equatable {
     let newAgentId: TypedKeyMaterial
 
     struct TBS {
@@ -55,7 +55,7 @@ extension IdentityDelegate: LinearEncodedPair {
 }
 
 ///package the elements you need for a identity handoff
-public struct IdentityHandoff {
+public struct IdentityHandoff: Equatable {
     let introduction: IdentityIntroduction
     //old key sign over over new identity pub Key + verb + TypedDigest
     struct PredecessorTBS {

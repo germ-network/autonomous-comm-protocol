@@ -13,6 +13,8 @@ public struct SignedObject<Content: LinearEncodable>: Sendable {
     let signature: TypedSignature
 }
 
+extension SignedObject: Equatable where Content: Equatable {}
+
 extension SignedObject: LinearEncodedPair {
     public var first: Content { content }
     public var second: TypedSignature { signature }
@@ -24,7 +26,7 @@ extension SignedObject: LinearEncodedPair {
 }
 
 //like TypedKeyMaterial, prepend a byte that indicates length of the body
-public struct TypedSignature: DefinedWidthBinary, Sendable {
+public struct TypedSignature: DefinedWidthBinary, Sendable, Equatable {
     public typealias Prefix = SigningKeyAlgorithm
     let signingAlgorithm: SigningKeyAlgorithm
     let signature: Data
