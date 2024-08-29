@@ -56,11 +56,11 @@ extension IdentityIntroduction: LinearEncodedPair {
 }
 
 extension IdentityIntroduction.Contents: LinearEncodedTriple {
-    var first: IdentityMutableData { mutableData }
-    var second: Resource { imageResource }
-    var third: TypedKeyMaterial { agentKey.id }
+    public var first: IdentityMutableData { mutableData }
+    public var second: Resource { imageResource }
+    public var third: TypedKeyMaterial { agentKey.id }
 
-    init(
+    public init(
         first: IdentityMutableData,
         second: Resource,
         third: TypedKeyMaterial

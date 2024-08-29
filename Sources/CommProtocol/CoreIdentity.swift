@@ -42,13 +42,13 @@ public struct CoreIdentity: Sendable, Equatable {
 }
 
 extension CoreIdentity: LinearEncodedQuintuple {
-    var first: TypedKeyMaterial { id.id }
-    var second: String { name }
-    var third: DescribedImage { describedImage }
-    var fourth: SemanticVersion { version }
-    var fifth: Data { nonce }
+    public var first: TypedKeyMaterial { id.id }
+    public var second: String { name }
+    public var third: DescribedImage { describedImage }
+    public var fourth: SemanticVersion { version }
+    public var fifth: Data { nonce }
 
-    init(
+    public init(
         first: TypedKeyMaterial,
         second: String,
         third: DescribedImage,
@@ -121,11 +121,11 @@ public struct IdentityMutableData: Sendable, Equatable {
 }
 
 extension IdentityMutableData: LinearEncodedTriple {
-    var first: UInt16 { counter }
-    var second: [String] { pronouns }
-    var third: String? { aboutText }
+    public var first: UInt16 { counter }
+    public var second: [String] { pronouns }
+    public var third: String? { aboutText }
 
-    init(first: UInt16, second: [String], third: String?) throws {
+    public init(first: UInt16, second: [String], third: String?) throws {
         self.init(counter: first, pronouns: second, aboutText: third)
     }
 }

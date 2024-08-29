@@ -50,11 +50,11 @@ extension ProtocolAddress: Identifiable {
 }
 
 extension ProtocolAddress: LinearEncodedTriple {
-    var first: String { identifier }
-    var second: String { serviceHost }
-    var third: Date { expiration }
+    public var first: String { identifier }
+    public var second: String { serviceHost }
+    public var third: Date { expiration }
 
-    init(first: String, second: String, third: Date) throws {
+    public init(first: String, second: String, third: Date) throws {
         self.init(identifier: first, serviceHost: second, expiration: third)
     }
 }

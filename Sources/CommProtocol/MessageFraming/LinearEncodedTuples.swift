@@ -40,7 +40,7 @@ extension LinearEncodedPair {
 
 }
 
-protocol LinearEncodedTriple: LinearEncodable {
+public protocol LinearEncodedTriple: LinearEncodable {
     associatedtype First: LinearEncodable
     associatedtype Second: LinearEncodable
     associatedtype Third: LinearEncodable
@@ -138,7 +138,7 @@ extension LinearEncodedQuad {
     }
 }
 
-protocol LinearEncodedQuintuple: LinearEncodable {
+public protocol LinearEncodedQuintuple: LinearEncodable {
     associatedtype First: LinearEncodable
     associatedtype Second: LinearEncodable
     associatedtype Third: LinearEncodable

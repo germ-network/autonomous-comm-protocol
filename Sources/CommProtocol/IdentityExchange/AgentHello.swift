@@ -107,11 +107,11 @@ extension AgentHello: LinearEncodedPair {
 }
 
 extension AgentHello.NewAgentData: LinearEncodedTriple {
-    var first: AgentUpdate { agentUpdate }
-    var second: SessionIntroductionChoices { keyChoices }
-    var third: Date { expiration }
+    public var first: AgentUpdate { agentUpdate }
+    public var second: SessionIntroductionChoices { keyChoices }
+    public var third: Date { expiration }
 
-    init(
+    public init(
         first: AgentUpdate,
         second: SessionIntroductionChoices,
         third: Date

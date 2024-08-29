@@ -78,7 +78,7 @@ public struct IdentityPrivateKey: Sendable {
             )
         )
     }
-    
+
     //We use this for same identity delegate
     public func createAgentDelegate(context: TypedDigest) throws -> (
         AgentPrivateKey,

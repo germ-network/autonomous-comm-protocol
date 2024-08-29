@@ -31,13 +31,13 @@ public struct AgentHelloReply: Sendable {
 }
 
 extension AgentHelloReply: LinearEncodedQuintuple {
-    var first: IdentityIntroduction { introduction }
-    var second: AgentUpdate { agentData }
-    var third: Data { groupIdSeed }
-    var fourth: TypedSignature { agentSignatureWelcome }
-    var fifth: Date { sentTime }
+    public var first: IdentityIntroduction { introduction }
+    public var second: AgentUpdate { agentData }
+    public var third: Data { groupIdSeed }
+    public var fourth: TypedSignature { agentSignatureWelcome }
+    public var fifth: Date { sentTime }
 
-    init(
+    public init(
         first: IdentityIntroduction,
         second: AgentUpdate,
         third: Data,
