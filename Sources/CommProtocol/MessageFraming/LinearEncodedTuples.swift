@@ -77,7 +77,7 @@ extension LinearEncodedTriple {
     }
 }
 
-protocol LinearEncodedQuad: LinearEncodable {
+public protocol LinearEncodedQuad: LinearEncodable {
     associatedtype First: LinearEncodable
     associatedtype Second: LinearEncodable
     associatedtype Third: LinearEncodable

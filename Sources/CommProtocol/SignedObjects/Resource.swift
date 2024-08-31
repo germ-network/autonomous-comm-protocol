@@ -43,12 +43,12 @@ public struct Resource: Sendable {
 }
 
 extension Resource: LinearEncodedQuad {
-    var first: String { identifier }
-    var second: String { host }
-    var third: Data { symmetricKey.dataRepresentation }
-    var fourth: Date { expiration }
+    public var first: String { identifier }
+    public var second: String { host }
+    public var third: Data { symmetricKey.dataRepresentation }
+    public var fourth: Date { expiration }
 
-    init(first: String, second: String, third: Data, fourth: Date) throws {
+    public init(first: String, second: String, third: Data, fourth: Date) throws {
         try self.init(
             identifier: first,
             host: second,

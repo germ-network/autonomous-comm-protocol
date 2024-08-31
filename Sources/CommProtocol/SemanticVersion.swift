@@ -33,12 +33,12 @@ public struct SemanticVersion: Equatable, Hashable, Sendable {
 ///Compactly represent this as 3 UInt8 bytes and a 4th enum indicating if there is a suffix
 ///Overflow the UInt8 to Uint32
 extension SemanticVersion: LinearEncodedQuad {
-    var first: UInt32 { major }
-    var second: UInt32 { minor }
-    var third: UInt32 { patch }
-    var fourth: OptionalString { .init(preReleaseSuffix) }
+    public var first: UInt32 { major }
+    public var second: UInt32 { minor }
+    public var third: UInt32 { patch }
+    public var fourth: OptionalString { .init(preReleaseSuffix) }
 
-    init(first: UInt32, second: UInt32, third: UInt32, fourth: OptionalString) throws {
+    public init(first: UInt32, second: UInt32, third: UInt32, fourth: OptionalString) throws {
         self.init(
             major: first,
             minor: second,
