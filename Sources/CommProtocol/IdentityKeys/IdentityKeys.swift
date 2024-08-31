@@ -95,7 +95,7 @@ public struct IdentityPrivateKey: Sendable {
         return (
             newAgent,
             .init(
-                newAgentId: newAgentPubKey.id,
+                newAgentId: newAgentPubKey,
                 knownIdentitySignature: signature
             )
         )

@@ -8,7 +8,7 @@
 import Foundation
 
 public struct IdentityDelegate: Sendable, Equatable {
-    let newAgentId: TypedKeyMaterial
+    let newAgentId: AgentPublicKey
 
     struct TBS {
         static let discriminator = Data("delegate".utf8)
@@ -30,7 +30,7 @@ public struct IdentityDelegate: Sendable, Equatable {
         context: TypedDigest?
     ) throws -> AgentPublicKey {
         let knownSignatureBody = TBS(
-            agentID: newAgentId,
+            agentID: newAgentId.id,
             context: context
         ).formatForSigning
         guard
@@ -41,16 +41,19 @@ public struct IdentityDelegate: Sendable, Equatable {
         else {
             throw ProtocolError.authenticationError
         }
-        return try .init(archive: newAgentId)
+        return newAgentId
     }
 }
 
 extension IdentityDelegate: LinearEncodedPair {
-    public var first: TypedKeyMaterial { newAgentId }
+    public var first: TypedKeyMaterial { newAgentId.id }
     public var second: TypedSignature { knownIdentitySignature }
 
     public init(first: TypedKeyMaterial, second: TypedSignature) throws {
-        self.init(newAgentId: first, knownIdentitySignature: second)
+        self.init(
+            newAgentId: try .init(archive: first),
+            knownIdentitySignature: second
+        )
     }
 }
 
