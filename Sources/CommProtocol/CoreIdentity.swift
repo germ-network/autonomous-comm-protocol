@@ -106,6 +106,14 @@ extension SignedObject<CoreIdentity> {
         //have to decode the credentialData to get the public key
         try content.id.validate(signedObject: self)
     }
+    
+    //digest of the immutable portion. Can't fold in contents as the
+    //imageResource expires and needs to be refreshed
+    public var signedIdentityDigest: TypedDigest {
+        get throws {
+            .init(prefix: .sha256, over: try wireFormat)
+        }
+    }
 }
 
 public struct IdentityMutableData: Sendable, Equatable {

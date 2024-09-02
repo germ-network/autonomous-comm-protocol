@@ -39,17 +39,6 @@ public struct IdentityIntroduction: Equatable {
 
         return (verifiedIdentity, contents)
     }
-    
-    //digest of the immutable portion. Can't fold in contents as the
-    //imageResource expires and needs to be refreshed
-    var signedIdentityDigest: TypedDigest {
-        get throws {
-            .init(
-                prefix: .sha256,
-                over: try signedIdentity.wireFormat
-            )
-        }
-    }
 }
 
 extension IdentityIntroduction: LinearEncodedPair {
