@@ -32,8 +32,8 @@ public struct DataIdentifier: DefinedWidthBinary, Sendable, Equatable, Hashable 
     }
     public typealias Prefix = Widths
 
-    let type: Widths
-    let identifier: Data
+    public let type: Widths
+    public let identifier: Data
 
     public init(width: Widths) {
         self.type = width
