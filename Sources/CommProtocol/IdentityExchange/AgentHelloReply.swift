@@ -23,33 +23,47 @@ public struct AgentHelloReply: Sendable {
     public let agentData: AgentUpdate
 
     ///A seed to be mixed into the initial pair of agent id's to derive the underlying group Id
-    public let groupIdSeed: Data
-    public let agentSignatureWelcome: TypedSignature
 
-    public let sentTime: Date  //just as messages assert local send time
-
+    public struct Content: Sendable {
+        public let groupIdSeed: DataIdentifier
+        public let agentSignatureWelcome: TypedSignature
+        public let seqNo: UInt32  //sets the initial seqNo
+        public let sentTime: Date  //just as messages assert local send time
+    }
+    public let content: Content
 }
 
-extension AgentHelloReply: LinearEncodedQuintuple {
+extension AgentHelloReply: LinearEncodedTriple {
     public var first: IdentityIntroduction { introduction }
     public var second: AgentUpdate { agentData }
-    public var third: Data { groupIdSeed }
-    public var fourth: TypedSignature { agentSignatureWelcome }
-    public var fifth: Date { sentTime }
+    public var third: Content { content }
 
     public init(
         first: IdentityIntroduction,
         second: AgentUpdate,
-        third: Data,
-        fourth: TypedSignature,
-        fifth: Date
+        third: Content
+    ) {
+        self.init(introduction: first, agentData: second, content: third)
+    }
+}
+
+extension AgentHelloReply.Content: LinearEncodedQuad {
+    public var first: DataIdentifier { groupIdSeed }
+    public var second: TypedSignature { agentSignatureWelcome }
+    public var third: UInt32 { seqNo }
+    public var fourth: Date { sentTime }
+
+    public init(
+        first: DataIdentifier,
+        second: TypedSignature,
+        third: UInt32,
+        fourth: Date
     ) throws {
         self.init(
-            introduction: first,
-            agentData: second,
-            groupIdSeed: third,
-            agentSignatureWelcome: fourth,
-            sentTime: fifth
+            groupIdSeed: first,
+            agentSignatureWelcome: second,
+            seqNo: third,
+            sentTime: fourth
         )
     }
 }

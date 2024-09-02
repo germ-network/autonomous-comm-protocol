@@ -38,7 +38,7 @@ public struct IdentityPrivateKey: Sendable {
             name: name,
             describedImage: describedImage,
             version: CoreIdentity.Constants.currentVersion,
-            nonce: SymmetricKey(size: .bits128).rawRepresentation
+            nonce: .init(width: .bits128)
         )
 
         let coreIdentityData = try coreIdentity.wireFormat

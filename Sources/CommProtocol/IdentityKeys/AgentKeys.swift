@@ -75,7 +75,7 @@ public struct AgentPrivateKey: Sendable {
     public func createAgentHelloReply(
         introduction: IdentityIntroduction,
         agentData: AgentUpdate,
-        groupIdSeed: Data,
+        groupIdSeed: DataIdentifier,
         welcomeMessage: Data
     ) throws -> AgentHelloReply {
         let signature = try sign(input: welcomeMessage)
@@ -83,9 +83,12 @@ public struct AgentPrivateKey: Sendable {
         return .init(
             introduction: introduction,
             agentData: agentData,
-            groupIdSeed: groupIdSeed,
-            agentSignatureWelcome: signature,
-            sentTime: .init()
+            content: .init(
+                groupIdSeed: groupIdSeed,
+                agentSignatureWelcome: signature,
+                seqNo: .random(in: .min...(.max)),
+                sentTime: .init()
+            )
         )
     }
 

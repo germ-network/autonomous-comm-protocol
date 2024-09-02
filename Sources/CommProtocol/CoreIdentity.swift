@@ -24,14 +24,14 @@ public struct CoreIdentity: Sendable, Equatable {
     public let name: String
     public let describedImage: DescribedImage
     public let version: SemanticVersion
-    let nonce: Data
+    let nonce: DataIdentifier
 
     init(
         id: IdentityPublicKey,
         name: String,
         describedImage: DescribedImage,
         version: SemanticVersion,
-        nonce: Data
+        nonce: DataIdentifier
     ) throws {
         self.id = id
         self.name = name
@@ -46,14 +46,14 @@ extension CoreIdentity: LinearEncodedQuintuple {
     public var second: String { name }
     public var third: DescribedImage { describedImage }
     public var fourth: SemanticVersion { version }
-    public var fifth: Data { nonce }
+    public var fifth: DataIdentifier { nonce }
 
     public init(
         first: TypedKeyMaterial,
         second: String,
         third: DescribedImage,
         fourth: SemanticVersion,
-        fifth: Data
+        fifth: DataIdentifier
     ) throws {
         try self.init(
             id: .init(archive: first),
