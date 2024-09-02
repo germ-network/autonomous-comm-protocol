@@ -26,7 +26,7 @@ public struct TypedDigest: DefinedWidthBinary, Sendable, Equatable {
 
     public var wireFormat: Data { [type.rawValue] + digest }
 
-    init(prefix: Prefix, over body: Data) {
+    public init(prefix: Prefix, over body: Data) {
         self.type = prefix
         switch prefix {
         case .sha256:
