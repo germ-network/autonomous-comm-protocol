@@ -35,7 +35,7 @@ public struct DataIdentifier: DefinedWidthBinary, Sendable, Equatable, Hashable 
     let type: Widths
     let identifier: Data
 
-    init(width: Widths) {
+    public init(width: Widths) {
         self.type = width
         self.identifier = SymmetricKey(size: width.keySize).rawRepresentation
     }
