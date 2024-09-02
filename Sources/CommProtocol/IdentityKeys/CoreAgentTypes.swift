@@ -13,7 +13,9 @@ public enum AgentTypes {
     case hello
     case reply(remoteAgentId: AgentPublicKey, seed: DataIdentifier)
 
-    func generateContext(myAgentId: AgentPublicKey) throws -> TypedDigest? {
+    public func generateContext(
+        myAgentId: AgentPublicKey
+    ) throws -> TypedDigest? {
         switch self {
         case .hello: return nil
         case .reply(let remoteAgentId, let base):
