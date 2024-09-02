@@ -24,7 +24,7 @@ public struct CoreIdentity: Sendable, Equatable {
     public let name: String
     public let describedImage: DescribedImage
     public let version: SemanticVersion
-    let nonce: DataIdentifier
+    public let nonce: DataIdentifier
 
     init(
         id: IdentityPublicKey,
