@@ -78,6 +78,18 @@ public struct AgentHandoff: Equatable {
         public let identityDelegate: IdentityDelegate
         public let signedIdentityMutable: SignedObject<IdentityMutableData>?
         public let establishedAgent: AgentPublicKey
+        
+        public init(
+            existingIdentity: IdentityPublicKey,
+            identityDelegate: IdentityDelegate,
+            signedIdentityMutable: SignedObject<IdentityMutableData>?,
+            establishedAgent: AgentPublicKey
+        ) {
+            self.existingIdentity = existingIdentity
+            self.identityDelegate = identityDelegate
+            self.signedIdentityMutable = signedIdentityMutable
+            self.establishedAgent = establishedAgent
+        }
     }
 }
 
