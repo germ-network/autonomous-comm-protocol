@@ -28,7 +28,6 @@ struct APITests {
             .createNewDelegate(
                 signedIdentity: signedIdentity,
                 identityMutable: .mock(),
-                imageResource: .mock(),
                 agentType: .hello
             )
 

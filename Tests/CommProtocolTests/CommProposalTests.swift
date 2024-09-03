@@ -176,14 +176,16 @@ struct CommProposalTests {
             to: nextIdentityKey.publicKey,
             context: mockContext
         )
+        
+        let newAgent = AgentPrivateKey(algorithm: .curve25519)
 
-        let (newAgent, identityHandoff) = try nextIdentityKey.createHandoff(
+        let identityHandoff = try nextIdentityKey.createHandoff(
             existingIdentity: knownIdentityKey.publicKey,
+            newAgent: newAgent.publicKey,
             startSignature: knownIdentitySignature,
             signedIdentity: signedNextIdentity,
             identityMutable: .mock(),
-            context: mockContext,
-            imageResource: .mock()
+            context: mockContext
         )
 
         let mockMessage = Mocks.mockMessage()

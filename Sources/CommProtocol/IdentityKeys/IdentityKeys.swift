@@ -59,7 +59,6 @@ public struct IdentityPrivateKey: Sendable {
     public func createNewDelegate(
         signedIdentity: SignedObject<CoreIdentity>,
         identityMutable: IdentityMutableData,
-        imageResource: Resource,
         agentType: AgentTypes
     ) throws -> (
         AgentPrivateKey,
@@ -73,7 +72,6 @@ public struct IdentityPrivateKey: Sendable {
                 signedIdentity: signedIdentity,
                 newAgent: newAgent.publicKey,
                 identityMutable: identityMutable,
-                imageResource: imageResource,
                 context: agentType.generateContext(myAgentId: newAgent.publicKey)
             )
         )
@@ -115,28 +113,23 @@ public struct IdentityPrivateKey: Sendable {
 
     public func createHandoff(
         existingIdentity: IdentityPublicKey,
+        newAgent: AgentPublicKey,
         startSignature: TypedSignature,
         signedIdentity: SignedObject<CoreIdentity>,
         identityMutable: IdentityMutableData,
-        context: TypedDigest,
-        imageResource: Resource
-    ) throws -> (AgentPrivateKey, IdentityHandoff) {
-        let newAgent = AgentPrivateKey(algorithm: .curve25519)
-
+        context: TypedDigest
+    ) throws -> IdentityHandoff {
         let introduction = try createIntroduction(
             signedIdentity: signedIdentity,
-            newAgent: newAgent.publicKey,
+            newAgent: newAgent,
             identityMutable: identityMutable,
-            imageResource: imageResource,
             context: context
         )
 
-        let handoff = IdentityHandoff(
+        return IdentityHandoff(
             introduction: introduction,
             predecessorSignature: startSignature
         )
-
-        return (newAgent, handoff)
     }
 
     public func sign(
@@ -178,7 +171,6 @@ public struct IdentityPrivateKey: Sendable {
         signedIdentity: SignedObject<CoreIdentity>,
         newAgent: AgentPublicKey,
         identityMutable: IdentityMutableData,
-        imageResource: Resource,
         context: TypedDigest?
     ) throws -> IdentityIntroduction {
         let introductionContent = IdentityIntroduction.Contents(
