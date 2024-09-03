@@ -8,7 +8,7 @@
 import Foundation
 
 public struct IdentityDelegate: Sendable, Equatable {
-    let newAgentId: AgentPublicKey
+    public let newAgentId: AgentPublicKey
 
     struct TBS {
         static let discriminator = Data("delegate".utf8)
