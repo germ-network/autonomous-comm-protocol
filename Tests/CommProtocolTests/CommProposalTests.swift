@@ -191,7 +191,6 @@ struct CommProposalTests {
         let mockMessage = Mocks.mockMessage()
 
         let proposal = try newAgent.completeIdentityHandoff(
-            newIdentity: signedNextIdentity.content.id,
             identityHandoff: identityHandoff,
             establishedAgent: knownAgent.publicKey,
             context: mockContext,

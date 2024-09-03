@@ -145,7 +145,6 @@ public struct AgentPrivateKey: Sendable {
     }
 
     public func completeIdentityHandoff(
-        newIdentity: IdentityPublicKey,
         identityHandoff: IdentityHandoff,
         establishedAgent: AgentPublicKey,
         context: TypedDigest,
@@ -154,7 +153,7 @@ public struct AgentPrivateKey: Sendable {
     ) throws -> CommProposal {
         let newAgentSignatureOver = try AgentHandoff.NewAgentTBS(
             knownAgentKey: establishedAgent,
-            newAgentIdentity: newIdentity,
+            newAgentIdentity: identityHandoff.introduction.signedIdentity.content.id,
             context: context,
             updateMessage: updateMessage,
             agentData: agentData
