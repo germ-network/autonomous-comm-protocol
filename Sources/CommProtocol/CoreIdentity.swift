@@ -65,27 +65,59 @@ extension CoreIdentity: LinearEncodedQuintuple {
     }
 }
 
+public enum ImageType: UInt8, Sendable {
+    case jpegXL = 1
+}
+
 public struct DescribedImage: Equatable, Sendable {
+    public let imageType: ImageType
     public let imageDigest: TypedDigest
     public let altText: String?
 
-    init(imageDigest: TypedDigest, altText: String?) {
+    init(imageType: ImageType, imageDigest: TypedDigest, altText: String?) {
+        self.imageType = imageType
         self.imageDigest = imageDigest
         self.altText = altText
     }
 
-    public init(imageData: Data, altText: String?) {
+    public init(
+        imageType: ImageType = .jpegXL,
+        imageData: Data,
+        altText: String?
+    ) {
+        self.imageType = imageType
         self.imageDigest = .init(prefix: .sha256, over: imageData)
         self.altText = altText
     }
 }
 
-extension DescribedImage: LinearEncodedPair {
-    public var first: TypedDigest { imageDigest }
-    public var second: OptionalString? { .init(altText) }
+extension DescribedImage: LinearEncodedTriple {
+    public var first: UInt8 { imageType.rawValue }
+    public var second: TypedDigest { imageDigest }
+    public var third: OptionalString? { .init(altText) }
 
-    public init(first: TypedDigest, second: OptionalString?) throws {
-        self.init(imageDigest: first, altText: second?.string)
+    public init(first: UInt8, second: TypedDigest, third: OptionalString?) throws {
+        guard let type = ImageType(rawValue: first) else {
+            throw LinearEncodingError.unexpectedData
+        }
+        self.init(
+            imageType: type,
+            imageDigest: second,
+            altText: third?.string
+        )
+    }
+}
+
+extension UInt8: LinearEncodable {
+    public static func parse(_ input: Data) throws -> (UInt8, Int) {
+        guard let first = input.first else {
+            throw LinearEncodingError.unexpectedEOF
+        }
+        return (first, 1)
+    }
+
+    public var wireFormat: Data {
+        .init([self])
     }
 }
 

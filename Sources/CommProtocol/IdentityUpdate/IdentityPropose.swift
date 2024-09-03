@@ -85,7 +85,8 @@ public struct IdentityHandoff: Equatable {
         knownIdentity: IdentityPublicKey,
         context: TypedDigest
     ) throws -> Validated {
-        let (newIdentity, introContents, imageResource) = try introduction.validated(context: context)
+        let (newIdentity, introContents, imageResource) = try introduction.validated(
+            context: context)
 
         //verify predecessor signature over the new key + context
         let predecessorSignatureBody = PredecessorTBS(

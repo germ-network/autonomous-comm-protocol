@@ -51,7 +51,7 @@ public struct AgentHello: Sendable {
         public let coreIdentity: CoreIdentity  //from the SignedIdentity
         public let signedIdentity: SignedObject<CoreIdentity>
         public let mutableData: IdentityMutableData
-        public let imageResource: Resource //duplicative, but enforce that it exists
+        public let imageResource: Resource  //duplicative, but enforce that it exists
         public let agentKey: AgentPublicKey
         public let agentData: NewAgentData
 
@@ -79,7 +79,7 @@ public struct AgentHello: Sendable {
             signedAgentData: signedAgentData,
             for: identity.id
         )
-        
+
         return .init(
             coreIdentity: identity,
             signedIdentity: introduction.signedIdentity,

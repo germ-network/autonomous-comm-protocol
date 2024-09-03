@@ -38,7 +38,7 @@ public struct IdentityIntroduction: Equatable {
             signedIntroduction: signedContents,
             context: context
         )
-        
+
         guard let imageResource = contents.mutableData.imageResource else {
             throw ProtocolError.missingImageResource
         }

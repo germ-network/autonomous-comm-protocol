@@ -131,7 +131,7 @@ public struct IdentityPrivateKey: Sendable {
             predecessorSignature: startSignature
         )
     }
-    
+
     // reintroduce this variant
     public func createHandoff(
         existingIdentity: IdentityPublicKey,
@@ -141,7 +141,7 @@ public struct IdentityPrivateKey: Sendable {
         context: TypedDigest
     ) throws -> (AgentPrivateKey, IdentityHandoff) {
         let newAgent = AgentPrivateKey(algorithm: .curve25519)
-        
+
         let introduction = try createIntroduction(
             signedIdentity: signedIdentity,
             newAgent: newAgent.publicKey,
