@@ -214,14 +214,4 @@ public enum CommProposal: LinearEncodable, Equatable {
             )
         )
     }
-
-    public var proposedClientKey: AgentPublicKey? {
-        switch self {
-        case .sameAgent: nil
-        case .sameIdentity(let identityDelegate, _):
-            identityDelegate.newAgentId
-        case .newIdentity(let identityHandoff, _):
-            identityHandoff.introduction.signedContents.content.agentKey
-        }
-    }
 }
