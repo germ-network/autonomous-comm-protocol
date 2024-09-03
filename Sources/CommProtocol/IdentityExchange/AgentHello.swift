@@ -51,6 +51,7 @@ public struct AgentHello: Sendable {
         public let coreIdentity: CoreIdentity  //from the SignedIdentity
         public let signedIdentity: SignedObject<CoreIdentity>
         public let mutableData: IdentityMutableData
+        public let imageResource: Resource //duplicative, but enforce that it exists
         public let agentKey: AgentPublicKey
         public let agentData: NewAgentData
 
@@ -59,30 +60,33 @@ public struct AgentHello: Sendable {
             signedIdentity: SignedObject<CoreIdentity>,
             mutableData: IdentityMutableData,
             agentKey: AgentPublicKey,
-            agentData: NewAgentData
+            agentData: NewAgentData,
+            imageResource: Resource
         ) {
             self.coreIdentity = coreIdentity
             self.signedIdentity = signedIdentity
             self.mutableData = mutableData
             self.agentKey = agentKey
             self.agentData = agentData
+            self.imageResource = imageResource
         }
     }
 
     public func validated() throws -> Validated {
-        let (identity, contents) = try introduction.validated(context: nil)
+        let (identity, contents, imageResource) = try introduction.validated(context: nil)
 
         let agentData = try contents.agentKey.validate(
             signedAgentData: signedAgentData,
             for: identity.id
         )
-
+        
         return .init(
             coreIdentity: identity,
             signedIdentity: introduction.signedIdentity,
             mutableData: contents.mutableData,
             agentKey: contents.agentKey,
-            agentData: agentData
+            agentData: agentData,
+            imageResource: imageResource
         )
     }
 }

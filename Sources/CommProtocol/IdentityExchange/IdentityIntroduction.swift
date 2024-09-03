@@ -18,6 +18,8 @@ public struct IdentityIntroduction: Equatable {
 
     //remainder of data the new Identity signs over
     public struct Contents: Equatable {
+        //for type simplicity, this allows an optional image resource,
+        //but it is required here and will fail validation if it doesn't exist
         public let mutableData: IdentityMutableData
         public let agentKey: AgentPublicKey
 
@@ -28,15 +30,20 @@ public struct IdentityIntroduction: Equatable {
 
     public func validated(context: TypedDigest?) throws -> (
         CoreIdentity,
-        Contents
+        Contents,
+        Resource
     ) {
         let verifiedIdentity = try signedIdentity.verifiedIdentity()
         let contents = try verifiedIdentity.id.validate(
             signedIntroduction: signedContents,
             context: context
         )
+        
+        guard let imageResource = contents.mutableData.imageResource else {
+            throw ProtocolError.missingImageResource
+        }
 
-        return (verifiedIdentity, contents)
+        return (verifiedIdentity, contents, imageResource)
     }
 }
 

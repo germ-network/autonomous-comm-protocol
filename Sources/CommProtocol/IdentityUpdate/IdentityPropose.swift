@@ -78,13 +78,14 @@ public struct IdentityHandoff: Equatable {
         let signedNewIdentity: SignedObject<CoreIdentity>
         let newMutableData: IdentityMutableData
         let newAgentKey: AgentPublicKey
+        let imageResource: Resource
     }
 
     func validate(
         knownIdentity: IdentityPublicKey,
         context: TypedDigest
     ) throws -> Validated {
-        let (newIdentity, introContents) = try introduction.validated(context: context)
+        let (newIdentity, introContents, imageResource) = try introduction.validated(context: context)
 
         //verify predecessor signature over the new key + context
         let predecessorSignatureBody = PredecessorTBS(
@@ -104,7 +105,8 @@ public struct IdentityHandoff: Equatable {
             newIdentity: newIdentity,
             signedNewIdentity: introduction.signedIdentity,
             newMutableData: introContents.mutableData,
-            newAgentKey: introContents.agentKey
+            newAgentKey: introContents.agentKey,
+            imageResource: imageResource
         )
     }
 }
