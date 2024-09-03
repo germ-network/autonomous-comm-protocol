@@ -73,7 +73,7 @@ public struct AgentHandoff: Equatable {
     }
 
     //for AgentPrivateKey.completeAgentHandoff
-    public struct Input {
+    public struct Input: Sendable {
         public let existingIdentity: IdentityPublicKey
         public let identityDelegate: IdentityDelegate
         public let signedIdentityMutable: SignedObject<IdentityMutableData>?
