@@ -106,7 +106,7 @@ extension SignedObject<CoreIdentity> {
         //have to decode the credentialData to get the public key
         try content.id.validate(signedObject: self)
     }
-    
+
     //digest of the immutable portion. Can't fold in contents as the
     //imageResource expires and needs to be refreshed
     public var signedIdentityDigest: TypedDigest {
@@ -120,20 +120,28 @@ public struct IdentityMutableData: Sendable, Equatable {
     public let counter: UInt16  //for predecence defined by the sender/signer
     public let pronouns: [String]
     public let aboutText: String?
+    public let imageResource: Resource?
 
-    public init(counter: UInt16, pronouns: [String], aboutText: String?) {
+    public init(counter: UInt16, pronouns: [String], aboutText: String?, imageResource: Resource?) {
         self.counter = counter
         self.pronouns = pronouns
         self.aboutText = aboutText
+        self.imageResource = imageResource
     }
 }
 
-extension IdentityMutableData: LinearEncodedTriple {
+extension IdentityMutableData: LinearEncodedQuad {
     public var first: UInt16 { counter }
     public var second: [String] { pronouns }
     public var third: String? { aboutText }
+    public var fourth: Resource? { imageResource }
 
-    public init(first: UInt16, second: [String], third: String?) throws {
-        self.init(counter: first, pronouns: second, aboutText: third)
+    public init(first: UInt16, second: [String], third: String?, fourth: Resource?) throws {
+        self.init(
+            counter: first,
+            pronouns: second,
+            aboutText: third,
+            imageResource: fourth
+        )
     }
 }

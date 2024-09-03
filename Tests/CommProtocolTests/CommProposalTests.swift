@@ -28,9 +28,12 @@ struct CommProposalTests {
         let mockMessage = Mocks.mockMessage()
         let mockContext = try TypedDigest.mock()
 
+        let signedIdentityMutable = try knownIdentityKey.sign(mutableData: .mock())
+
         let proposal = try knownAgent.proposeLeafNode(
             leafNodeUpdate: mockMessage,
             agentUpdate: .mock(),
+            signedIdentityMutable: signedIdentityMutable,
             context: mockContext
         )
         let wireProposal = try proposal.wireFormat
@@ -57,6 +60,7 @@ struct CommProposalTests {
         let proposal = try knownAgent.proposeLeafNode(
             leafNodeUpdate: mockMessage,
             agentUpdate: .mock(),
+            signedIdentityMutable: try knownIdentityKey.sign(mutableData: .mock()),
             context: mockContext
         )
         let wireProposal = try proposal.wireFormat
@@ -97,6 +101,7 @@ struct CommProposalTests {
         let proposal = try newAgent.completeAgentHandoff(
             existingIdentity: knownSignedIdentity.content.id,
             identityDelegate: identityDelegate,
+            signedIdentityMutable: try knownIdentityKey.sign(mutableData: .mock()),
             establishedAgent: knownAgent.publicKey,
             context: mockContext,
             agentData: newAgentData,
@@ -112,12 +117,17 @@ struct CommProposalTests {
             context: mockContext,
             updateMessage: mockMessage
         )
-        guard case .sameIdentity(let validated) = outcome else {
+        guard
+            case .sameIdentity(
+                let validatedAgent,
+                let validatedMutable
+            ) = outcome
+        else {
             #expect(Bool(false))
             return
         }
-        #expect(validated.newAgent == newAgent.publicKey)
-        #expect(validated.agentData == newAgentData)
+        #expect(validatedAgent.newAgent == newAgent.publicKey)
+        #expect(validatedAgent.agentData == newAgentData)
     }
 
     @Test func testSameIdentityErrors() async throws {
@@ -135,6 +145,7 @@ struct CommProposalTests {
         let proposal = try newAgent.completeAgentHandoff(
             existingIdentity: knownSignedIdentity.content.id,
             identityDelegate: identityDelegate,
+            signedIdentityMutable: try knownIdentityKey.sign(mutableData: .mock()),
             establishedAgent: knownAgent.publicKey,
             context: mockContext,
             agentData: newAgentData,

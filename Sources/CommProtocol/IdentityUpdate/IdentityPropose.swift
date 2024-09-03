@@ -78,7 +78,6 @@ public struct IdentityHandoff: Equatable {
         let signedNewIdentity: SignedObject<CoreIdentity>
         let newMutableData: IdentityMutableData
         let newAgentKey: AgentPublicKey
-        let imageResource: Resource
     }
 
     func validate(
@@ -105,8 +104,7 @@ public struct IdentityHandoff: Equatable {
             newIdentity: newIdentity,
             signedNewIdentity: introduction.signedIdentity,
             newMutableData: introContents.mutableData,
-            newAgentKey: introContents.agentKey,
-            imageResource: introContents.imageResource
+            newAgentKey: introContents.agentKey
         )
     }
 }

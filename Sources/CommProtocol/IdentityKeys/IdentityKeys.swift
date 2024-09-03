@@ -183,7 +183,6 @@ public struct IdentityPrivateKey: Sendable {
     ) throws -> IdentityIntroduction {
         let introductionContent = IdentityIntroduction.Contents(
             mutableData: identityMutable,
-            imageResource: imageResource,
             agentKey: newAgent
         )
 
@@ -243,6 +242,11 @@ public struct IdentityPublicKey: Sendable {
             throw ProtocolError.authenticationError
         }
         return signedObject.content
+    }
+
+    func validate<C>(maybeSignedObject: SignedObject<C>?) throws -> C? {
+        guard let maybeSignedObject else { return nil }
+        return try validate(signedObject: maybeSignedObject)
     }
 
     func validate(signature: TypedSignature, for body: Data) throws {

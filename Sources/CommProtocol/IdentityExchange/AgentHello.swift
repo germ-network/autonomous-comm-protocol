@@ -51,7 +51,6 @@ public struct AgentHello: Sendable {
         public let coreIdentity: CoreIdentity  //from the SignedIdentity
         public let signedIdentity: SignedObject<CoreIdentity>
         public let mutableData: IdentityMutableData
-        public let imageResource: Resource
         public let agentKey: AgentPublicKey
         public let agentData: NewAgentData
 
@@ -59,14 +58,12 @@ public struct AgentHello: Sendable {
             coreIdentity: CoreIdentity,
             signedIdentity: SignedObject<CoreIdentity>,
             mutableData: IdentityMutableData,
-            imageResource: Resource,
             agentKey: AgentPublicKey,
             agentData: NewAgentData
         ) {
             self.coreIdentity = coreIdentity
             self.signedIdentity = signedIdentity
             self.mutableData = mutableData
-            self.imageResource = imageResource
             self.agentKey = agentKey
             self.agentData = agentData
         }
@@ -84,7 +81,6 @@ public struct AgentHello: Sendable {
             coreIdentity: identity,
             signedIdentity: introduction.signedIdentity,
             mutableData: contents.mutableData,
-            imageResource: contents.imageResource,
             agentKey: contents.agentKey,
             agentData: agentData
         )

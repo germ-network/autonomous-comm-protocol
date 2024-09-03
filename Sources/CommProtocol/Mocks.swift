@@ -102,7 +102,8 @@ extension IdentityMutableData {
         .init(
             counter: UInt16.random(in: 0...(.max)),
             pronouns: [TestPronouns.random().rawValue, TestPronouns.random().rawValue],
-            aboutText: nil
+            aboutText: nil,
+            imageResource: .mock()
         )
     }
 }

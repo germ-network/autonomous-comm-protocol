@@ -95,6 +95,7 @@ public struct AgentPrivateKey: Sendable {
     public func proposeLeafNode(
         leafNodeUpdate: Data,
         agentUpdate: AgentUpdate,
+        signedIdentityMutable: SignedObject<IdentityMutableData>?,
         context: TypedDigest
     ) throws -> CommProposal {
         let signature = try sign(
@@ -108,7 +109,8 @@ public struct AgentPrivateKey: Sendable {
             .init(
                 content: agentUpdate,
                 signature: signature
-            )
+            ),
+            signedIdentityMutable
         )
     }
 
@@ -118,6 +120,7 @@ public struct AgentPrivateKey: Sendable {
     public func completeAgentHandoff(
         existingIdentity: IdentityPublicKey,
         identityDelegate: IdentityDelegate,
+        signedIdentityMutable: SignedObject<IdentityMutableData>?,
         establishedAgent: AgentPublicKey,
         context: TypedDigest,
         agentData: AgentUpdate,
@@ -137,7 +140,11 @@ public struct AgentPrivateKey: Sendable {
             newAgentSignature: newAgentSignature
         )
 
-        return .sameIdentity(identityDelegate, agentHandoff)
+        return .sameIdentity(
+            identityDelegate,
+            agentHandoff,
+            signedIdentityMutable
+        )
     }
 
     public func completeIdentityHandoff(

@@ -50,8 +50,8 @@ extension Data {
     }
 }
 
+//used in CommProtocol
 public struct LinearEncoder {
-    //can't yet deprecate as we use in the CommProposal enum
     static func decode<T: LinearEncodable, U: LinearEncodable>(
         _ firstType: T.Type,
         _ secondType: U.Type,
@@ -65,6 +65,29 @@ public struct LinearEncoder {
         let (second, secondConsumed) = try U.parse(slice)
 
         return (first, second, consumed + secondConsumed)
+    }
+
+    static func decode<T: LinearEncodable, U: LinearEncodable, V: LinearEncodable>(
+        _ firstType: T.Type,
+        _ secondType: U.Type,
+        _ thirdType: V.Type,
+        input: Data
+    ) throws -> (T, U, V, Int) {
+        let (first, consumed) = try T.parse(input)
+        guard consumed < input.count else {
+            throw LinearEncodingError.unexpectedEOF
+        }
+        let slice = input.suffix(from: input.startIndex + consumed)
+
+        let (second, secondConsumed) = try U.parse(slice)
+        guard secondConsumed < slice.count else {
+            throw LinearEncodingError.unexpectedEOF
+        }
+        let finalSlice = slice.suffix(from: slice.startIndex + secondConsumed)
+
+        let (third, thirdConsumed) = try V.parse(finalSlice)
+
+        return (first, second, third, consumed + secondConsumed + thirdConsumed)
     }
 }
 

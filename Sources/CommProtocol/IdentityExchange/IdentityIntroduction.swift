@@ -19,7 +19,6 @@ public struct IdentityIntroduction: Equatable {
     //remainder of data the new Identity signs over
     public struct Contents: Equatable {
         public let mutableData: IdentityMutableData
-        public let imageResource: Resource
         public let agentKey: AgentPublicKey
 
         func formatForSigning(context: TypedDigest?) throws -> Data {
@@ -56,20 +55,17 @@ extension IdentityIntroduction: LinearEncodedPair {
     }
 }
 
-extension IdentityIntroduction.Contents: LinearEncodedTriple {
+extension IdentityIntroduction.Contents: LinearEncodedPair {
     public var first: IdentityMutableData { mutableData }
-    public var second: Resource { imageResource }
-    public var third: TypedKeyMaterial { agentKey.id }
+    public var second: TypedKeyMaterial { agentKey.id }
 
     public init(
         first: IdentityMutableData,
-        second: Resource,
-        third: TypedKeyMaterial
+        second: TypedKeyMaterial
     ) throws {
         try self.init(
             mutableData: first,
-            imageResource: second,
-            agentKey: .init(archive: third)
+            agentKey: .init(archive: second)
         )
     }
 }
