@@ -99,10 +99,12 @@ struct CommProposalTests {
         let mockMessage = Mocks.mockMessage()
 
         let proposal = try newAgent.completeAgentHandoff(
-            existingIdentity: knownSignedIdentity.content.id,
-            identityDelegate: identityDelegate,
-            signedIdentityMutable: try knownIdentityKey.sign(mutableData: .mock()),
-            establishedAgent: knownAgent.publicKey,
+            input: .init(
+                existingIdentity: knownSignedIdentity.content.id,
+                identityDelegate: identityDelegate,
+                signedIdentityMutable: try knownIdentityKey.sign(mutableData: .mock()),
+                establishedAgent: knownAgent.publicKey
+            ),
             context: mockContext,
             agentData: newAgentData,
             updateMessage: mockMessage
@@ -143,10 +145,12 @@ struct CommProposalTests {
         let mockMessage = Mocks.mockMessage()
 
         let proposal = try newAgent.completeAgentHandoff(
-            existingIdentity: knownSignedIdentity.content.id,
-            identityDelegate: identityDelegate,
-            signedIdentityMutable: try knownIdentityKey.sign(mutableData: .mock()),
-            establishedAgent: knownAgent.publicKey,
+            input: .init(
+                existingIdentity: knownSignedIdentity.content.id,
+                identityDelegate: identityDelegate,
+                signedIdentityMutable: try knownIdentityKey.sign(mutableData: .mock()),
+                establishedAgent: knownAgent.publicKey
+            ),
             context: mockContext,
             agentData: newAgentData,
             updateMessage: mockMessage

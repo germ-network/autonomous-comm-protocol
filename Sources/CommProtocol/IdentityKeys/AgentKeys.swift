@@ -118,17 +118,14 @@ public struct AgentPrivateKey: Sendable {
     /// 1. start in IdentityPrivateKey creating a new agent
     /// 3. the new Agent completes it
     public func completeAgentHandoff(
-        existingIdentity: IdentityPublicKey,
-        identityDelegate: IdentityDelegate,
-        signedIdentityMutable: SignedObject<IdentityMutableData>?,
-        establishedAgent: AgentPublicKey,
+        input: AgentHandoff.Input,
         context: TypedDigest,
         agentData: AgentUpdate,
         updateMessage: Data
     ) throws -> CommProposal {
         let newAgentSignatureOver = try AgentHandoff.NewAgentTBS(
-            knownAgentKey: establishedAgent,
-            newAgentIdentity: existingIdentity,
+            knownAgentKey: input.establishedAgent,
+            newAgentIdentity: input.existingIdentity,
             context: context,
             updateMessage: updateMessage,
             agentData: agentData
@@ -141,9 +138,9 @@ public struct AgentPrivateKey: Sendable {
         )
 
         return .sameIdentity(
-            identityDelegate,
+            input.identityDelegate,
             agentHandoff,
-            signedIdentityMutable
+            input.signedIdentityMutable
         )
     }
 

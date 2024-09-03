@@ -113,7 +113,7 @@ public enum CommProposal: LinearEncodable, Equatable {
                 )
             return (.sameAgent(signedAgentUpdate, signedIdentityMutable), consumed + 1)
         case .sameIdentity:
-            return try (remainder)
+            return try parseSameIdentity(remainder)
         case .newIdentity:
             return try parseNewIdentity(remainder)
         }

@@ -71,6 +71,14 @@ public struct AgentHandoff: Equatable {
 
         return agentData
     }
+
+    //for AgentPrivateKey.completeAgentHandoff
+    public struct Input {
+        let existingIdentity: IdentityPublicKey
+        let identityDelegate: IdentityDelegate
+        let signedIdentityMutable: SignedObject<IdentityMutableData>?
+        let establishedAgent: AgentPublicKey
+    }
 }
 
 extension AgentHandoff: LinearEncodedPair {
@@ -83,6 +91,22 @@ extension AgentHandoff: LinearEncodedPair {
         self.init(
             agentData: first,
             newAgentSignature: second
+        )
+    }
+}
+
+extension AgentHandoff.Input: LinearEncodedQuad {
+    public var first: TypedKeyMaterial { existingIdentity.id }
+    public var second: IdentityDelegate { identityDelegate }
+    public var third: SignedObject<IdentityMutableData>? { signedIdentityMutable }
+    public var fourth: TypedKeyMaterial { establishedAgent.id }
+
+    public init(first: First, second: Second, third: Third, fourth: Fourth) throws {
+        self.init(
+            existingIdentity: try .init(archive: first),
+            identityDelegate: second,
+            signedIdentityMutable: third,
+            establishedAgent: try .init(archive: fourth)
         )
     }
 }
