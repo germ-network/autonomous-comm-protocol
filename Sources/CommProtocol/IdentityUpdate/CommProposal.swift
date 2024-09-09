@@ -53,7 +53,7 @@ public enum CommProposal: LinearEncodable, Equatable {
         case newIdentity
     }
 
-    public enum Validated {
+    public enum Validated: Sendable {
         case sameAgent(AgentUpdate, IdentityMutableData?)
         case sameIdentity(AgentHandoff.Validated, IdentityMutableData?)
         case newIdentity(CoreIdentity, SignedObject<CoreIdentity>, AgentHandoff.Validated)

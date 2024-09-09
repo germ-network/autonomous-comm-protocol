@@ -40,7 +40,7 @@ public struct AgentHandoff: Equatable {
         }
     }
 
-    public struct Validated {
+    public struct Validated: Sendable {
         let newAgent: AgentPublicKey
         let agentData: AgentUpdate
     }
