@@ -59,14 +59,13 @@ public enum CommProposal: LinearEncodable, Equatable {
         case newIdentity(CoreIdentity, SignedObject<CoreIdentity>, AgentHandoff.Validated)
     }
 
-    public static func parseAndValidate(
-        _ input: Data,
+    public func validate(
         knownIdentity: IdentityPublicKey,
         knownAgent: AgentPublicKey,
         context: TypedDigest,
         updateMessage: Data
     ) throws -> Validated {
-        switch try finalParse(input) {
+        switch self {
         case .sameAgent(let signedAgentUpdate, let signedIdentityMutable):
             .sameAgent(
                 try knownAgent.validate(
@@ -78,7 +77,7 @@ public enum CommProposal: LinearEncodable, Equatable {
 
             )
         case .sameIdentity(let identityDelegate, let agentHandoff, let identityMutable):
-            try validateSameIdentity(
+            try Self.validateSameIdentity(
                 knownIdentity: knownIdentity,
                 knownAgent: knownAgent,
                 context: context,
@@ -88,7 +87,7 @@ public enum CommProposal: LinearEncodable, Equatable {
                 signedIdentityMutable: identityMutable
             )
         case .newIdentity(let identityHandoff, let agentHandoff):
-            try validateNewIdentity(
+            try Self.validateNewIdentity(
                 knownIdentity: knownIdentity,
                 knownAgent: knownAgent,
                 context: context,
