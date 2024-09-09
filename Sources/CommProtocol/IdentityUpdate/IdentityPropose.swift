@@ -74,7 +74,6 @@ public struct IdentityHandoff: Equatable {
     let predecessorSignature: TypedSignature
 
     struct Validated {
-        let newIdentity: CoreIdentity
         let signedNewIdentity: SignedObject<CoreIdentity>
         let newMutableData: IdentityMutableData
         let newAgentKey: AgentPublicKey
@@ -103,7 +102,6 @@ public struct IdentityHandoff: Equatable {
         }
 
         return .init(
-            newIdentity: newIdentity,
             signedNewIdentity: introduction.signedIdentity,
             newMutableData: introContents.mutableData,
             newAgentKey: introContents.agentKey,

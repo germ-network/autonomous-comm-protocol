@@ -210,7 +210,6 @@ struct CommProposalTests {
 
         guard
             case .newIdentity(
-                let identity,
                 let signedIdentity,
                 let validatedAgentHandoff
             ) = outcome
