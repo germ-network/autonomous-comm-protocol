@@ -41,8 +41,8 @@ public struct AgentHandoff: Equatable {
     }
 
     public struct Validated: Sendable {
-        let newAgent: AgentPublicKey
-        let agentData: AgentUpdate
+        public let newAgent: AgentPublicKey
+        public let agentData: AgentUpdate
     }
 
     func validate(
