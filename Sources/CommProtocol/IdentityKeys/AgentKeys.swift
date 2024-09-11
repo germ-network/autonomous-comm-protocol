@@ -193,38 +193,6 @@ public struct AgentPrivateKey: Sendable {
             )
         )
     }
-    //
-    //    public func sign(transition: SignedAgentTransition.Transition)
-    //    throws -> (encoded: Data, signature: Data) {
-    //        let encoded = try transition.encoded
-    //        return (encoded: encoded, signature: try key.signature(for: encoded))
-    //    }
-    //
-    //    public func sign(helloReply: HelloReply) throws -> SignedObject<HelloReply> {
-    //        let data = try helloReply.encoded
-    //        let signature = try key.signature(for: data)
-    //        return .init(body: data,
-    //                     signature: signature)
-    //    }
-    //
-
-    //
-    //    public func sign(preSessionMap: TypedPreSessionMap) throws -> SignedObject<TypedPreSessionMap> {
-    //        let data = try preSessionMap.encoded
-    //        let signature = try key.signature(for: data)
-    //        return .init(body: data,
-    //                     signature: signature)
-    //    }
-    //
-    //    //unused, retain until we determine if we will generate legacy invitations
-    //    public func sign(sessionInvitation: TypedSessionInvitation) throws -> CompleteSignedObject<TypedSessionInvitation> {
-    //        let data = try sessionInvitation.encoded
-    //        let signature = try key.signature(for: data)
-    //        return .init(body: data,
-    //                     signature: signature,
-    //                     signerArchive: publicTypedKey.stablePublicArchive)
-    //    }
-
 }
 
 public struct AgentPublicKey: Sendable {

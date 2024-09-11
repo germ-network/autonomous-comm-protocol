@@ -42,7 +42,7 @@ public struct TypedKeyMaterial: DefinedWidthBinary, Equatable, Hashable, Sendabl
 
         var isSymmetric: Bool {
             switch self {
-            case .chaCha20Poly1305, .aesGCM256: true
+            case .chaCha20Poly1305, .aesGCM256, .hmacSha256: true
             default: false
             }
         }
