@@ -186,7 +186,7 @@ public struct IdentityPrivateKey: Sendable {
     }
 
     //MARK: Implementation
-    private func sign(input: Data) throws -> TypedSignature {
+    func sign(input: Data) throws -> TypedSignature {
         try .init(
             prefix: keyType,
             checkedData: privateKey.signature(for: input)

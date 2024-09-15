@@ -25,7 +25,7 @@ public struct TypedKeyMaterial: DefinedWidthBinary, Equatable, Hashable, Sendabl
         case curve25519KeyAgreement  //RFC 7748
         case curve25519Signing  //RFC 8032
         case hpkeEncapCurve25519Sha256ChachaPoly  //RFC 9180
-        case hmacSha256 //RFC 2104
+        case hmacSha256  //RFC 2104
 
         public var contentByteSize: Int { keyByteSize }
 
