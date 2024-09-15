@@ -16,8 +16,8 @@ import Foundation
 
 public struct CoreIdentity: Sendable, Equatable {
     struct Constants {
-        //previously, 0.0.1
-        static let currentVersion = SemanticVersion(major: 1, minor: 0, patch: 0)
+        //previously, 1.0.0
+        static let currentVersion = SemanticVersion(major: 2, minor: 0, patch: 0)
     }
 
     public let id: IdentityPublicKey  //WireFormat for IdentityPublicKey
