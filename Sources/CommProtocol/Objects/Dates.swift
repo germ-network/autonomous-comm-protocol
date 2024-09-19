@@ -31,7 +31,7 @@ extension Date: LinearEncodable {
 public struct RoundedDate: Equatable {
     let hoursSinceEpoch: UInt32
 
-    init(date: Date) {
+    public init(date: Date) {
         hoursSinceEpoch = UInt32((date.timeIntervalSince1970 / 3600).rounded())
     }
 
@@ -39,7 +39,7 @@ public struct RoundedDate: Equatable {
         self.hoursSinceEpoch = hoursSinceEpoch
     }
 
-    var date: Date {
+    public var date: Date {
         .init(timeIntervalSince1970: Double(hoursSinceEpoch) * 3600)
     }
 }
