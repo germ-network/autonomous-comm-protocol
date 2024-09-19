@@ -18,7 +18,7 @@ public struct ProtocolAddress: Sendable, Equatable {
 
     }
 
-    init(identifier: String, serviceHost: String, expiration: Date) {
+    public init(identifier: String, serviceHost: String, expiration: Date) {
         self.identifier = identifier
         self.serviceHost = serviceHost
         self.expiration = .init(date: expiration)
