@@ -18,13 +18,25 @@ public struct Resource: Sendable {
     public let identifier: String  //base64url decodes to digest of the ciphertext
     public let host: String
     public let symmetricKey: SymmetricKey
-    public let expiration: Date
+    public let expiration: RoundedDate
 
     public init(
         identifier: String,
         host: String,
         symmetricKey: SymmetricKey,
         expiration: Date
+    ) {
+        self.identifier = identifier
+        self.host = host
+        self.symmetricKey = symmetricKey
+        self.expiration = .init(date: expiration)
+    }
+
+    init(
+        identifier: String,
+        host: String,
+        symmetricKey: SymmetricKey,
+        expiration: RoundedDate
     ) {
         self.identifier = identifier
         self.host = host
@@ -46,9 +58,9 @@ extension Resource: LinearEncodedQuad {
     public var first: String { identifier }
     public var second: String { host }
     public var third: Data { symmetricKey.dataRepresentation }
-    public var fourth: Date { expiration }
+    public var fourth: RoundedDate { expiration }
 
-    public init(first: String, second: String, third: Data, fourth: Date) throws {
+    public init(first: String, second: String, third: Data, fourth: RoundedDate) throws {
         try self.init(
             identifier: first,
             host: second,
@@ -56,23 +68,6 @@ extension Resource: LinearEncodedQuad {
             expiration: fourth
         )
     }
-}
-
-//we transform the date into a
-extension Date: LinearEncodable {
-    public static func parse(_ input: Data) throws -> (Date, Int) {
-        let (hours, consumed) = try UInt32.parse(input)
-        return (
-            Date(timeIntervalSince1970: Double(hours) * 3600),
-            consumed
-        )
-    }
-
-    public var wireFormat: Data {
-        UInt32((timeIntervalSince1970 / 3600).rounded())
-            .wireFormat
-    }
-
 }
 
 extension Resource: Equatable {}

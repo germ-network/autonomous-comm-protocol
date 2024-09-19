@@ -7,10 +7,10 @@
 
 import Foundation
 
-public struct ProtocolAddress: Codable, Sendable, Equatable {
+public struct ProtocolAddress: Sendable, Equatable {
     public let identifier: String
     public let serviceHost: String
-    public let expiration: Date
+    public let expiration: RoundedDate
 
     struct Constants {
         static let validNowBuffer: TimeInterval = 3600
@@ -18,18 +18,24 @@ public struct ProtocolAddress: Codable, Sendable, Equatable {
 
     }
 
-    public init(identifier: String, serviceHost: String, expiration: Date) {
+    init(identifier: String, serviceHost: String, expiration: Date) {
+        self.identifier = identifier
+        self.serviceHost = serviceHost
+        self.expiration = .init(date: expiration)
+    }
+
+    init(identifier: String, serviceHost: String, expiration: RoundedDate) {
         self.identifier = identifier
         self.serviceHost = serviceHost
         self.expiration = expiration
     }
 
     public var validImmediateUse: Bool {
-        expiration.timeIntervalSinceNow > Constants.validNowBuffer
+        expiration.date.timeIntervalSinceNow > Constants.validNowBuffer
     }
 
     public var validToday: Bool {
-        expiration.timeIntervalSinceNow > Constants.validTodayBuffer
+        expiration.date.timeIntervalSinceNow > Constants.validTodayBuffer
     }
 }
 
@@ -52,16 +58,9 @@ extension ProtocolAddress: Identifiable {
 extension ProtocolAddress: LinearEncodedTriple {
     public var first: String { identifier }
     public var second: String { serviceHost }
-    public var third: Date { expiration }
+    public var third: RoundedDate { expiration }
 
-    public init(first: String, second: String, third: Date) throws {
+    public init(first: String, second: String, third: RoundedDate) throws {
         self.init(identifier: first, serviceHost: second, expiration: third)
     }
 }
-
-//extension ProtocolAddress: SHA2Hashable {
-//    public func sha2Hash(into hasher: inout SHA256) {
-//        identifier.sha2Hash(into: &hasher)
-//        serviceHost.sha2Hash(into: &hasher)
-//    }
-//}
