@@ -56,7 +56,7 @@ public enum CommProposal: LinearEncodable, Equatable {
     public enum Validated: Sendable {
         case sameAgent(AgentUpdate, IdentityMutableData?)
         case sameIdentity(AgentHandoff.Validated, IdentityMutableData?)
-        case newIdentity(SignedObject<CoreIdentity>, AgentHandoff.Validated)
+        case newIdentity(SignedObject<CoreIdentity>, IdentityMutableData, AgentHandoff.Validated)
     }
 
     public func validate(
@@ -232,6 +232,7 @@ public enum CommProposal: LinearEncodable, Equatable {
 
         return .newIdentity(
             validatedIdentity.signedNewIdentity,
+            validatedIdentity.newMutableData,
             .init(
                 newAgent: validatedIdentity.newAgentKey,
                 agentData: agentUpdate

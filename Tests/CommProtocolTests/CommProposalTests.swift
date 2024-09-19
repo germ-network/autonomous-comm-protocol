@@ -211,6 +211,7 @@ struct CommProposalTests {
         guard
             case .newIdentity(
                 let signedIdentity,
+                let mutableData,
                 let validatedAgentHandoff
             ) = outcome
         else {
