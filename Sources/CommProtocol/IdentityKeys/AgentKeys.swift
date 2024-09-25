@@ -47,6 +47,15 @@ public struct AgentPrivateKey: Sendable {
         privateKey = concrete
         publicKey = .init(concrete: concrete.publicKey)
     }
+    
+    public func sign<Content: LinearEncodable>(
+        content: Content
+    ) throws -> SignedObject<Content> {
+        .init(
+            content: content,
+            signature: try sign(input: content.wireFormat)
+        )
+    }
 
     //usually implicitly authorized by the session, but need direct signing in the AgentHello
     public func sign(
