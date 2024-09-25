@@ -236,7 +236,7 @@ public struct AgentPublicKey: Sendable {
     }
 
     //MARK: Implementation
-    func validate<C>(signedObject: SignedObject<C>) throws -> C {
+    public func validate<C>(signedObject: SignedObject<C>) throws -> C {
         guard keyType == signedObject.signature.signingAlgorithm,
             publicKey.isValidSignature(
                 signedObject.signature.signature,
