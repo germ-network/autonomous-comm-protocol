@@ -100,6 +100,27 @@ public struct AgentPrivateKey: Sendable {
             )
         )
     }
+    
+    //variant when identity & agent are already known so we just need agent
+    //update, and mainly sign over
+    //welcome
+    public func createKnownHelloReply(
+        agentData: AgentUpdate,
+        groupIdSeed: DataIdentifier,
+        welcomeMessage: Data
+    ) throws -> KnownReply {
+        let signature = try sign(input: welcomeMessage)
+
+        return .init(
+            agentData: agentData,
+            content: .init(
+                groupIdSeed: groupIdSeed,
+                agentSignatureWelcome: signature,
+                seqNo: .random(in: .min...(.max)),
+                sentTime: .init()
+            )
+        )
+    }
 
     public func proposeLeafNode(
         leafNodeUpdate: Data,
