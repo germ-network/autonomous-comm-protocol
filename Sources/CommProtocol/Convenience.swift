@@ -9,7 +9,7 @@ import CryptoKit
 import Foundation
 
 extension Digest {
-    var data: Data { Data(bytes) }
+    public var data: Data { Data(bytes) }
     private var bytes: [UInt8] { Array(makeIterator()) }
 }
 
@@ -21,6 +21,18 @@ extension SymmetricKey: RawRepresentableKey {
 
     public var rawRepresentation: Data {
         return dataRepresentation  // Contiguous bytes repackaged as a Data instance.
+    }
+}
+
+extension String {
+    public var utf8Data: Data {
+        Data(utf8)
+    }
+}
+
+extension Data {
+    public var utf8String: String? {
+        String(bytes: self, encoding: .utf8)
     }
 }
 

@@ -121,18 +121,6 @@ extension UInt8: LinearEncodable {
     }
 }
 
-extension String {
-    public var utf8Data: Data {
-        Data(utf8)
-    }
-}
-
-extension Data {
-    public var utf8String: String? {
-        String(bytes: self, encoding: .utf8)
-    }
-}
-
 extension SignedObject<CoreIdentity> {
     public func verifiedIdentity() throws -> CoreIdentity {
         //have to decode the credentialData to get the public key
