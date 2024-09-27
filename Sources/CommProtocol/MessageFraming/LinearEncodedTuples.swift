@@ -8,11 +8,11 @@
 import Foundation
 
 ///let conforming types declare their types
-protocol LinearEncodedPair: LinearEncodable {
+public protocol LinearEncodedPair: LinearEncodable {
     associatedtype First: LinearEncodable
     associatedtype Second: LinearEncodable
 
-    var first: First { get }
+    var first: First { get throws }
     var second: Second { get }
 
     init(first: First, second: Second) throws
@@ -40,7 +40,7 @@ extension LinearEncodedPair {
 
 }
 
-protocol LinearEncodedTriple: LinearEncodable {
+public protocol LinearEncodedTriple: LinearEncodable {
     associatedtype First: LinearEncodable
     associatedtype Second: LinearEncodable
     associatedtype Third: LinearEncodable
@@ -77,7 +77,7 @@ extension LinearEncodedTriple {
     }
 }
 
-protocol LinearEncodedQuad: LinearEncodable {
+public protocol LinearEncodedQuad: LinearEncodable {
     associatedtype First: LinearEncodable
     associatedtype Second: LinearEncodable
     associatedtype Third: LinearEncodable
@@ -138,7 +138,7 @@ extension LinearEncodedQuad {
     }
 }
 
-protocol LinearEncodedQuintuple: LinearEncodable {
+public protocol LinearEncodedQuintuple: LinearEncodable {
     associatedtype First: LinearEncodable
     associatedtype Second: LinearEncodable
     associatedtype Third: LinearEncodable

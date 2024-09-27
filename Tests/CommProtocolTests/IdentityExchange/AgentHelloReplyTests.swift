@@ -30,17 +30,16 @@ struct TestAgentHelloReply {
             .createNewDelegate(
                 signedIdentity: signedIdentity,
                 identityMutable: .mock(),
-                imageResource: .mock(),
                 agentType: .reply(
-                    agentId: remoteAgentKey.publicKey,
-                    seed: SymmetricKey(size: .bits128).rawRepresentation
+                    remoteAgentId: remoteAgentKey.publicKey,
+                    seed: .init(width: .bits128)
                 )
             )
 
         agentHelloReply = try agentKey.createAgentHelloReply(
             introduction: introduction,
             agentData: .mock(),
-            groupIdSeed: SymmetricKey(size: .bits256).rawRepresentation,
+            groupIdSeed: .init(width: .bits256),
             welcomeMessage: SymmetricKey(size: .bits256).rawRepresentation
         )
     }

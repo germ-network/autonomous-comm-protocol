@@ -7,8 +7,8 @@
 
 import Foundation
 
-public struct IdentityDelegate: Sendable {
-    let newAgentId: TypedKeyMaterial
+public struct IdentityDelegate: Sendable, Equatable {
+    public let newAgentId: AgentPublicKey
 
     struct TBS {
         static let discriminator = Data("delegate".utf8)
@@ -30,7 +30,7 @@ public struct IdentityDelegate: Sendable {
         context: TypedDigest?
     ) throws -> AgentPublicKey {
         let knownSignatureBody = TBS(
-            agentID: newAgentId,
+            agentID: newAgentId.id,
             context: context
         ).formatForSigning
         guard
@@ -41,21 +41,24 @@ public struct IdentityDelegate: Sendable {
         else {
             throw ProtocolError.authenticationError
         }
-        return try .init(archive: newAgentId)
+        return newAgentId
     }
 }
 
 extension IdentityDelegate: LinearEncodedPair {
-    var first: TypedKeyMaterial { newAgentId }
-    var second: TypedSignature { knownIdentitySignature }
+    public var first: TypedKeyMaterial { newAgentId.id }
+    public var second: TypedSignature { knownIdentitySignature }
 
-    init(first: TypedKeyMaterial, second: TypedSignature) throws {
-        self.init(newAgentId: first, knownIdentitySignature: second)
+    public init(first: TypedKeyMaterial, second: TypedSignature) throws {
+        self.init(
+            newAgentId: try .init(archive: first),
+            knownIdentitySignature: second
+        )
     }
 }
 
 ///package the elements you need for a identity handoff
-public struct IdentityHandoff {
+public struct IdentityHandoff: Equatable {
     let introduction: IdentityIntroduction
     //old key sign over over new identity pub Key + verb + TypedDigest
     struct PredecessorTBS {
@@ -71,7 +74,6 @@ public struct IdentityHandoff {
     let predecessorSignature: TypedSignature
 
     struct Validated {
-        let newIdentity: CoreIdentity
         let signedNewIdentity: SignedObject<CoreIdentity>
         let newMutableData: IdentityMutableData
         let newAgentKey: AgentPublicKey
@@ -82,7 +84,8 @@ public struct IdentityHandoff {
         knownIdentity: IdentityPublicKey,
         context: TypedDigest
     ) throws -> Validated {
-        let (newIdentity, introContents) = try introduction.validated(context: context)
+        let (newIdentity, introContents, imageResource) = try introduction.validated(
+            context: context)
 
         //verify predecessor signature over the new key + context
         let predecessorSignatureBody = PredecessorTBS(
@@ -99,20 +102,19 @@ public struct IdentityHandoff {
         }
 
         return .init(
-            newIdentity: newIdentity,
             signedNewIdentity: introduction.signedIdentity,
             newMutableData: introContents.mutableData,
             newAgentKey: introContents.agentKey,
-            imageResource: introContents.imageResource
+            imageResource: imageResource
         )
     }
 }
 
 extension IdentityHandoff: LinearEncodedPair {
-    var first: IdentityIntroduction { introduction }
-    var second: TypedSignature { predecessorSignature }
+    public var first: IdentityIntroduction { introduction }
+    public var second: TypedSignature { predecessorSignature }
 
-    init(first: IdentityIntroduction, second: TypedSignature) throws {
+    public init(first: IdentityIntroduction, second: TypedSignature) throws {
         self.init(
             introduction: first,
             predecessorSignature: second

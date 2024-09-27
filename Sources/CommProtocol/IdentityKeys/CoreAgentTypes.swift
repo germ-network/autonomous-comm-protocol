@@ -8,18 +8,21 @@
 import CryptoKit
 import Foundation
 
+//only using this for the exchange, not subsequent proposals
 public enum AgentTypes {
     case hello
-    case reply(agentId: AgentPublicKey, seed: Data)
+    case reply(remoteAgentId: AgentPublicKey, seed: DataIdentifier)
 
-    func generateContext(myAgentId: AgentPublicKey) throws -> TypedDigest? {
+    public func generateContext(
+        myAgentId: AgentPublicKey
+    ) throws -> TypedDigest? {
         switch self {
         case .hello: return nil
-        case .reply(let agentId, let seed):
+        case .reply(let remoteAgentId, let base):
             var hasher = SHA256()
-            hasher.update(data: agentId.wireFormat)
+            hasher.update(data: base.identifier)
+            hasher.update(data: remoteAgentId.wireFormat)
             hasher.update(data: myAgentId.wireFormat)
-            hasher.update(data: seed)
             return try .init(prefix: .sha256, checkedData: hasher.finalize().data)
         }
     }

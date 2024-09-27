@@ -7,7 +7,7 @@
 
 import Foundation
 
-public struct AgentHandoff {
+public struct AgentHandoff: Equatable {
     struct NewAgentTBS {
         static let discriminator = Data("successorAgent".utf8)
         //All of these are injected and already known
@@ -40,9 +40,9 @@ public struct AgentHandoff {
         }
     }
 
-    public struct Validated {
-        let newAgent: AgentPublicKey
-        let agentData: AgentUpdate
+    public struct Validated: Sendable {
+        public let newAgent: AgentPublicKey
+        public let agentData: AgentUpdate
     }
 
     func validate(
@@ -71,18 +71,54 @@ public struct AgentHandoff {
 
         return agentData
     }
+
+    //for AgentPrivateKey.completeAgentHandoff
+    public struct Input: Sendable {
+        public let existingIdentity: IdentityPublicKey
+        public let identityDelegate: IdentityDelegate
+        public let signedIdentityMutable: SignedObject<IdentityMutableData>?
+        public let establishedAgent: AgentPublicKey
+
+        public init(
+            existingIdentity: IdentityPublicKey,
+            identityDelegate: IdentityDelegate,
+            signedIdentityMutable: SignedObject<IdentityMutableData>?,
+            establishedAgent: AgentPublicKey
+        ) {
+            self.existingIdentity = existingIdentity
+            self.identityDelegate = identityDelegate
+            self.signedIdentityMutable = signedIdentityMutable
+            self.establishedAgent = establishedAgent
+        }
+    }
 }
 
 extension AgentHandoff: LinearEncodedPair {
-    var first: AgentUpdate { agentData }
-    var second: TypedSignature { newAgentSignature }
+    public var first: AgentUpdate { agentData }
+    public var second: TypedSignature { newAgentSignature }
 
-    init(first: AgentUpdate, second: TypedSignature)
+    public init(first: AgentUpdate, second: TypedSignature)
         throws
     {
         self.init(
             agentData: first,
             newAgentSignature: second
+        )
+    }
+}
+
+extension AgentHandoff.Input: LinearEncodedQuad {
+    public var first: TypedKeyMaterial { existingIdentity.id }
+    public var second: IdentityDelegate { identityDelegate }
+    public var third: SignedObject<IdentityMutableData>? { signedIdentityMutable }
+    public var fourth: TypedKeyMaterial { establishedAgent.id }
+
+    public init(first: First, second: Second, third: Third, fourth: Fourth) throws {
+        self.init(
+            existingIdentity: try .init(archive: first),
+            identityDelegate: second,
+            signedIdentityMutable: third,
+            establishedAgent: try .init(archive: fourth)
         )
     }
 }

@@ -30,11 +30,15 @@ public struct AgentUpdate: Sendable, Equatable {
 }
 
 extension AgentUpdate: LinearEncodedTriple {
-    var first: SemanticVersion { version }
-    var second: Bool { isAppClip }
-    var third: [ProtocolAddress] { addresses }
+    public var first: SemanticVersion { version }
+    public var second: Bool { isAppClip }
+    public var third: [ProtocolAddress] { addresses }
 
-    init(first: SemanticVersion, second: Bool, third: [ProtocolAddress]) throws {
+    public init(
+        first: SemanticVersion,
+        second: Bool,
+        third: [ProtocolAddress]
+    ) throws {
         self.init(version: first, isAppClip: second, addresses: third)
     }
 }

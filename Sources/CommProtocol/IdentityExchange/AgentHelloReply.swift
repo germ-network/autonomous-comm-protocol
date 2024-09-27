@@ -19,37 +19,51 @@ import Foundation
 ///- check the contents of the AgentHelloReply
 
 public struct AgentHelloReply: Sendable {
-    let introduction: IdentityIntroduction
-    let agentData: AgentUpdate
+    public let introduction: IdentityIntroduction
+    public let agentData: AgentUpdate
 
     ///A seed to be mixed into the initial pair of agent id's to derive the underlying group Id
-    let groupIdSeed: Data
-    let agentSignatureWelcome: TypedSignature
 
-    let sentTime: Date  //just as messages assert local send time
-
+    public struct Content: Sendable {
+        public let groupIdSeed: DataIdentifier
+        public let agentSignatureWelcome: TypedSignature
+        public let seqNo: UInt32  //sets the initial seqNo
+        public let sentTime: Date  //just as messages assert local send time
+    }
+    public let content: Content
 }
 
-extension AgentHelloReply: LinearEncodedQuintuple {
-    var first: IdentityIntroduction { introduction }
-    var second: AgentUpdate { agentData }
-    var third: Data { groupIdSeed }
-    var fourth: TypedSignature { agentSignatureWelcome }
-    var fifth: Date { sentTime }
+extension AgentHelloReply: LinearEncodedTriple {
+    public var first: IdentityIntroduction { introduction }
+    public var second: AgentUpdate { agentData }
+    public var third: Content { content }
 
-    init(
+    public init(
         first: IdentityIntroduction,
         second: AgentUpdate,
-        third: Data,
-        fourth: TypedSignature,
-        fifth: Date
+        third: Content
+    ) {
+        self.init(introduction: first, agentData: second, content: third)
+    }
+}
+
+extension AgentHelloReply.Content: LinearEncodedQuad {
+    public var first: DataIdentifier { groupIdSeed }
+    public var second: TypedSignature { agentSignatureWelcome }
+    public var third: UInt32 { seqNo }
+    public var fourth: Date { sentTime }
+
+    public init(
+        first: DataIdentifier,
+        second: TypedSignature,
+        third: UInt32,
+        fourth: Date
     ) throws {
         self.init(
-            introduction: first,
-            agentData: second,
-            groupIdSeed: third,
-            agentSignatureWelcome: fourth,
-            sentTime: fifth
+            groupIdSeed: first,
+            agentSignatureWelcome: second,
+            seqNo: third,
+            sentTime: fourth
         )
     }
 }

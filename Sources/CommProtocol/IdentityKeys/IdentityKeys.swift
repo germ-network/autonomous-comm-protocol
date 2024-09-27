@@ -38,7 +38,7 @@ public struct IdentityPrivateKey: Sendable {
             name: name,
             describedImage: describedImage,
             version: CoreIdentity.Constants.currentVersion,
-            nonce: SymmetricKey(size: .bits128).rawRepresentation
+            nonce: .init(width: .bits128)
         )
 
         let coreIdentityData = try coreIdentity.wireFormat
@@ -53,12 +53,12 @@ public struct IdentityPrivateKey: Sendable {
         )
     }
 
+    //Used for both sides of the card exchange
     //have to leave this framework to generate the update message
     //that we then pass to the agent in a variety of proposeAgentHandoff
     public func createNewDelegate(
         signedIdentity: SignedObject<CoreIdentity>,
         identityMutable: IdentityMutableData,
-        imageResource: Resource,
         agentType: AgentTypes
     ) throws -> (
         AgentPrivateKey,
@@ -72,14 +72,13 @@ public struct IdentityPrivateKey: Sendable {
                 signedIdentity: signedIdentity,
                 newAgent: newAgent.publicKey,
                 identityMutable: identityMutable,
-                imageResource: imageResource,
                 context: agentType.generateContext(myAgentId: newAgent.publicKey)
             )
         )
     }
 
-    //TODO: consider deprecate?
-    public func createAgentDelegate(context: TypedDigest?) throws -> (
+    //We use this for same identity delegate
+    public func createAgentDelegate(context: TypedDigest) throws -> (
         AgentPrivateKey,
         IdentityDelegate
     ) {
@@ -94,7 +93,7 @@ public struct IdentityPrivateKey: Sendable {
         return (
             newAgent,
             .init(
-                newAgentId: newAgentPubKey.id,
+                newAgentId: newAgentPubKey,
                 knownIdentitySignature: signature
             )
         )
@@ -114,11 +113,32 @@ public struct IdentityPrivateKey: Sendable {
 
     public func createHandoff(
         existingIdentity: IdentityPublicKey,
+        newAgent: AgentPublicKey,
         startSignature: TypedSignature,
         signedIdentity: SignedObject<CoreIdentity>,
         identityMutable: IdentityMutableData,
-        context: TypedDigest,
-        imageResource: Resource
+        context: TypedDigest
+    ) throws -> IdentityHandoff {
+        let introduction = try createIntroduction(
+            signedIdentity: signedIdentity,
+            newAgent: newAgent,
+            identityMutable: identityMutable,
+            context: context
+        )
+
+        return IdentityHandoff(
+            introduction: introduction,
+            predecessorSignature: startSignature
+        )
+    }
+
+    // reintroduce this variant
+    public func createHandoff(
+        existingIdentity: IdentityPublicKey,
+        startSignature: TypedSignature,
+        signedIdentity: SignedObject<CoreIdentity>,
+        identityMutable: IdentityMutableData,
+        context: TypedDigest
     ) throws -> (AgentPrivateKey, IdentityHandoff) {
         let newAgent = AgentPrivateKey(algorithm: .curve25519)
 
@@ -126,16 +146,16 @@ public struct IdentityPrivateKey: Sendable {
             signedIdentity: signedIdentity,
             newAgent: newAgent.publicKey,
             identityMutable: identityMutable,
-            imageResource: imageResource,
             context: context
         )
 
-        let handoff = IdentityHandoff(
-            introduction: introduction,
-            predecessorSignature: startSignature
+        return (
+            newAgent,
+            .init(
+                introduction: introduction,
+                predecessorSignature: startSignature
+            )
         )
-
-        return (newAgent, handoff)
     }
 
     public func sign(
@@ -166,7 +186,7 @@ public struct IdentityPrivateKey: Sendable {
     }
 
     //MARK: Implementation
-    private func sign(input: Data) throws -> TypedSignature {
+    func sign(input: Data) throws -> TypedSignature {
         try .init(
             prefix: keyType,
             checkedData: privateKey.signature(for: input)
@@ -177,12 +197,10 @@ public struct IdentityPrivateKey: Sendable {
         signedIdentity: SignedObject<CoreIdentity>,
         newAgent: AgentPublicKey,
         identityMutable: IdentityMutableData,
-        imageResource: Resource,
         context: TypedDigest?
     ) throws -> IdentityIntroduction {
         let introductionContent = IdentityIntroduction.Contents(
             mutableData: identityMutable,
-            imageResource: imageResource,
             agentKey: newAgent
         )
 
@@ -242,6 +260,11 @@ public struct IdentityPublicKey: Sendable {
             throw ProtocolError.authenticationError
         }
         return signedObject.content
+    }
+
+    func validate<C>(maybeSignedObject: SignedObject<C>?) throws -> C? {
+        guard let maybeSignedObject else { return nil }
+        return try validate(signedObject: maybeSignedObject)
     }
 
     func validate(signature: TypedSignature, for body: Data) throws {

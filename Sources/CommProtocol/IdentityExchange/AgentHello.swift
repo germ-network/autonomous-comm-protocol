@@ -18,12 +18,12 @@ public struct AgentHello: Sendable {
     public struct NewAgentData: Sendable {
         //prepend the identity key when signing
         public let agentUpdate: AgentUpdate
-        public let keyChoices: KeyPackageChoices
+        public let keyChoices: SessionIntroductionChoices
         public let expiration: Date
 
         public init(
             agentUpdate: AgentUpdate,
-            keyChoices: KeyPackageChoices,
+            keyChoices: SessionIntroductionChoices,
             expiration: Date
         ) {
             self.agentUpdate = agentUpdate
@@ -51,7 +51,7 @@ public struct AgentHello: Sendable {
         public let coreIdentity: CoreIdentity  //from the SignedIdentity
         public let signedIdentity: SignedObject<CoreIdentity>
         public let mutableData: IdentityMutableData
-        public let imageResource: Resource
+        public let imageResource: Resource  //duplicative, but enforce that it exists
         public let agentKey: AgentPublicKey
         public let agentData: NewAgentData
 
@@ -59,21 +59,21 @@ public struct AgentHello: Sendable {
             coreIdentity: CoreIdentity,
             signedIdentity: SignedObject<CoreIdentity>,
             mutableData: IdentityMutableData,
-            imageResource: Resource,
             agentKey: AgentPublicKey,
-            agentData: NewAgentData
+            agentData: NewAgentData,
+            imageResource: Resource
         ) {
             self.coreIdentity = coreIdentity
             self.signedIdentity = signedIdentity
             self.mutableData = mutableData
-            self.imageResource = imageResource
             self.agentKey = agentKey
             self.agentData = agentData
+            self.imageResource = imageResource
         }
     }
 
     public func validated() throws -> Validated {
-        let (identity, contents) = try introduction.validated(context: nil)
+        let (identity, contents, imageResource) = try introduction.validated(context: nil)
 
         let agentData = try contents.agentKey.validate(
             signedAgentData: signedAgentData,
@@ -84,18 +84,18 @@ public struct AgentHello: Sendable {
             coreIdentity: identity,
             signedIdentity: introduction.signedIdentity,
             mutableData: contents.mutableData,
-            imageResource: contents.imageResource,
             agentKey: contents.agentKey,
-            agentData: agentData
+            agentData: agentData,
+            imageResource: imageResource
         )
     }
 }
 
 extension AgentHello: LinearEncodedPair {
-    var first: IdentityIntroduction { introduction }
-    var second: SignedObject<NewAgentData> { signedAgentData }
+    public var first: IdentityIntroduction { introduction }
+    public var second: SignedObject<NewAgentData> { signedAgentData }
 
-    init(
+    public init(
         first: IdentityIntroduction,
         second: SignedObject<NewAgentData>
     ) throws {
@@ -107,13 +107,13 @@ extension AgentHello: LinearEncodedPair {
 }
 
 extension AgentHello.NewAgentData: LinearEncodedTriple {
-    var first: AgentUpdate { agentUpdate }
-    var second: KeyPackageChoices { keyChoices }
-    var third: Date { expiration }
+    public var first: AgentUpdate { agentUpdate }
+    public var second: SessionIntroductionChoices { keyChoices }
+    public var third: Date { expiration }
 
-    init(
+    public init(
         first: AgentUpdate,
-        second: [TypedKeyPackage],
+        second: SessionIntroductionChoices,
         third: Date
     ) throws {
         self.init(

@@ -16,22 +16,22 @@ import Foundation
 
 public struct CoreIdentity: Sendable, Equatable {
     struct Constants {
-        //previously, 0.0.1
-        static let currentVersion = SemanticVersion(major: 1, minor: 0, patch: 0)
+        //previously, 1.0.0
+        static let currentVersion = SemanticVersion(major: 2, minor: 0, patch: 0)
     }
 
     public let id: IdentityPublicKey  //WireFormat for IdentityPublicKey
     public let name: String
     public let describedImage: DescribedImage
     public let version: SemanticVersion
-    let nonce: Data
+    public let nonce: DataIdentifier
 
     init(
         id: IdentityPublicKey,
         name: String,
         describedImage: DescribedImage,
         version: SemanticVersion,
-        nonce: Data
+        nonce: DataIdentifier
     ) throws {
         self.id = id
         self.name = name
@@ -42,18 +42,18 @@ public struct CoreIdentity: Sendable, Equatable {
 }
 
 extension CoreIdentity: LinearEncodedQuintuple {
-    var first: TypedKeyMaterial { id.id }
-    var second: String { name }
-    var third: DescribedImage { describedImage }
-    var fourth: SemanticVersion { version }
-    var fifth: Data { nonce }
+    public var first: TypedKeyMaterial { id.id }
+    public var second: String { name }
+    public var third: DescribedImage { describedImage }
+    public var fourth: SemanticVersion { version }
+    public var fifth: DataIdentifier { nonce }
 
-    init(
+    public init(
         first: TypedKeyMaterial,
         second: String,
         third: DescribedImage,
         fourth: SemanticVersion,
-        fifth: Data
+        fifth: DataIdentifier
     ) throws {
         try self.init(
             id: .init(archive: first),
@@ -65,27 +65,59 @@ extension CoreIdentity: LinearEncodedQuintuple {
     }
 }
 
+public enum ImageType: UInt8, Sendable {
+    case jpegXL = 1
+}
+
 public struct DescribedImage: Equatable, Sendable {
+    public let imageType: ImageType
     public let imageDigest: TypedDigest
     public let altText: String?
 
-    init(imageDigest: TypedDigest, altText: String?) {
+    init(imageType: ImageType, imageDigest: TypedDigest, altText: String?) {
+        self.imageType = imageType
         self.imageDigest = imageDigest
         self.altText = altText
     }
 
-    public init(imageData: Data, altText: String?) {
+    public init(
+        imageType: ImageType = .jpegXL,
+        imageData: Data,
+        altText: String?
+    ) {
+        self.imageType = imageType
         self.imageDigest = .init(prefix: .sha256, over: imageData)
         self.altText = altText
     }
 }
 
-extension DescribedImage: LinearEncodedPair {
-    var first: TypedDigest { imageDigest }
-    var second: OptionalString? { .init(altText) }
+extension DescribedImage: LinearEncodedTriple {
+    public var first: UInt8 { imageType.rawValue }
+    public var second: TypedDigest { imageDigest }
+    public var third: OptionalString? { .init(altText) }
 
-    init(first: TypedDigest, second: OptionalString?) throws {
-        self.init(imageDigest: first, altText: second?.string)
+    public init(first: UInt8, second: TypedDigest, third: OptionalString?) throws {
+        guard let type = ImageType(rawValue: first) else {
+            throw LinearEncodingError.unexpectedData
+        }
+        self.init(
+            imageType: type,
+            imageDigest: second,
+            altText: third?.string
+        )
+    }
+}
+
+extension UInt8: LinearEncodable {
+    public static func parse(_ input: Data) throws -> (UInt8, Int) {
+        guard let first = input.first else {
+            throw LinearEncodingError.unexpectedEOF
+        }
+        return (first, 1)
+    }
+
+    public var wireFormat: Data {
+        .init([self])
     }
 }
 
@@ -106,26 +138,42 @@ extension SignedObject<CoreIdentity> {
         //have to decode the credentialData to get the public key
         try content.id.validate(signedObject: self)
     }
+
+    //digest of the immutable portion. Can't fold in contents as the
+    //imageResource expires and needs to be refreshed
+    public var signedIdentityDigest: TypedDigest {
+        get throws {
+            .init(prefix: .sha256, over: try wireFormat)
+        }
+    }
 }
 
 public struct IdentityMutableData: Sendable, Equatable {
     public let counter: UInt16  //for predecence defined by the sender/signer
     public let pronouns: [String]
     public let aboutText: String?
+    public let imageResource: Resource?
 
-    public init(counter: UInt16, pronouns: [String], aboutText: String?) {
+    public init(counter: UInt16, pronouns: [String], aboutText: String?, imageResource: Resource?) {
         self.counter = counter
         self.pronouns = pronouns
         self.aboutText = aboutText
+        self.imageResource = imageResource
     }
 }
 
-extension IdentityMutableData: LinearEncodedTriple {
-    var first: UInt16 { counter }
-    var second: [String] { pronouns }
-    var third: String? { aboutText }
+extension IdentityMutableData: LinearEncodedQuad {
+    public var first: UInt16 { counter }
+    public var second: [String] { pronouns }
+    public var third: String? { aboutText }
+    public var fourth: Resource? { imageResource }
 
-    init(first: UInt16, second: [String], third: String?) throws {
-        self.init(counter: first, pronouns: second, aboutText: third)
+    public init(first: UInt16, second: [String], third: String?, fourth: Resource?) throws {
+        self.init(
+            counter: first,
+            pronouns: second,
+            aboutText: third,
+            imageResource: fourth
+        )
     }
 }

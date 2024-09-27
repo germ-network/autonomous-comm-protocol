@@ -47,6 +47,15 @@ public struct AgentPrivateKey: Sendable {
         privateKey = concrete
         publicKey = .init(concrete: concrete.publicKey)
     }
+    
+    public func sign<Content: LinearEncodable>(
+        content: Content
+    ) throws -> SignedObject<Content> {
+        .init(
+            content: content,
+            signature: try sign(input: content.wireFormat)
+        )
+    }
 
     //usually implicitly authorized by the session, but need direct signing in the AgentHello
     public func sign(
@@ -75,7 +84,7 @@ public struct AgentPrivateKey: Sendable {
     public func createAgentHelloReply(
         introduction: IdentityIntroduction,
         agentData: AgentUpdate,
-        groupIdSeed: Data,
+        groupIdSeed: DataIdentifier,
         welcomeMessage: Data
     ) throws -> AgentHelloReply {
         let signature = try sign(input: welcomeMessage)
@@ -83,15 +92,40 @@ public struct AgentPrivateKey: Sendable {
         return .init(
             introduction: introduction,
             agentData: agentData,
-            groupIdSeed: groupIdSeed,
-            agentSignatureWelcome: signature,
-            sentTime: .init()
+            content: .init(
+                groupIdSeed: groupIdSeed,
+                agentSignatureWelcome: signature,
+                seqNo: .random(in: .min...(.max)),
+                sentTime: .init()
+            )
+        )
+    }
+    
+    //variant when identity & agent are already known so we just need agent
+    //update, and mainly sign over
+    //welcome
+    public func createKnownHelloReply(
+        agentData: AgentUpdate,
+        groupIdSeed: DataIdentifier,
+        welcomeMessage: Data
+    ) throws -> KnownReply {
+        let signature = try sign(input: welcomeMessage)
+
+        return .init(
+            agentData: agentData,
+            content: .init(
+                groupIdSeed: groupIdSeed,
+                agentSignatureWelcome: signature,
+                seqNo: .random(in: .min...(.max)),
+                sentTime: .init()
+            )
         )
     }
 
     public func proposeLeafNode(
         leafNodeUpdate: Data,
         agentUpdate: AgentUpdate,
+        signedIdentityMutable: SignedObject<IdentityMutableData>?,
         context: TypedDigest
     ) throws -> CommProposal {
         let signature = try sign(
@@ -105,7 +139,8 @@ public struct AgentPrivateKey: Sendable {
             .init(
                 content: agentUpdate,
                 signature: signature
-            )
+            ),
+            signedIdentityMutable
         )
     }
 
@@ -113,16 +148,14 @@ public struct AgentPrivateKey: Sendable {
     /// 1. start in IdentityPrivateKey creating a new agent
     /// 3. the new Agent completes it
     public func completeAgentHandoff(
-        existingIdentity: IdentityPublicKey,
-        identityDelegate: IdentityDelegate,
-        establishedAgent: AgentPublicKey,
+        input: AgentHandoff.Input,
         context: TypedDigest,
         agentData: AgentUpdate,
         updateMessage: Data
     ) throws -> CommProposal {
         let newAgentSignatureOver = try AgentHandoff.NewAgentTBS(
-            knownAgentKey: establishedAgent,
-            newAgentIdentity: existingIdentity,
+            knownAgentKey: input.establishedAgent,
+            newAgentIdentity: input.existingIdentity,
             context: context,
             updateMessage: updateMessage,
             agentData: agentData
@@ -134,11 +167,14 @@ public struct AgentPrivateKey: Sendable {
             newAgentSignature: newAgentSignature
         )
 
-        return .sameIdentity(identityDelegate, agentHandoff)
+        return .sameIdentity(
+            input.identityDelegate,
+            agentHandoff,
+            input.signedIdentityMutable
+        )
     }
 
     public func completeIdentityHandoff(
-        newIdentity: IdentityPublicKey,
         identityHandoff: IdentityHandoff,
         establishedAgent: AgentPublicKey,
         context: TypedDigest,
@@ -147,7 +183,7 @@ public struct AgentPrivateKey: Sendable {
     ) throws -> CommProposal {
         let newAgentSignatureOver = try AgentHandoff.NewAgentTBS(
             knownAgentKey: establishedAgent,
-            newAgentIdentity: newIdentity,
+            newAgentIdentity: identityHandoff.introduction.signedIdentity.content.id,
             context: context,
             updateMessage: updateMessage,
             agentData: agentData
@@ -187,38 +223,6 @@ public struct AgentPrivateKey: Sendable {
             )
         )
     }
-    //
-    //    public func sign(transition: SignedAgentTransition.Transition)
-    //    throws -> (encoded: Data, signature: Data) {
-    //        let encoded = try transition.encoded
-    //        return (encoded: encoded, signature: try key.signature(for: encoded))
-    //    }
-    //
-    //    public func sign(helloReply: HelloReply) throws -> SignedObject<HelloReply> {
-    //        let data = try helloReply.encoded
-    //        let signature = try key.signature(for: data)
-    //        return .init(body: data,
-    //                     signature: signature)
-    //    }
-    //
-
-    //
-    //    public func sign(preSessionMap: TypedPreSessionMap) throws -> SignedObject<TypedPreSessionMap> {
-    //        let data = try preSessionMap.encoded
-    //        let signature = try key.signature(for: data)
-    //        return .init(body: data,
-    //                     signature: signature)
-    //    }
-    //
-    //    //unused, retain until we determine if we will generate legacy invitations
-    //    public func sign(sessionInvitation: TypedSessionInvitation) throws -> CompleteSignedObject<TypedSessionInvitation> {
-    //        let data = try sessionInvitation.encoded
-    //        let signature = try key.signature(for: data)
-    //        return .init(body: data,
-    //                     signature: signature,
-    //                     signerArchive: publicTypedKey.stablePublicArchive)
-    //    }
-
 }
 
 public struct AgentPublicKey: Sendable {
@@ -253,7 +257,7 @@ public struct AgentPublicKey: Sendable {
     }
 
     //MARK: Implementation
-    func validate<C>(signedObject: SignedObject<C>) throws -> C {
+    public func validate<C>(signedObject: SignedObject<C>) throws -> C {
         guard keyType == signedObject.signature.signingAlgorithm,
             publicKey.isValidSignature(
                 signedObject.signature.signature,

@@ -25,7 +25,7 @@ extension SymmetricKey: RawRepresentableKey {
 }
 
 extension ContiguousBytes {
-    var dataRepresentation: Data {
+    public var dataRepresentation: Data {
         withUnsafeBytes {
             Data(Array($0))
         }

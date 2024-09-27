@@ -1,13 +1,13 @@
 //
-//  KeyPackages.swift
+//  SessionEncryptionSuites.swift
+//  CommProtocol
 //
-//
-//  Created by Mark @ Germ on 7/2/24.
+//  Created by Mark Xue on 8/19/24.
 //
 
 import Foundation
 
-public enum SessionEncryptionSuites: UInt8, Equatable, Sendable, CaseIterable {
+public enum SessionEncryptionSuites: UInt8, Equatable, Sendable, CaseIterable, Codable {
     case mlsCurve25519ChaChaPoly = 1
 
     //notice: unused
@@ -50,24 +50,19 @@ extension SessionEncryptionSuites: LinearEncodable {
     }
 }
 
-// for MLS, data value is an encoded MLS KeyPackage message
-public struct TypedKeyPackage: Equatable, Sendable {
-    public let suite: SessionEncryptionSuites
-    public let keyPackage: Data
+extension SessionEncryptionSuites {
+    var keyMaterialType: TypedKeyMaterial.Algorithms {
+        switch self {
+        case .mlsCurve25519ChaChaPoly:
+            .hpkeEncapCurve25519Sha256ChachaPoly
+        }
+    }
 
-    public init(suite: SessionEncryptionSuites, keyPackage: Data) {
-        self.suite = suite
-        self.keyPackage = keyPackage
+    init(keyMaterialType: TypedKeyMaterial.Algorithms) throws {
+        switch keyMaterialType {
+        case .hpkeEncapCurve25519Sha256ChachaPoly:
+            self = .mlsCurve25519ChaChaPoly
+        default: throw ProtocolError.archiveIncorrect
+        }
     }
 }
-
-extension TypedKeyPackage: LinearEncodedPair {
-    var first: SessionEncryptionSuites { suite }
-    var second: Data { keyPackage }
-
-    init(first: SessionEncryptionSuites, second: Data) {
-        self.init(suite: first, keyPackage: second)
-    }
-}
-
-public typealias KeyPackageChoices = [TypedKeyPackage]

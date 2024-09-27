@@ -13,18 +13,20 @@ public struct SignedObject<Content: LinearEncodable>: Sendable {
     let signature: TypedSignature
 }
 
-extension SignedObject: LinearEncodedPair {
-    var first: Content { content }
-    var second: TypedSignature { signature }
+extension SignedObject: Equatable where Content: Equatable {}
 
-    init(first: Content, second: TypedSignature) throws {
+extension SignedObject: LinearEncodedPair {
+    public var first: Content { content }
+    public var second: TypedSignature { signature }
+
+    public init(first: Content, second: TypedSignature) throws {
         self.init(content: first, signature: second)
     }
 
 }
 
 //like TypedKeyMaterial, prepend a byte that indicates length of the body
-public struct TypedSignature: DefinedWidthBinary, Sendable {
+public struct TypedSignature: DefinedWidthBinary, Sendable, Equatable {
     public typealias Prefix = SigningKeyAlgorithm
     let signingAlgorithm: SigningKeyAlgorithm
     let signature: Data
