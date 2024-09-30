@@ -225,6 +225,19 @@ public struct AgentPrivateKey: Sendable {
     }
 }
 
+extension AgentPrivateKey: Equatable{
+    static public func == (lhs: Self, rhs: Self) -> Bool {
+        lhs.id == rhs.id
+    }
+}
+
+extension AgentPrivateKey: Hashable {
+    public func hash(into hasher: inout Hasher) {
+        hasher.combine("Agent Private Key")
+        hasher.combine(id)
+    }
+}
+
 public struct AgentPublicKey: Sendable {
     let publicKey: any PublicSigningKey
     public let id: TypedKeyMaterial
