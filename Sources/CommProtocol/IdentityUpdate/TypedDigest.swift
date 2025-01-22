@@ -10,8 +10,8 @@ import Foundation
 
 public struct TypedDigest: DefinedWidthBinary, Sendable, Equatable {
     public typealias Prefix = DigestTypes
-    let type: DigestTypes
-    let digest: Data
+    public let type: DigestTypes
+    public let digest: Data
 
     public init(
         prefix: Prefix,
