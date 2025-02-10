@@ -27,6 +27,7 @@ struct AppWelcomeTests {
         #expect(
             validated.introContents == mockWelcome.introduction.signedContents.content)
         #expect(validated.welcomeContent == mockWelcome.signedContent.content)
+
     }
 
 }

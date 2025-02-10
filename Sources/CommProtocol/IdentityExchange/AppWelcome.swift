@@ -5,6 +5,7 @@
 //  Created by Mark @ Germ on 2/9/25.
 //
 
+import CryptoKit
 import Foundation
 
 ///This is the accompanying Application-level data to an MLS welcome, issued in response
@@ -25,6 +26,7 @@ public struct AppWelcome {
         public let agentData: AgentUpdate
         public let seqNo: UInt32  //sets the initial seqNo
         public let sentTime: Date  //just as messages assert local send time
+        public let keyPackageData: Data
     }
 
     //This gets transmitted, encrypted to the HPKE init key
@@ -51,23 +53,26 @@ extension AppWelcome: LinearEncodedPair {
     }
 }
 
-extension AppWelcome.Content: LinearEncodedQuad {
+extension AppWelcome.Content: LinearEncodedQuintuple {
     public var first: DataIdentifier { groupId }
     public var second: AgentUpdate { agentData }
     public var third: UInt32 { seqNo }
     public var fourth: Date { sentTime }
+    public var fifth: Data { keyPackageData }
 
     public init(
         first: DataIdentifier,
         second: AgentUpdate,
         third: UInt32,
-        fourth: Date
+        fourth: Date,
+        fifth: Data
     ) throws {
         self.init(
             groupId: first,
             agentData: second,
             seqNo: third,
-            sentTime: fourth
+            sentTime: fourth,
+            keyPackageData: fifth
         )
     }
 }
@@ -145,7 +150,8 @@ extension AppWelcome {
         return try agentKey.createAppWelcome(
             introduction: introduction,
             agentData: .mock(),
-            groupId: groupId
+            groupId: groupId,
+            keyPackageData: SymmetricKey(size: .bits256).rawRepresentation
         )
     }
 }

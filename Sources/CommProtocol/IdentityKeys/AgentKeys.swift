@@ -104,13 +104,15 @@ public struct AgentPrivateKey: Sendable {
     public func createAppWelcome(
         introduction: IdentityIntroduction,
         agentData: AgentUpdate,
-        groupId: DataIdentifier
+        groupId: DataIdentifier,
+        keyPackageData: Data
     ) throws -> AppWelcome {
         let content = AppWelcome.Content(
             groupId: groupId,
             agentData: agentData,
             seqNo: .random(in: .min...(.max)),
-            sentTime: .now
+            sentTime: .now,
+            keyPackageData: keyPackageData
         )
 
         let signedContent = try sign(content: content)
