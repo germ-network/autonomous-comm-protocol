@@ -8,8 +8,8 @@
 import Foundation
 
 ///This is now deprecated and used in the PairMLS session type only
-///This has the disadvantage of needing to process thek MLS commit to decrypt
-///the Applicationmessage
+///This has the disadvantage of needing to process the MLS commit to decrypt
+///the ApplicationMessage to get the application-level group init
 
 ///form a channel, under MLS
 ///- we process a MLS welcome

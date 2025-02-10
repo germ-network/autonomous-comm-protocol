@@ -18,7 +18,10 @@ public enum ProtocolError: Error {
     case incorrectAssertionType
     case incorrectSigner
     case archiveIncorrect
+    case unexpected(String)
 }
+
+extension ProtocolError: Equatable {}
 
 extension ProtocolError: LocalizedError {
     public var errorDescription: String? {
@@ -33,6 +36,7 @@ extension ProtocolError: LocalizedError {
         case .incorrectAssertionType: "Incorrect identity relationship type"
         case .incorrectSigner: "Incorrect signing key type"
         case .archiveIncorrect: "unexpected archive"
+        case .unexpected(let string): "Unexpected \(string)"
         }
     }
 }

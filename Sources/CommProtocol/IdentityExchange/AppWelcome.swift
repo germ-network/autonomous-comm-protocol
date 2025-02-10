@@ -20,7 +20,7 @@ public struct AppWelcome {
     public let introduction: IdentityIntroduction
     public let signedContent: SignedObject<Content>
 
-    public struct Content: Sendable {
+    public struct Content: Equatable, Sendable {
         public let groupId: DataIdentifier
         public let agentData: AgentUpdate
         public let seqNo: UInt32  //sets the initial seqNo
@@ -81,27 +81,71 @@ extension AppWelcome.Combined: LinearEncodedPair {
     }
 }
 
+//The AppWelcome is encrypted to an assumed published key in HPKE basic mode
+//(we don't know the sender ahead of time)
+//should presume confidentiality but not authenticity.
+//We need to confirm the identity key in the AppWelcome signs
+//over the remainder of the data in the AppWelcome
+//some indirectly through the delegate AgentKey
+extension AppWelcome {
+    public struct Validated {
+        public let coreIdentity: CoreIdentity
+        public let introContents: IdentityIntroduction.Contents
+        public let imageResource: Resource
+        public let welcomeContent: AppWelcome.Content
+    }
+
+    public func validated(myAgent: AgentPublicKey) throws -> Validated {
+        let agentType = AgentTypes.welcome(
+            remoteAgentId: myAgent,
+            groupId: signedContent.content.groupId
+        )
+
+        guard
+            let context = try agentType.generateContext(
+                myAgentId: introduction.signedContents.content.agentKey
+            )
+        else {
+            throw ProtocolError.unexpected("mismatched context")
+        }
+
+        let (coreIdentity, introContents, imageResource) = try introduction.validated(
+            context: context
+        )
+
+        return .init(
+            coreIdentity: coreIdentity,
+            introContents: introContents,
+            imageResource: imageResource,
+            welcomeContent: try introContents.agentKey
+                .validate(signedObject: signedContent)
+        )
+    }
+}
+
 extension AppWelcome {
     static public func mock(remoteAgentKey: AgentPublicKey) throws -> AppWelcome {
         let (identityKey, signedIdentity) =
             try Mocks
             .mockIdentity()
 
+        let groupId = DataIdentifier(width: .bits256)
+
         let (agentKey, introduction) =
             try identityKey
             .createNewDelegate(
                 signedIdentity: signedIdentity,
                 identityMutable: .mock(),
-                agentType: .reply(
+                agentType: .welcome(
                     remoteAgentId: remoteAgentKey,
-                    seed: .init(width: .bits128)
+                    groupId: groupId
                 )
             )
 
         return try agentKey.createAppWelcome(
             introduction: introduction,
             agentData: .mock(),
-            groupId: .init(width: .bits128)
+            groupId: groupId
         )
     }
 }
