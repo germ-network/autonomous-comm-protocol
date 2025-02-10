@@ -82,7 +82,7 @@ extension AppWelcome.Combined: LinearEncodedPair {
 }
 
 extension AppWelcome {
-    static func mock(remoteAgentKey: AgentPublicKey) throws -> AppWelcome {
+    static public func mock(remoteAgentKey: AgentPublicKey) throws -> AppWelcome {
         let (identityKey, signedIdentity) =
             try Mocks
             .mockIdentity()
