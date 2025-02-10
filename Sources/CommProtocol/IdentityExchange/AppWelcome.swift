@@ -29,8 +29,13 @@ public struct AppWelcome {
 
     //This gets transmitted, encrypted to the HPKE init key
     public struct Combined {
-        let appWelcome: AppWelcome
-        let mlsMessageData: Data
+        public let appWelcome: AppWelcome
+        public let mlsMessageData: Data
+        
+        public init(appWelcome: AppWelcome, mlsMessageData: Data) {
+            self.appWelcome = appWelcome
+            self.mlsMessageData = mlsMessageData
+        }
     }
 }
 
