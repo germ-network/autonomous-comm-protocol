@@ -31,7 +31,7 @@ public struct AppWelcome {
     public struct Combined {
         public let appWelcome: AppWelcome
         public let mlsMessageData: Data
-        
+
         public init(appWelcome: AppWelcome, mlsMessageData: Data) {
             self.appWelcome = appWelcome
             self.mlsMessageData = mlsMessageData
@@ -78,5 +78,30 @@ extension AppWelcome.Combined: LinearEncodedPair {
 
     public init(first: AppWelcome, second: Data) throws {
         self.init(appWelcome: first, mlsMessageData: second)
+    }
+}
+
+extension AppWelcome {
+    static func mock(remoteAgentKey: AgentPublicKey) throws -> AppWelcome {
+        let (identityKey, signedIdentity) =
+            try Mocks
+            .mockIdentity()
+
+        let (agentKey, introduction) =
+            try identityKey
+            .createNewDelegate(
+                signedIdentity: signedIdentity,
+                identityMutable: .mock(),
+                agentType: .reply(
+                    remoteAgentId: remoteAgentKey,
+                    seed: .init(width: .bits128)
+                )
+            )
+
+        return try agentKey.createAppWelcome(
+            introduction: introduction,
+            agentData: .mock(),
+            groupId: .init(width: .bits128)
+        )
     }
 }

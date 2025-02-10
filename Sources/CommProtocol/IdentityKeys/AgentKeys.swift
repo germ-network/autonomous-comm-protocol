@@ -101,6 +101,26 @@ public struct AgentPrivateKey: Sendable {
         )
     }
 
+    public func createAppWelcome(
+        introduction: IdentityIntroduction,
+        agentData: AgentUpdate,
+        groupId: DataIdentifier
+    ) throws -> AppWelcome {
+        let content = AppWelcome.Content(
+            groupId: groupId,
+            agentData: agentData,
+            seqNo: .random(in: .min...(.max)),
+            sentTime: .now
+        )
+
+        let signedContent = try sign(content: content)
+
+        return .init(
+            introduction: introduction,
+            signedContent: signedContent
+        )
+    }
+
     //variant when identity & agent are already known so we just need agent
     //update, and mainly sign over
     //welcome
