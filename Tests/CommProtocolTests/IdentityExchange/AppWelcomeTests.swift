@@ -6,6 +6,7 @@
 //
 
 import CommProtocol
+import CryptoKit
 import Testing
 
 struct AppWelcomeTests {
@@ -13,7 +14,8 @@ struct AppWelcomeTests {
         let myAgent = AgentPrivateKey(algorithm: .curve25519)
 
         let mockWelcome = try AppWelcome.mock(
-            remoteAgentKey: myAgent.publicKey
+            remoteAgentKey: myAgent.publicKey,
+            keyPackageData: SymmetricKey(size: .bits256).rawRepresentation
         )
 
         let validated = try mockWelcome.validated(

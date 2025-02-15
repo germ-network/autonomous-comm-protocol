@@ -129,7 +129,10 @@ extension AppWelcome {
 }
 
 extension AppWelcome {
-    static public func mock(remoteAgentKey: AgentPublicKey) throws -> AppWelcome {
+    static public func mock(
+        remoteAgentKey: AgentPublicKey,
+        keyPackageData: Data
+    ) throws -> AppWelcome {
         let (identityKey, signedIdentity) =
             try Mocks
             .mockIdentity()
@@ -151,7 +154,7 @@ extension AppWelcome {
             introduction: introduction,
             agentData: .mock(),
             groupId: groupId,
-            keyPackageData: SymmetricKey(size: .bits256).rawRepresentation
+            keyPackageData: keyPackageData
         )
     }
 }
