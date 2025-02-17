@@ -32,17 +32,11 @@ public struct AppWelcome {
     //This gets transmitted, encrypted to the HPKE init key
     public struct Combined {
         public let appWelcome: AppWelcome
-        public let mlsWelcomeData: Data
-        public let stapledAppMessage: Data?
+        public let mlsMessageData: Data
 
-        public init(
-            appWelcome: AppWelcome,
-            mlsWelcomeData: Data,
-            stapledAppMessage: Data?
-        ) {
+        public init(appWelcome: AppWelcome, mlsMessageData: Data) {
             self.appWelcome = appWelcome
-            self.mlsWelcomeData = mlsWelcomeData
-            self.stapledAppMessage = stapledAppMessage
+            self.mlsMessageData = mlsMessageData
         }
     }
 }
@@ -83,17 +77,12 @@ extension AppWelcome.Content: LinearEncodedQuintuple {
     }
 }
 
-extension AppWelcome.Combined: LinearEncodedTriple {
+extension AppWelcome.Combined: LinearEncodedPair {
     public var first: AppWelcome { appWelcome }
-    public var second: Data { mlsWelcomeData }
-    public var third: Data? { stapledAppMessage }
+    public var second: Data { mlsMessageData }
 
-    public init(first: AppWelcome, second: Data, third: Data?) throws {
-        self.init(
-            appWelcome: first,
-            mlsWelcomeData: second,
-            stapledAppMessage: third
-        )
+    public init(first: AppWelcome, second: Data) throws {
+        self.init(appWelcome: first, mlsMessageData: second)
     }
 }
 
