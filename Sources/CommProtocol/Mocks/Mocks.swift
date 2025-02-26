@@ -141,3 +141,12 @@ extension AgentHello.NewAgentData {
         )
     }
 }
+
+extension ReJoin {
+    public static func mock() -> Self {
+        .init(
+            keyPackageMessage:  SymmetricKey(size: .bits256).rawRepresentation,
+            groupId:  SymmetricKey(size: .bits256).rawRepresentation
+        )
+    }
+}
