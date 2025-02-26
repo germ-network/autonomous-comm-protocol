@@ -15,8 +15,13 @@ import Foundation
 
 public struct ReJoin {
     public let keyPackageMessage: Data
-    public let groupId: Data //groupId of the send group the ReJoin is issued on
+    public let groupId: Data  //groupId of the send group the ReJoin is issued on
     
+    public init(keyPackageMessage: Data, groupId: Data) {
+        self.keyPackageMessage = keyPackageMessage
+        self.groupId = groupId
+    }
+
     func formatForSigning() throws -> Data {
         try "rejoin".utf8Data + wireFormat
     }
@@ -25,7 +30,7 @@ public struct ReJoin {
 extension ReJoin: LinearEncodedPair {
     public var first: Data { keyPackageMessage }
     public var second: Data { groupId }
-    
+
     public init(first: Data, second: Data) throws {
         self.init(keyPackageMessage: first, groupId: second)
     }
@@ -33,14 +38,19 @@ extension ReJoin: LinearEncodedPair {
 
 extension SignedObject<ReJoin> {
     public func verified(for publicKey: AgentPublicKey) throws -> ReJoin {
-        guard signature.signingAlgorithm == Swift
-            .type(of: publicKey.publicKey).signingAlgorithm else {
+        guard
+            signature.signingAlgorithm
+                == Swift
+                .type(of: publicKey.publicKey).signingAlgorithm
+        else {
             throw ProtocolError.suiteMismatch
         }
-        guard publicKey.publicKey.isValidSignature(
-            signature.signature,
-            for: try content.formatForSigning()
-        ) else {
+        guard
+            publicKey.publicKey.isValidSignature(
+                signature.signature,
+                for: try content.formatForSigning()
+            )
+        else {
             throw ProtocolError.authenticationError
         }
         return content

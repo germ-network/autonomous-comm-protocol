@@ -219,7 +219,7 @@ public struct AgentPrivateKey: Sendable {
 
         return .newIdentity(identityHandoff, agentHandoff)
     }
-    
+
     public func sign(reJoin: ReJoin) throws -> SignedObject<ReJoin> {
         .init(
             content: reJoin,
