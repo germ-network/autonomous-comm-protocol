@@ -17,7 +17,7 @@ import Foundation
 ///     - the introduced AgentId at index 0
 ///     - the recipient agentId at index 1
 
-public struct AppWelcome {
+public struct AppWelcome: Equatable {
     public let introduction: IdentityIntroduction
     public let signedContent: SignedObject<Content>
 
@@ -30,7 +30,7 @@ public struct AppWelcome {
     }
 
     //This gets transmitted, encrypted to the HPKE init key
-    public struct Combined {
+    public struct Combined: Equatable {
         public let appWelcome: AppWelcome
         public let mlsWelcomeData: Data
 
