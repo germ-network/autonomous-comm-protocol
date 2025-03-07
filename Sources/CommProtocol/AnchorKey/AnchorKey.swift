@@ -34,7 +34,7 @@ public struct AnchorPrivateKey: Sendable {
                 signature:
                     try privateKey
                     .signature(
-                        for: anchor.formatForSigning(publicKey: publicKey)
+                        for: anchor.formatForSigning(anchorKey: publicKey)
                     )
             )
         )
@@ -45,7 +45,7 @@ public struct AnchorPublicKey: Sendable {
     let publicKey: any PublicSigningKey
     let archive: TypedKeyMaterial
 
-    var wireFormat: Data { archive.wireFormat }
+    public var wireFormat: Data { archive.wireFormat }
 
     init(concrete: any PublicSigningKey) {
         publicKey = concrete
@@ -53,7 +53,7 @@ public struct AnchorPublicKey: Sendable {
     }
 
     func verify(signedAnchor: SignedObject<ATProtoAnchor>) throws -> ATProtoAnchor {
-        let format = signedAnchor.content.formatForSigning(publicKey: self)
+        let format = signedAnchor.content.formatForSigning(anchorKey: self)
         guard
             publicKey.isValidSignature(
                 signedAnchor.signature.signature,

@@ -5,6 +5,7 @@
 //  Created by Mark @ Germ on 3/6/25.
 //
 
+import CryptoKit
 import Foundation
 
 public struct ATProtoAnchor {
@@ -12,9 +13,9 @@ public struct ATProtoAnchor {
     let handle: String
     let previousDigest: Data?
 
-    func formatForSigning(publicKey: AnchorPublicKey) -> Data {
+    func formatForSigning(anchorKey: AnchorPublicKey) -> Data {
         Data(("anchor" + did + "." + handle).utf8)
-            + publicKey
+            + anchorKey
             .wireFormat + (previousDigest ?? .init())
     }
 }
