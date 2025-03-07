@@ -9,9 +9,9 @@ import CryptoKit
 import Foundation
 
 public struct ATProtoAnchor: Equatable {
-    let did: String
-    let handle: String
-    let previousDigest: Data?
+    public let did: String
+    public let handle: String
+    public let previousDigest: Data?
 
     func formatForSigning(anchorKey: AnchorPublicKey) -> Data {
         Data(("anchor" + did + "." + handle).utf8)
