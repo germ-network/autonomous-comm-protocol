@@ -8,7 +8,7 @@
 import CryptoKit
 import Foundation
 
-public struct ATProtoAnchor {
+public struct ATProtoAnchor: Equatable {
     let did: String
     let handle: String
     let previousDigest: Data?

@@ -52,7 +52,7 @@ public struct AnchorPublicKey: Sendable {
         archive = .init(typedKey: publicKey)
     }
 
-    func verify(signedAnchor: SignedObject<ATProtoAnchor>) throws -> ATProtoAnchor {
+    public func verify(signedAnchor: SignedObject<ATProtoAnchor>) throws -> ATProtoAnchor {
         let format = signedAnchor.content.formatForSigning(anchorKey: self)
         guard
             publicKey.isValidSignature(
