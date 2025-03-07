@@ -26,6 +26,11 @@ public struct AnchorPrivateKey: Sendable {
         }
     }
 
+    //TODO: type constrain this for registration
+    public func sign(over body: Data) throws -> Data {
+        try privateKey.signature(for: body)
+    }
+
     func sign(anchor: ATProtoAnchor) throws -> SignedObject<ATProtoAnchor> {
         .init(
             content: anchor,
