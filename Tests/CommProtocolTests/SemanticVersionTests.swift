@@ -28,6 +28,8 @@ struct Test {
             let threeByte = Data([1, 1, 1])
             let _ = try UInt32(dataRepresentation: threeByte)
         }
+        
+        #expect(SemanticVersion(major: 1, minor: 1, patch: 1) < SemanticVersion(major: 1, minor: 1, patch: 2))
 
     }
 }
