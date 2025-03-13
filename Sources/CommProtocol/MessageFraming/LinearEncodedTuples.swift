@@ -46,8 +46,8 @@ public protocol LinearEncodedTriple: LinearEncodable {
     associatedtype Third: LinearEncodable
 
     var first: First { get }
-    var second: Second { get }
-    var third: Third { get }
+    var second: Second { get throws }
+    var third: Third { get throws }
 
     init(first: First, second: Second, third: Third) throws
 }
