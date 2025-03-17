@@ -47,7 +47,7 @@ public struct AgentPrivateKey: Sendable {
         privateKey = concrete
         publicKey = .init(concrete: concrete.publicKey)
     }
-    
+
     public func sign<Content: LinearEncodable>(
         content: Content
     ) throws -> SignedObject<Content> {
@@ -100,7 +100,29 @@ public struct AgentPrivateKey: Sendable {
             )
         )
     }
-    
+
+    public func createAppWelcome(
+        introduction: IdentityIntroduction,
+        agentData: AgentUpdate,
+        groupId: DataIdentifier,
+        keyPackageData: Data
+    ) throws -> AppWelcome {
+        let content = AppWelcome.Content(
+            groupId: groupId,
+            agentData: agentData,
+            seqNo: .random(in: .min...(.max)),
+            sentTime: .now,
+            keyPackageData: keyPackageData
+        )
+
+        let signedContent = try sign(content: content)
+
+        return .init(
+            introduction: introduction,
+            signedContent: signedContent
+        )
+    }
+
     //variant when identity & agent are already known so we just need agent
     //update, and mainly sign over
     //welcome
@@ -225,7 +247,7 @@ public struct AgentPrivateKey: Sendable {
     }
 }
 
-extension AgentPrivateKey: Equatable{
+extension AgentPrivateKey: Equatable {
     static public func == (lhs: Self, rhs: Self) -> Bool {
         lhs.id == rhs.id
     }

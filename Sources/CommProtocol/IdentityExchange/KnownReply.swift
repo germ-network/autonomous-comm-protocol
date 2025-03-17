@@ -14,7 +14,6 @@ public struct KnownReply: Sendable {
     public let content: AgentHelloReply.Content
 }
 
-
 extension KnownReply: LinearEncodedPair {
     public var first: AgentUpdate { agentData }
     public var second: AgentHelloReply.Content { content }

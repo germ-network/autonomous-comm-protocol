@@ -77,7 +77,7 @@ extension UInt64: LinearEncodable {
 }
 
 extension UInt64 {
-    var dataRepresentation: Data {
+    public var dataRepresentation: Data {
         var endian = bigEndian
         return Data(bytes: &endian, count: MemoryLayout<UInt64>.size)
     }

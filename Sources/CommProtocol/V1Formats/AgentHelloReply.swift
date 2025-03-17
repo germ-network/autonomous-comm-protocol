@@ -7,11 +7,10 @@
 
 import Foundation
 
-///While the AgentHello is not covered by a signature, this is transported in MLS authenticated content
-///for the sender's leafNode, so the agent only needs to sign over the leafNode identity
-///We do that by signing over the welcome message
+///This is now deprecated and used in the PairMLS session type only
+///This has the disadvantage of needing to process the MLS commit to decrypt
+///the ApplicationMessage to get the application-level group init
 
-///Whereas in the prototype this struct was unwrapped from a basic message and used to
 ///form a channel, under MLS
 ///- we process a MLS welcome
 ///- we check the properties of the resulting group against our invitation
@@ -21,16 +20,15 @@ import Foundation
 public struct AgentHelloReply: Sendable {
     public let introduction: IdentityIntroduction
     public let agentData: AgentUpdate
-
-    ///A seed to be mixed into the initial pair of agent id's to derive the underlying group Id
+    public let content: Content
 
     public struct Content: Sendable {
+        ///A seed to be mixed into the initial pair of agent id's to derive the underlying group Id
         public let groupIdSeed: DataIdentifier
         public let agentSignatureWelcome: TypedSignature
         public let seqNo: UInt32  //sets the initial seqNo
         public let sentTime: Date  //just as messages assert local send time
     }
-    public let content: Content
 }
 
 extension AgentHelloReply: LinearEncodedTriple {

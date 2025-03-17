@@ -7,7 +7,7 @@
 
 import Foundation
 
-public struct SemanticVersion: Equatable, Hashable, Sendable {
+public struct SemanticVersion: Equatable, Hashable, Sendable, Comparable {
     let major: UInt32
     let minor: UInt32
     let patch: UInt32
@@ -27,6 +27,28 @@ public struct SemanticVersion: Equatable, Hashable, Sendable {
 
     public var string: String {
         "\(major).\(minor).\(patch)" + (preReleaseSuffix ?? "")
+    }
+
+    static public func < (lhs: SemanticVersion, rhs: SemanticVersion) -> Bool {
+        if lhs.major < rhs.major {
+            true
+        } else if lhs.major > rhs.major {
+            false
+        } else {
+            if lhs.minor < rhs.minor {
+                true
+            } else if lhs.minor > rhs.minor {
+                false
+            } else {
+                if lhs.patch < rhs.patch {
+                    true
+                } else if lhs.patch > rhs.patch {
+                    false
+                } else {
+                    false
+                }
+            }
+        }
     }
 }
 
