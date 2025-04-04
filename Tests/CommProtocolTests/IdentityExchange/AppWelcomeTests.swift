@@ -10,26 +10,26 @@ import CryptoKit
 import Testing
 
 struct AppWelcomeTests {
-    @Test func testValidation() throws {
-        let myAgent = AgentPrivateKey(algorithm: .curve25519)
+	@Test func testValidation() throws {
+		let myAgent = AgentPrivateKey(algorithm: .curve25519)
 
-        let mockWelcome = try AppWelcome.mock(
-            remoteAgentKey: myAgent.publicKey,
-            keyPackageData: SymmetricKey(size: .bits256).rawRepresentation
-        )
+		let mockWelcome = try AppWelcome.mock(
+			remoteAgentKey: myAgent.publicKey,
+			keyPackageData: SymmetricKey(size: .bits256).rawRepresentation
+		)
 
-        let validated = try mockWelcome.validated(
-            myAgent: myAgent.publicKey
-        )
+		let validated = try mockWelcome.validated(
+			myAgent: myAgent.publicKey
+		)
 
-        #expect(
-            validated.coreIdentity
-                == mockWelcome.introduction.signedIdentity
-                .content)
-        #expect(
-            validated.introContents == mockWelcome.introduction.signedContents.content)
-        #expect(validated.welcomeContent == mockWelcome.signedContent.content)
+		#expect(
+			validated.coreIdentity
+				== mockWelcome.introduction.signedIdentity
+				.content)
+		#expect(
+			validated.introContents == mockWelcome.introduction.signedContents.content)
+		#expect(validated.welcomeContent == mockWelcome.signedContent.content)
 
-    }
+	}
 
 }

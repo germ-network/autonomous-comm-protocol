@@ -11,42 +11,42 @@ import Testing
 @testable import CommProtocol
 
 struct TestAgentHelloReply {
-    let identityKey: IdentityPrivateKey
-    let signedIdentity: SignedObject<CoreIdentity>
-    let agentKey: AgentPrivateKey
-    let introduction: IdentityIntroduction
+	let identityKey: IdentityPrivateKey
+	let signedIdentity: SignedObject<CoreIdentity>
+	let agentKey: AgentPrivateKey
+	let introduction: IdentityIntroduction
 
-    let agentHelloReply: AgentHelloReply
+	let agentHelloReply: AgentHelloReply
 
-    init() throws {
-        (identityKey, signedIdentity) =
-            try Mocks
-            .mockIdentity()
+	init() throws {
+		(identityKey, signedIdentity) =
+			try Mocks
+			.mockIdentity()
 
-        let remoteAgentKey = AgentPrivateKey(algorithm: .curve25519)
+		let remoteAgentKey = AgentPrivateKey(algorithm: .curve25519)
 
-        (agentKey, introduction) =
-            try identityKey
-            .createNewDelegate(
-                signedIdentity: signedIdentity,
-                identityMutable: .mock(),
-                agentType: .reply(
-                    remoteAgentId: remoteAgentKey.publicKey,
-                    seed: .init(width: .bits128)
-                )
-            )
+		(agentKey, introduction) =
+			try identityKey
+			.createNewDelegate(
+				signedIdentity: signedIdentity,
+				identityMutable: .mock(),
+				agentType: .reply(
+					remoteAgentId: remoteAgentKey.publicKey,
+					seed: .init(width: .bits128)
+				)
+			)
 
-        agentHelloReply = try agentKey.createAgentHelloReply(
-            introduction: introduction,
-            agentData: .mock(),
-            groupIdSeed: .init(width: .bits256),
-            welcomeMessage: SymmetricKey(size: .bits256).rawRepresentation
-        )
-    }
+		agentHelloReply = try agentKey.createAgentHelloReply(
+			introduction: introduction,
+			agentData: .mock(),
+			groupIdSeed: .init(width: .bits256),
+			welcomeMessage: SymmetricKey(size: .bits256).rawRepresentation
+		)
+	}
 
-    @Test func testAgentHelloReply() async throws {
-        // Write your test here and use APIs like `#expect(...)` to check expected conditions.
+	@Test func testAgentHelloReply() async throws {
+		// Write your test here and use APIs like `#expect(...)` to check expected conditions.
 
-    }
+	}
 
 }
