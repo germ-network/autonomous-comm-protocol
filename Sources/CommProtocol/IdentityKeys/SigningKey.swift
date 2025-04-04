@@ -20,41 +20,41 @@ import Foundation
 
 //TODO: type constrain the keys to have the same algorithm.
 protocol PrivateSigningKey: TypedKeyMaterialInput, Sendable {
-    associatedtype PublicKey where PublicKey: PublicSigningKey
-    static var signingAlgorithm: SigningKeyAlgorithm { get }
+	associatedtype PublicKey where PublicKey: PublicSigningKey
+	static var signingAlgorithm: SigningKeyAlgorithm { get }
 
-    init()
-    init<D>(rawRepresentation data: D) throws where D: ContiguousBytes
-    var rawRepresentation: Data { get }
-    var publicKey: PublicKey { get }
+	init()
+	init<D>(rawRepresentation data: D) throws where D: ContiguousBytes
+	var rawRepresentation: Data { get }
+	var publicKey: PublicKey { get }
 
-    func signature<D>(for data: D) throws -> Data where D: DataProtocol
+	func signature<D>(for data: D) throws -> Data where D: DataProtocol
 }
 
 public protocol PublicSigningKey: TypedKeyMaterialInput, Hashable, Sendable {
-    static var signingAlgorithm: SigningKeyAlgorithm { get }
+	static var signingAlgorithm: SigningKeyAlgorithm { get }
 
-    init<D>(rawRepresentation data: D) throws where D: ContiguousBytes
-    var rawRepresentation: Data { get }
+	init<D>(rawRepresentation data: D) throws where D: ContiguousBytes
+	var rawRepresentation: Data { get }
 
-    func isValidSignature<S, D>(
-        _ signature: S,
-        for data: D
-    ) -> Bool where S: DataProtocol, D: DataProtocol
+	func isValidSignature<S, D>(
+		_ signature: S,
+		for data: D
+	) -> Bool where S: DataProtocol, D: DataProtocol
 }
 
 //use enum to pick keys, but rely on TypedKeyMaterial enum to encode
 //Do use this to encode prefix when
 public enum SigningKeyAlgorithm: UInt8, DefinedWidthPrefix, Sendable {
-    case curve25519  //RFC 8410
+	case curve25519  //RFC 8410
 
-    public var contentByteSize: Int { signatureLength }
+	public var contentByteSize: Int { signatureLength }
 
-    private var signatureLength: Int {
-        switch self {
-        case .curve25519: 64
-        }
-    }
+	private var signatureLength: Int {
+		switch self {
+		case .curve25519: 64
+		}
+	}
 }
 
 //used the typed key material format for storing private keys in KeyChain / secrets stores
@@ -62,5 +62,5 @@ public enum SigningKeyAlgorithm: UInt8, DefinedWidthPrefix, Sendable {
 //private keys when public keys are expected,
 //instead of encoding in the wire format and make sure we then check the generated wire format
 extension Curve25519.KeyAgreement.PrivateKey: TypedKeyMaterialInput {
-    public static let encodeAlgorithm: TypedKeyMaterial.Algorithms = .chaCha20Poly1305
+	public static let encodeAlgorithm: TypedKeyMaterial.Algorithms = .chaCha20Poly1305
 }

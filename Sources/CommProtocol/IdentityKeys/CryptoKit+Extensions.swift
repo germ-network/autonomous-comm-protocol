@@ -10,8 +10,8 @@ import CryptoKit
 import Foundation
 
 public protocol RawRepresentableKey {
-    init<D>(rawRepresentation: D) throws where D: ContiguousBytes
-    var rawRepresentation: Data { get }
+	init<D>(rawRepresentation: D) throws where D: ContiguousBytes
+	var rawRepresentation: Data { get }
 }
 
 //all of these are RawRepresentable, could combine extensions

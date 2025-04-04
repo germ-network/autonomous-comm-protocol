@@ -30,11 +30,11 @@ import Foundation
 /// [Application Update][Application Content]
 
 enum ApplicationContent {
-    case textMessage(AppTextMessage)
+	case textMessage(AppTextMessage)
 }
 
 struct AppTextMessage {
-    public let body: String
-    let threadId: UUID?
-    let reference: UUID?
+	public let body: String
+	let threadId: UUID?
+	let reference: UUID?
 }

@@ -10,10 +10,10 @@ import Testing
 
 struct AnchorTests {
 
-    @Test func testAnchorVerification() throws {
-        let (privateKey, signedAnchor) = try ATProtoAnchor.signedMock()
-        let verified = try privateKey.publicKey.verify(signedAnchor: signedAnchor)
-        #expect(verified == signedAnchor.content)
-    }
+	@Test func testAnchorVerification() throws {
+		let (privateKey, signedAnchor) = try ATProtoAnchor.signedMock()
+		let verified = try privateKey.publicKey.verify(signedAnchor: signedAnchor)
+		#expect(verified == signedAnchor.content)
+	}
 
 }
