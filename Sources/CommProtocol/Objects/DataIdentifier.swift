@@ -52,9 +52,4 @@ public struct DataIdentifier: DefinedWidthBinary, Sendable, Equatable, Hashable 
 	}
 
 	public var wireFormat: Data { [type.rawValue] + identifier }
-
-	init(prefix: Prefix) {
-		self.type = prefix
-		self.identifier = SymmetricKey(size: prefix.keySize).rawRepresentation
-	}
 }

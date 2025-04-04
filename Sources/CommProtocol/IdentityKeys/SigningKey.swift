@@ -24,7 +24,6 @@ protocol PrivateSigningKey: TypedKeyMaterialInput, Sendable {
 	static var signingAlgorithm: SigningKeyAlgorithm { get }
 
 	init()
-	init<D>(rawRepresentation data: D) throws where D: ContiguousBytes
 	var rawRepresentation: Data { get }
 	var publicKey: PublicKey { get }
 

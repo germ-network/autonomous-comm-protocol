@@ -222,29 +222,8 @@ public struct AgentPrivateKey: Sendable {
 	}
 
 	//MARK: Implementation
-	func sign(resource: Resource) throws -> SignedObject<Resource> {
-		.init(
-			content: resource,
-			signature: try sign(input: resource.wireFormat)
-		)
-	}
-
 	private func sign(input: Data) throws -> TypedSignature {
 		try .init(prefix: type, checkedData: privateKey.signature(for: input))
-	}
-
-	private func sign(
-		newAgentData: AgentHello.NewAgentData,
-		identity: IdentityPublicKey
-	) throws -> SignedObject<AgentHello.NewAgentData> {
-		.init(
-			content: newAgentData,
-			signature: try sign(
-				input: newAgentData.formatForSigning(
-					with: identity
-				)
-			)
-		)
 	}
 }
 

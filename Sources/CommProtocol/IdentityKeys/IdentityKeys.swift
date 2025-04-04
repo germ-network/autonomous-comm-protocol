@@ -112,7 +112,6 @@ public struct IdentityPrivateKey: Sendable {
 	}
 
 	public func createHandoff(
-		existingIdentity: IdentityPublicKey,
 		newAgent: AgentPublicKey,
 		startSignature: TypedSignature,
 		signedIdentity: SignedObject<CoreIdentity>,
@@ -134,7 +133,6 @@ public struct IdentityPrivateKey: Sendable {
 
 	// reintroduce this variant
 	public func createHandoff(
-		existingIdentity: IdentityPublicKey,
 		startSignature: TypedSignature,
 		signedIdentity: SignedObject<CoreIdentity>,
 		identityMutable: IdentityMutableData,
@@ -266,14 +264,6 @@ public struct IdentityPublicKey: Sendable {
 	func validate<C>(maybeSignedObject: SignedObject<C>?) throws -> C? {
 		guard let maybeSignedObject else { return nil }
 		return try validate(signedObject: maybeSignedObject)
-	}
-
-	func validate(signature: TypedSignature, for body: Data) throws {
-		guard keyType == signature.signingAlgorithm,
-			publicKey.isValidSignature(signature.signature, for: body)
-		else {
-			throw ProtocolError.authenticationError
-		}
 	}
 
 	func validate(

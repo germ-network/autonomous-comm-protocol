@@ -181,7 +181,6 @@ struct CommProposalTests {
 		let newAgent = AgentPrivateKey(algorithm: .curve25519)
 
 		let identityHandoff = try nextIdentityKey.createHandoff(
-			existingIdentity: knownIdentityKey.publicKey,
 			newAgent: newAgent.publicKey,
 			startSignature: knownIdentitySignature,
 			signedIdentity: signedNextIdentity,
