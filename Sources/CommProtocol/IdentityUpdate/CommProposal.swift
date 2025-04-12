@@ -36,7 +36,7 @@ import Foundation
 ///[knownAgentSignature.wireFormat]
 ///
 
-public enum CommProposal: LinearEncodable, Equatable {
+public enum CommProposal: LinearEncodable, Equatable, Sendable {
 	//we don't, strictly speaking, need the type enum on the typed signature,
 	//but this lets us parse the data structure without injecting the expected
 	//types into our parse methods
