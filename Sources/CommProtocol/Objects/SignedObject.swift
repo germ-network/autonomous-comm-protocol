@@ -8,11 +8,12 @@
 import CryptoKit
 import Foundation
 
-public struct SignedObject<Content: LinearEncodable>: Sendable {
+public struct SignedObject<Content: LinearEncodable> {
 	public let content: Content
 	let signature: TypedSignature
 }
 
+extension SignedObject: Sendable where Content: Sendable {}
 extension SignedObject: Equatable where Content: Equatable {}
 
 extension SignedObject: LinearEncodedPair {
