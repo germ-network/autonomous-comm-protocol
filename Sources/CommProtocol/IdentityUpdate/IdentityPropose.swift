@@ -58,7 +58,7 @@ extension IdentityDelegate: LinearEncodedPair {
 }
 
 ///package the elements you need for a identity handoff
-public struct IdentityHandoff: Equatable {
+public struct IdentityHandoff: Equatable, Sendable {
 	let introduction: IdentityIntroduction
 	//old key sign over over new identity pub Key + verb + TypedDigest
 	struct PredecessorTBS {

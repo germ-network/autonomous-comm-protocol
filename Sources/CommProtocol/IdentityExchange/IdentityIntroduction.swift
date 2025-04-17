@@ -11,13 +11,13 @@ import Foundation
 //Shared across AgentHello, AgentHelloReply,
 //and IdentityUpdate when transmitting a new identity
 ///Encapsulate the data needed to process a new identity
-public struct IdentityIntroduction: Equatable {
+public struct IdentityIntroduction: Equatable, Sendable {
 	//Standalone object
 	public let signedIdentity: SignedObject<CoreIdentity>
 	public let signedContents: SignedObject<Contents>
 
 	//remainder of data the new Identity signs over
-	public struct Contents: Equatable {
+	public struct Contents: Equatable, Sendable {
 		//for type simplicity, this allows an optional image resource,
 		//but it is required here and will fail validation if it doesn't exist
 		public let mutableData: IdentityMutableData

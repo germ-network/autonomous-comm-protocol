@@ -28,7 +28,7 @@ extension Date: LinearEncodable {
 	}
 }
 
-public struct RoundedDate: Equatable {
+public struct RoundedDate: Equatable, Sendable {
 	let hoursSinceEpoch: UInt32
 
 	public init(date: Date) {
