@@ -9,7 +9,7 @@ import Foundation
 
 public struct AgentHandoff: Equatable, Sendable {
 	struct NewAgentTBS {
-		static let discriminator = Data("successorAgent".utf8)
+//		static let discriminator = Data("successorAgent".utf8)
 		//All of these are injected and already known
 		let knownAgentKey: AgentPublicKey
 		let newAgentIdentity: IdentityPublicKey
