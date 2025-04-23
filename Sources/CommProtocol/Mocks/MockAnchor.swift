@@ -19,12 +19,10 @@ extension ATProtoAnchor {
 }
 
 extension ATProtoAnchor {
-	static public func mock() -> ATProtoAnchor {
+	static public func mock() throws -> ATProtoAnchor {
 		//ATProto did is hash-bashed, so likely is a digest encoding
 		.init(
-			did: SymmetricKey(size: .bits256).rawRepresentation
-				.base64URLEncodedString(),
-			handle: UUID().uuidString,
+			did: .mock(),
 			previousDigest: nil
 		)
 	}

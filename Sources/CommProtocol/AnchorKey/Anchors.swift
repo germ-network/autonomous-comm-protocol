@@ -9,23 +9,26 @@ import CryptoKit
 import Foundation
 
 public struct ATProtoAnchor: Equatable {
-	public let did: String
-	public let handle: String
+	static let discriminator = "anchor"
+
+	public let did: ATProtoDID
 	public let previousDigest: Data?
 
 	func formatForSigning(anchorKey: AnchorPublicKey) -> Data {
-		Data(("anchor" + did + "." + handle).utf8)
-			+ anchorKey
-			.wireFormat + (previousDigest ?? .init())
+		Data((Self.discriminator + did.fullId).utf8)
+			+ anchorKey.wireFormat
+			+ (previousDigest ?? .init())
 	}
 }
 
-extension ATProtoAnchor: LinearEncodedTriple {
-	public var first: String { did }
-	public var second: String { handle }
-	public var third: Data? { previousDigest }
+extension ATProtoAnchor: LinearEncodedPair {
+	public var first: String { did.fullId }
+	public var second: Data? { previousDigest }
 
-	public init(first: String, second: String, third: Data?) throws {
-		self.init(did: first, handle: second, previousDigest: third)
+	public init(first: String, second: Data?) throws {
+		self.init(
+			did: try .init(fullId: first),
+			previousDigest: second,
+		)
 	}
 }
