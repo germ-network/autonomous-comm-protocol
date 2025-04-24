@@ -8,17 +8,71 @@
 import CryptoKit
 import Foundation
 
-public struct AnchorPrivateKey: Sendable {
+//taking an approach different from Identity and Agent where we make the
+//Private and Public Agent encapsulate more of the associated data
+//instead of being just a typed wrapper on
+
+public struct PrivateActiveAnchor {
+	let privateKey: AnchorPrivateKey
+	let attestation: AnchorAttestation
+
+	public static func create(for did: ATProtoDID) throws -> Self {
+		let anchorPrivateKey = AnchorPrivateKey()
+		let attestationContents = AnchorAttestation.Contents(
+			anchorTo: did,
+			previousAnchor: nil
+		)
+
+		let signedContents = try SignedContent<AnchorAttestation.Contents>
+			.init(
+				content: attestationContents,
+				signer: anchorPrivateKey.signer,
+				formatter: { content in
+					content
+						.formatForSigning(
+							anchorKey: anchorPrivateKey.publicKey)
+				}
+			)
+
+		return .init(
+			privateKey: anchorPrivateKey,
+			attestation: .init(
+				publicKey: anchorPrivateKey.publicKey,
+				signedContents: signedContents
+			)
+		)
+	}
+
+	public func produceAnchor() throws -> (encrypted: Data, seedGen: DataIdentifier) {
+		throw ProtocolError.unexpected("not implemented")
+	}
+
+	//verify anchor
+
+	//public func produceAnchorIntro() -> (encrypted: Data, seedGen: DataIdentifier) {
+
+}
+
+public struct RetiredAnchor {
+	let publicKey: any PublicSigningKey
+}
+
+public struct PublicAnchor {
+	let publicKey: any PublicSigningKey
+}
+
+struct AnchorPrivateKey: Sendable {
 	private let privateKey: any PrivateSigningKey
 	public let publicKey: AnchorPublicKey
 
-	//for local storage
-	public var archive: TypedKeyMaterial { .init(typedKey: privateKey) }
-	public var type: SigningKeyAlgorithm {
+	var type: SigningKeyAlgorithm {
 		Swift.type(of: privateKey).signingAlgorithm
 	}
 
-	public init(algorithm: SigningKeyAlgorithm) {
+	//for local storage
+	public var archive: TypedKeyMaterial { .init(typedKey: privateKey) }
+
+	public init(algorithm: SigningKeyAlgorithm = .curve25519) {
 		switch algorithm {
 		case .curve25519:
 			self.privateKey = Curve25519.Signing.PrivateKey()
@@ -26,33 +80,44 @@ public struct AnchorPrivateKey: Sendable {
 		}
 	}
 
-	//TODO: type constrain this for registration
-	public func sign(over body: Data) throws -> TypedSignature {
-		.init(
-			signingAlgorithm: type,
-			signature: try privateKey.signature(for: body)
-		)
+	var signer: @Sendable (Data) throws -> TypedSignature {
+		{ body in
+			try .init(
+				signingAlgorithm: type,
+				signature: privateKey.signature(for: body)
+			)
+
+		}
 	}
 
-	func sign(anchor: ATProtoAnchor) throws -> SignedObject<ATProtoAnchor> {
-		.init(
-			content: anchor,
-			signature: .init(
-				signingAlgorithm: type,
-				signature:
-					try privateKey
-					.signature(
-						for: anchor.formatForSigning(anchorKey: publicKey)
-					)
-			)
-		)
-	}
+	//	//TODO: type constrain this for registration
+	//	public func sign(over body: Data) throws -> TypedSignature {
+	//		.init(
+	//			signingAlgorithm: type,
+	//			signature: try privateKey.signature(for: body)
+	//		)
+	//	}
+
+	//	func sign(anchor: ATProtoAnchor) throws -> SignedObject<ATProtoAnchor> {
+	//		.init(
+	//			content: anchor,
+	//			signature: .init(
+	//				signingAlgorithm: type,
+	//				signature:
+	//					try privateKey
+	//					.signature(
+	//						for: anchor.formatForSigning(anchorKey: publicKey)
+	//					)
+	//			)
+	//		)
+	//	}
 }
 
 public struct AnchorPublicKey: Sendable {
 	let publicKey: any PublicSigningKey
 	let archive: TypedKeyMaterial
 
+	var type: SigningKeyAlgorithm { Swift.type(of: publicKey).signingAlgorithm }
 	public var wireFormat: Data { archive.wireFormat }
 
 	init(concrete: any PublicSigningKey) {
@@ -60,17 +125,37 @@ public struct AnchorPublicKey: Sendable {
 		archive = .init(typedKey: publicKey)
 	}
 
-	public func verify(signedAnchor: SignedObject<ATProtoAnchor>) throws -> ATProtoAnchor {
-		let format = signedAnchor.content.formatForSigning(anchorKey: self)
-		guard
-			publicKey.isValidSignature(
-				signedAnchor.signature.signature,
-				for: format
+	init(archive: TypedKeyMaterial) throws {
+		switch archive.algorithm {
+		case .curve25519Signing:
+			self.init(
+				concrete: try Curve25519.Signing
+					.PublicKey(rawRepresentation: archive.keyData)
 			)
-		else {
-			throw ProtocolError.authenticationError
+		default:
+			throw ProtocolError.typedKeyArchiveMismatch
 		}
+	}
 
-		return signedAnchor.content
+	//	public func verify(signedAnchor: SignedObject<ATProtoAnchor>) throws -> ATProtoAnchor {
+	//		let format = signedAnchor.content.formatForSigning(anchorKey: self)
+	//		guard
+	//			publicKey.isValidSignature(
+	//				signedAnchor.signature.signature,
+	//				for: format
+	//			)
+	//		else {
+	//			throw ProtocolError.authenticationError
+	//		}
+	//
+	//		return signedAnchor.content
+	//	}
+}
+
+extension TypedKeyMaterial {
+	var asAnchorPublicKey: AnchorPublicKey {
+		get throws {
+			try .init(archive: self)
+		}
 	}
 }

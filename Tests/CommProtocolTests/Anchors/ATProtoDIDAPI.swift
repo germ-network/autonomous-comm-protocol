@@ -1,5 +1,5 @@
 //
-//  Test.swift
+//  ATProtoDIDAPI.swift
 //  CommProtocol
 //
 //  Created by Mark @ Germ on 4/22/25.
@@ -8,7 +8,7 @@
 import CommProtocol
 import Testing
 
-struct AnchorAPITests {
+struct ATProtoDIDAPITests {
 	@Test func testArchive() throws {
 		let mock = ATProtoDID.mock()
 

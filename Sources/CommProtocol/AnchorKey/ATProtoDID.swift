@@ -27,8 +27,8 @@ public struct ATProtoDID: Equatable {
 	}
 
 	public enum Methods: String, CaseIterable {
-		case plc = "plc"
-		case web = "web"
+		case plc
+		case web
 
 		static func parse(
 			_ subsequence: String.SubSequence
@@ -79,5 +79,23 @@ extension ATProtoDIDError: LocalizedError {
 		case .invalidPrefix: "Invalid prefix"
 		case .invalidMethod: "Invalid method"
 		}
+	}
+}
+
+extension ATProtoDID: AnchorTo {
+	public static let anchorType: AnchorTypes = .atProto
+
+	public init(type: AnchorTypes, encoded: Data) throws {
+		guard type == .atProto else {
+			throw ProtocolError.incorrectAnchorType
+		}
+		guard let string = String(data: encoded, encoding: .utf8) else {
+			throw ProtocolError.archiveIncorrect
+		}
+		try self.init(fullId: string)
+	}
+
+	public var stableEncoded: Data {
+		fullId.utf8Data
 	}
 }
