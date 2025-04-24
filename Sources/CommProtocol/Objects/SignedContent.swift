@@ -18,7 +18,8 @@ public protocol SignableContent {
 extension SignableContent {
 	typealias SignatureFomatter = @Sendable (Self) throws -> Data
 	typealias Signer = @Sendable (Data) throws -> TypedSignature
-	typealias Verifier = @Sendable (Data) -> Bool
+	//signature, data
+	typealias Verifier = @Sendable (Data, Data) -> Bool
 }
 
 public struct SignedContent<Content: SignableContent> {
@@ -34,14 +35,22 @@ public struct SignedContent<Content: SignableContent> {
 		verifier: Content.Verifier
 	) throws -> Content {
 		let verifyBody = try formatter(content)
-		guard verifier(verifyBody) else {
+		guard verifier(signature.signature, verifyBody) else {
 			throw ProtocolError.authenticationError
 		}
 
 		return content
 	}
 
-	init(
+	static func create(
+		content: Content,
+		signer: Content.Signer,
+		formatter: Content.SignatureFomatter
+	) throws -> Self {
+		try .init(content: content, signer: signer, formatter: formatter)
+	}
+
+	private init(
 		content: Content,
 		signer: Content.Signer,
 		formatter: Content.SignatureFomatter
@@ -50,7 +59,12 @@ public struct SignedContent<Content: SignableContent> {
 		self.signature = try signer(try formatter(content))
 	}
 
-	init(content: Content, signature: TypedSignature) {
+	//	static func restore(content: Content, signature: TypedSignature) -> Self {
+	//		.init(content: content, signature: signature)
+	//	}
+
+	//for restoration
+	private init(content: Content, signature: TypedSignature) {
 		self.content = content
 		self.signature = signature
 	}

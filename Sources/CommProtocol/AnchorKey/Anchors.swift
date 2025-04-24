@@ -2,87 +2,98 @@
 //  Anchors.swift
 //  CommProtocol
 //
-//  Created by Mark @ Germ on 3/6/25.
+//  Created by Mark @ Germ on 4/24/25.
 //
 
 import CryptoKit
 import Foundation
 
-public protocol AnchorTo {
-	static var anchorType: AnchorTypes { get }
-	init(type: AnchorTypes, encoded: Data) throws
-	var stableEncoded: Data { get }
-}
-
-extension AnchorTo {
-	var type: AnchorTypes { Swift.type(of: self).anchorType }
-}
-
-public enum AnchorTypes: UInt16, Sendable {
-	case atProto = 0
-}
-
-//The body, analogous to CoreIdentity
-//for simplicity of decoding, pulling out the
-//anchor key
-public struct AnchorAttestation {
+public struct PrivateActiveAnchor {
+	let privateKey: AnchorPrivateKey
 	let publicKey: AnchorPublicKey
-	let signedContents: SignedContent<Contents>
+	let attestation: SignedContent<AnchorAttestation>
 
-	public struct Contents {
-		static let discriminator = "anchor"
-		public let anchorTo: AnchorTo
-		public let previousAnchor: AnchorPublicKey?
+	public static func create(for did: ATProtoDID) throws -> Self {
+		let anchorPrivateKey = AnchorPrivateKey()
+		let attestationContents = AnchorAttestation(
+			anchorTo: did,
+			previousAnchor: nil
+		)
 
-		func formatForSigning(anchorKey: AnchorPublicKey) -> Data {
-			Self.discriminator.utf8Data + anchorTo.stableEncoded + anchorKey.wireFormat
-				+ (previousAnchor?.wireFormat ?? .init())
-		}
-	}
-}
+		let signedContents = try SignedContent<AnchorAttestation>
+			.create(
+				content: attestationContents,
+				signer: anchorPrivateKey.signer,
+				formatter: { content in
+					content
+						.formatForSigning(
+							anchorKey: anchorPrivateKey.publicKey)
+				}
+			)
 
-extension AnchorAttestation.Contents: SignableContent {
-	public init(wireFormat: Data) throws {
-		self = try Self.finalParse(wireFormat)
-	}
-}
-
-extension AnchorAttestation.Contents: LinearEncodedTriple {
-	public var first: UInt16 { anchorTo.type.rawValue }
-	public var second: Data { anchorTo.stableEncoded }
-	public var third: TypedKeyMaterial? { previousAnchor?.archive }
-
-	public init(
-		first: UInt16,
-		second: Data,
-		third: TypedKeyMaterial?,
-	) throws {
-		self.init(
-			anchorTo: try Self.anchorToFactory(type: first, encoded: second),
-			previousAnchor: try third?.asAnchorPublicKey
+		return .init(
+			privateKey: anchorPrivateKey,
+			publicKey: anchorPrivateKey.publicKey,
+			attestation: signedContents
 		)
 	}
 
-	static func anchorToFactory(type: UInt16, encoded: Data) throws -> AnchorTo {
-		guard let anchorType = AnchorTypes(rawValue: type) else {
-			throw LinearEncodingError.invalidPrefix
-		}
-		switch anchorType {
-		case .atProto:
-			return try ATProtoDID(type: .atProto, encoded: encoded)
-		}
+	public func produceAnchor() throws -> (
+		encrypted: Data,
+		publicKey: AnchorPublicKey,
+		seed: DataIdentifier
+	) {
+		//underlying generation is from a CryptoKit symmetric key
+		let newSeed = DataIdentifier(width: .bits128)
+		let newSeedKey = SymmetricKey(data: newSeed.identifier)
+		let derivedKey = try publicKey.deriveKey(with: newSeedKey)
+
+		let encryptedAttestation = try ChaChaPoly.seal(
+			try attestation.wireFormat,
+			using: derivedKey
+		).combined
+
+		return (encryptedAttestation, publicKey, newSeed)
 	}
+
+	//verify anchor
+
+	//public func produceAnchorIntro() -> (encrypted: Data, seedGen: DataIdentifier) {
+
 }
 
-//extension AnchorAttestation: LinearEncodedTriple {
-//	public var first: TypedKeyMaterial { publicKey.archive }
-//	public var second: Contents { signedContents.content }
-//	public var third: TypedSignature { signedContents.signature }
-//
-//	public init(first: First, second: Second, third: Third) throws {
-//		self.init(
-//			publicKey: try .init(archive: first),
-//			signedContents: .init(content: second, signature: third)
-//		)
-//	}
-//}
+public struct RetiredAnchor {
+	let publicKey: any PublicSigningKey
+}
+
+public struct PublicAnchor {
+	let publicKey: AnchorPublicKey
+	let verified: AnchorAttestation
+
+	private init(publicKey: AnchorPublicKey, verified: AnchorAttestation) {
+		self.publicKey = publicKey
+		self.verified = verified
+	}
+
+	//counterpart to PrivateActiveAnchor.create
+	public static func create(
+		encrypted: Data,
+		publicKey: AnchorPublicKey,
+		seed: DataIdentifier
+	) throws -> Self {
+		let newSeedKey = SymmetricKey(data: seed.identifier)
+		let derivedKey = try publicKey.deriveKey(with: newSeedKey)
+
+		let decrypted = try ChaChaPoly.open(
+			.init(combined: encrypted),
+			using: derivedKey
+		)
+		let signedAttestation = try SignedContent<AnchorAttestation>
+			.finalParse(decrypted)
+		let verified = try signedAttestation.verified(
+			formatter: publicKey.formatter,
+			verifier: publicKey.verifier
+		)
+		return .init(publicKey: publicKey, verified: verified)
+	}
+}

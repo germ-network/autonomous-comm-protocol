@@ -9,13 +9,18 @@ import CommProtocol
 import Testing
 
 struct AnchorAPITests {
-
 	@Test func testAnchorLifeCycle() throws {
 		let mockDID = ATProtoDID.mock()
 		let privateAnchor = try PrivateActiveAnchor.create(for: mockDID)
 
-		let (anchorAttestation, publicAnchorKey, seed) =
+		let (encrypted, publicAnchorKey, seed) =
 			try privateAnchor.produceAnchor()
+
+		let publicAnchor = try PublicAnchor.create(
+			encrypted: encrypted,
+			publicKey: publicAnchorKey,
+			seed: seed
+		)
 	}
 
 }

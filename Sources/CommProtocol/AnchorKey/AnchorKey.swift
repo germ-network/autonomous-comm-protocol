@@ -12,71 +12,6 @@ import Foundation
 //Private and Public Agent encapsulate more of the associated data
 //instead of being just a typed wrapper on
 
-public struct PrivateActiveAnchor {
-	let privateKey: AnchorPrivateKey
-	let attestation: AnchorAttestation
-
-	public static func create(for did: ATProtoDID) throws -> Self {
-		let anchorPrivateKey = AnchorPrivateKey()
-		let attestationContents = AnchorAttestation.Contents(
-			anchorTo: did,
-			previousAnchor: nil
-		)
-
-		let signedContents = try SignedContent<AnchorAttestation.Contents>
-			.init(
-				content: attestationContents,
-				signer: anchorPrivateKey.signer,
-				formatter: { content in
-					content
-						.formatForSigning(
-							anchorKey: anchorPrivateKey.publicKey)
-				}
-			)
-
-		return .init(
-			privateKey: anchorPrivateKey,
-			attestation: .init(
-				publicKey: anchorPrivateKey.publicKey,
-				signedContents: signedContents
-			)
-		)
-	}
-
-	public func produceAnchor() throws -> (
-		encrypted: Data,
-		publicKey: AnchorPublicKey,
-		seedGen: DataIdentifier
-	) {
-		//underlying generation is from a CryptoKit symmetric key
-		let newSeed = DataIdentifier(width: .bits128)
-		let newSeedKey = SymmetricKey(data: newSeed.identifier)
-		let derivedKey = try attestation.publicKey
-			.deriveKey(with: newSeedKey)
-
-		let encodedAttestation = try attestation.signedContents.wireFormat
-		let encryptedAttestation = try ChaChaPoly.seal(
-			encodedAttestation,
-			using: derivedKey
-		).combined
-
-		return (encryptedAttestation, attestation.publicKey, newSeed)
-	}
-
-	//verify anchor
-
-	//public func produceAnchorIntro() -> (encrypted: Data, seedGen: DataIdentifier) {
-
-}
-
-public struct RetiredAnchor {
-	let publicKey: any PublicSigningKey
-}
-
-public struct PublicAnchor {
-	let publicKey: any PublicSigningKey
-}
-
 struct AnchorPrivateKey: Sendable {
 	private let privateKey: any PrivateSigningKey
 	public let publicKey: AnchorPublicKey
@@ -161,6 +96,17 @@ public struct AnchorPublicKey: Sendable {
 				info: "anchorDerivation".utf8Data,
 				outputByteCount: 32
 			)
+	}
+
+	var formatter: @Sendable (AnchorAttestation) throws -> Data {
+		{ $0.formatForSigning(anchorKey: self) }
+	}
+
+	//signature, data
+	var verifier: @Sendable (Data, Data) -> Bool {
+		{ signature, body in
+			publicKey.isValidSignature(signature, for: body)
+		}
 	}
 
 	//	public func verify(signedAnchor: SignedObject<ATProtoAnchor>) throws -> ATProtoAnchor {
