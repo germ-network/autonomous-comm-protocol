@@ -14,6 +14,8 @@ struct AnchorAPITests {
 		let mockDID = ATProtoDID.mock()
 		let privateAnchor = try PrivateActiveAnchor.create(for: mockDID)
 
+		let (anchorAttestation, publicAnchorKey, seed) =
+			try privateAnchor.produceAnchor()
 	}
 
 }

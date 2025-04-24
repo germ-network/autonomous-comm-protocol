@@ -43,8 +43,24 @@ public struct PrivateActiveAnchor {
 		)
 	}
 
-	public func produceAnchor() throws -> (encrypted: Data, seedGen: DataIdentifier) {
-		throw ProtocolError.unexpected("not implemented")
+	public func produceAnchor() throws -> (
+		encrypted: Data,
+		publicKey: AnchorPublicKey,
+		seedGen: DataIdentifier
+	) {
+		//underlying generation is from a CryptoKit symmetric key
+		let newSeed = DataIdentifier(width: .bits128)
+		let newSeedKey = SymmetricKey(data: newSeed.identifier)
+		let derivedKey = try attestation.publicKey
+			.deriveKey(with: newSeedKey)
+
+		let encodedAttestation = try attestation.signedContents.wireFormat
+		let encryptedAttestation = try ChaChaPoly.seal(
+			encodedAttestation,
+			using: derivedKey
+		).combined
+
+		return (encryptedAttestation, attestation.publicKey, newSeed)
 	}
 
 	//verify anchor
@@ -135,6 +151,16 @@ public struct AnchorPublicKey: Sendable {
 		default:
 			throw ProtocolError.typedKeyArchiveMismatch
 		}
+	}
+
+	func deriveKey(with seed: SymmetricKey) throws -> SymmetricKey {
+		HKDF<SHA256>
+			.deriveKey(
+				inputKeyMaterial: seed,
+				salt: wireFormat,
+				info: "anchorDerivation".utf8Data,
+				outputByteCount: 32
+			)
 	}
 
 	//	public func verify(signedAnchor: SignedObject<ATProtoAnchor>) throws -> ATProtoAnchor {

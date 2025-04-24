@@ -49,4 +49,19 @@ public struct SignedContent<Content: SignableContent> {
 		self.content = content
 		self.signature = try signer(try formatter(content))
 	}
+
+	init(content: Content, signature: TypedSignature) {
+		self.content = content
+		self.signature = signature
+	}
+}
+
+extension SignedContent: LinearEncodable where Content: LinearEncodable {}
+extension SignedContent: LinearEncodedPair where Content: LinearEncodable {
+	public var first: Content { content }
+	public var second: TypedSignature { signature }
+
+	public init(first: Content, second: TypedSignature) throws {
+		self.init(content: first, signature: second)
+	}
 }
