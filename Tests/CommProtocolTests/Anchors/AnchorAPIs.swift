@@ -52,20 +52,20 @@ struct AnchorAPITests {
 			)
 
 		//Blair consumes the hello
-		let publicAnchorKey = alexPrivateAnchor.publicKey
-		let verifiedAnchorHello = try publicAnchorKey.verify(
+		let alexPublicAnchor = alexPrivateAnchor.publicKey
+		let verifiedAnchorHello = try alexPublicAnchor.verify(
 			encryptedHello: encryptedHello,
 			seed: seedKey
 		)
 		#expect(verifiedAnchorHello.agentPublicKey == alexAgent.publicKey)
 
-		//Blair geneates a reply
-		let (blairAgent, reply) =
-			try blairPrivateAnchor
-			.createReply(
-				agentVersion: .mock(),
-				mlsWelcome: "mock".utf8Data
-			)
+		//Blair generates a reply
+		let blairReplyAgent = try blairPrivateAnchor.createReplyAgent()
+		//client creates an MLS welcome with the blairAgent
+		let reply = try blairReplyAgent.createReply(
+			agentVersion: .mock(),
+			mlsWelcomeDigest: .mock()
+		)
 
 	}
 }

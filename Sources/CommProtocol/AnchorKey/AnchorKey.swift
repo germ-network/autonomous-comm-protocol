@@ -126,6 +126,41 @@ extension AnchorPublicKey {
 	}
 }
 
+extension AnchorPublicKey {
+	public func verify(
+		reply: AnchorReply,
+		mlsWelcomeDigest: TypedDigest,
+	) throws -> AnchorReply.Verified {
+		let publicAnchor = try PublicAnchor.create(
+			publicKey: self,
+			signedAttestation: reply.attestation
+		)
+
+		let agentPublicKey = try reply.delegation.verified(
+			formatter: { $0.formatForSigning(delegationType: .reply) },
+			verifier: verifier
+		).agentKey
+
+		let agentSigned = try reply.agentState.verified(
+			formatter: {
+				try $0.formatForSigning(
+					anchorKey: self,
+					mlsWelcomeDigest: mlsWelcomeDigest
+				)
+			},
+			verifier: agentPublicKey.verifier
+		)
+
+		return .init(
+			publicAnchor: publicAnchor,
+			agentPublicKey: agentPublicKey,
+			version: agentSigned.version,
+			seqNo: agentSigned.seqNo,
+			sentTime: agentSigned.sentTime
+		)
+	}
+}
+
 extension AnchorPublicKey: Equatable {
 	public static func == (lhs: AnchorPublicKey, rhs: AnchorPublicKey) -> Bool {
 		lhs.wireFormat == rhs.wireFormat

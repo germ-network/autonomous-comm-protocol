@@ -11,6 +11,7 @@ import Foundation
 enum AnchorDelegationType: UInt8 {
 	case hello
 	case reply
+	//messaging - same as reply?
 }
 
 public struct AnchorDelegation {

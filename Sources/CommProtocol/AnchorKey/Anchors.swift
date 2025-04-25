@@ -117,11 +117,13 @@ extension PrivateActiveAnchor {
 }
 
 extension PrivateActiveAnchor {
+	//have to break this into 2 steps
+	//1. generate delegate agent
+	//client then generates welcome bound to the agent id
+	//2. generate appWelcome bound to the welcome
+
 	//can then encrypt to the HPKE key in the hello
-	public func createReply(
-		agentVersion: SemanticVersion,
-		mlsWelcome: Data
-	) throws -> (AgentPrivateKey, AnchorReply) {
+	public func createReplyAgent() throws -> PrivateAnchorAgent {
 		let newAgent = AgentPrivateKey()
 
 		let anchorDelegation = try SignedContent<AnchorDelegation>
@@ -131,26 +133,12 @@ extension PrivateActiveAnchor {
 				formatter: { $0.formatForSigning(delegationType: .reply) }
 			)
 
-		let anchorPublicKey = publicKey
-		let agentSigned = try SignedContent<AnchorReply.AgentSigned>
-			.create(
-				content: .init(
-					version: agentVersion,
-					mlsWelcome: mlsWelcome,
-					seqNo: .random(in: .min...(.max)),
-					sentTime: .now
-				),
-				signer: newAgent.signer,
-				formatter: { try $0.formatForSigning(anchorKey: anchorPublicKey) }
-			)
-
-		return (
-			newAgent,
-			.init(
-				attestation: attestation,
-				delegate: anchorDelegation,
-				agentState: agentSigned
-			)
+		return .init(
+			privateKey: newAgent,
+			anchorPublicKey: publicKey,
+			attestation: attestation,
+			delegation: anchorDelegation,
+			delegateType: .reply
 		)
 	}
 }

@@ -22,7 +22,7 @@ public struct AnchorReply {
 	//could fetch this but sending it saves us an
 	//additional request
 	let attestation: SignedContent<AnchorAttestation>
-	let delegate: SignedContent<AnchorDelegation>
+	let delegation: SignedContent<AnchorDelegation>
 	let agentState: SignedContent<AgentSigned>
 
 	//no addresses
@@ -30,14 +30,16 @@ public struct AnchorReply {
 	public struct AgentSigned {
 		static let discriminator = "AnchorHello.AgentSigned"
 		let version: SemanticVersion
-		let mlsWelcome: Data
 		let seqNo: UInt32  //sets initial seqNo
 		let sentTime: Date
 
-		func formatForSigning(anchorKey: AnchorPublicKey) throws -> Data {
+		func formatForSigning(
+			anchorKey: AnchorPublicKey,
+			mlsWelcomeDigest: TypedDigest
+		) throws -> Data {
 			try Self.discriminator.utf8Data
 				+ version.wireFormat
-				+ mlsWelcome.wireFormat
+				+ mlsWelcomeDigest.wireFormat
 		}
 	}
 
@@ -45,7 +47,6 @@ public struct AnchorReply {
 		public let publicAnchor: PublicAnchor
 		public let agentPublicKey: AgentPublicKey
 		public let version: SemanticVersion
-		public let mlsWelcome: Data
 		public let seqNo: UInt32
 		public let sentTime: Date
 	}
@@ -53,7 +54,7 @@ public struct AnchorReply {
 
 extension AnchorReply: LinearEncodedTriple {
 	public var first: SignedContent<AnchorAttestation> { attestation }
-	public var second: SignedContent<AnchorDelegation> { delegate }
+	public var second: SignedContent<AnchorDelegation> { delegation }
 	public var third: SignedContent<AgentSigned> { agentState }
 
 	public init(
@@ -62,22 +63,20 @@ extension AnchorReply: LinearEncodedTriple {
 		third: SignedContent<AgentSigned>
 	) {
 		self.attestation = first
-		self.delegate = second
+		self.delegation = second
 		self.agentState = third
 	}
 }
 
-extension AnchorReply.AgentSigned: LinearEncodedQuad {
+extension AnchorReply.AgentSigned: LinearEncodedTriple {
 	public var first: SemanticVersion { version }
-	public var second: Data { mlsWelcome }
-	public var third: UInt32 { seqNo }
-	public var fourth: Date { sentTime }
+	public var second: UInt32 { seqNo }
+	public var third: Date { sentTime }
 
-	public init(first: SemanticVersion, second: Data, third: UInt32, fourth: Date) {
+	public init(first: SemanticVersion, second: UInt32, third: Date) {
 		self.version = first
-		self.mlsWelcome = second
-		self.seqNo = third
-		self.sentTime = fourth
+		self.seqNo = second
+		self.sentTime = third
 	}
 }
 
