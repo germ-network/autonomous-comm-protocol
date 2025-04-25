@@ -86,7 +86,7 @@ extension PrivateActiveAnchor {
 	) throws -> (AgentPrivateKey, AnchorHello) {
 		let newAgent = AgentPrivateKey()
 
-		let identitySigned = try SignedContent<AnchorHello.IdentitySigned>
+		let identitySigned = try SignedContent<AnchorDelegation>
 			.create(
 				content: .init(agentKey: newAgent.publicKey),
 				signer: privateKey.signer,

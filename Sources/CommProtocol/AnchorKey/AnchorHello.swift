@@ -13,23 +13,22 @@ enum AnchorDelegationType: UInt8 {
 	case reply
 }
 
+public struct AnchorDelegation {
+	static let discriminator = "AnchorDelegation"
+	let agentKey: AgentPublicKey
+
+	func formatForSigning(delegationType: AnchorDelegationType) -> Data {
+		Self.discriminator.utf8Data
+			+ [delegationType.rawValue]
+			+ agentKey.wireFormat
+	}
+}
+
 //the Anchor Public Key is already known
 public struct AnchorHello {
 	let attestation: SignedContent<AnchorAttestation>
-	let delegate: SignedContent<IdentitySigned>
+	let delegate: SignedContent<AnchorDelegation>
 	let agentState: SignedContent<AgentSigned>
-
-	//mix in AnchorDelegationType when formatting for signing
-	public struct IdentitySigned {
-		static let discriminator = "AnchorHello.IdentitySigned"
-		let agentKey: AgentPublicKey
-
-		func formatForSigning(delegationType: AnchorDelegationType) -> Data {
-			Self.discriminator.utf8Data
-				+ [delegationType.rawValue]
-				+ agentKey.wireFormat
-		}
-	}
 
 	//no addresses
 	//mix in anchor key
@@ -55,11 +54,11 @@ public struct AnchorHello {
 
 extension AnchorHello: LinearEncodedTriple {
 	public var first: SignedContent<AnchorAttestation> { attestation }
-	public var second: SignedContent<IdentitySigned> { delegate }
+	public var second: SignedContent<AnchorDelegation> { delegate }
 	public var third: SignedContent<AgentSigned> { agentState }
 
 	public init(
-		first: SignedContent<AnchorAttestation>, second: SignedContent<IdentitySigned>,
+		first: SignedContent<AnchorAttestation>, second: SignedContent<AnchorDelegation>,
 		third: SignedContent<AgentSigned>
 	) {
 		self.attestation = first
@@ -68,14 +67,14 @@ extension AnchorHello: LinearEncodedTriple {
 	}
 }
 
-extension AnchorHello.IdentitySigned: SignableContent {
+extension AnchorDelegation: SignableContent {
 	public init(wireFormat: Data) throws {
 		self.agentKey = try .init(wireFormat: wireFormat)
 	}
 }
 
-extension AnchorHello.IdentitySigned: LinearEncodable {
-	public static func parse(_ input: Data) throws -> (AnchorHello.IdentitySigned, Int) {
+extension AnchorDelegation: LinearEncodable {
+	public static func parse(_ input: Data) throws -> (AnchorDelegation, Int) {
 		let (typedKey, remainder) = try TypedKeyMaterial.parse(input)
 
 		return (
