@@ -64,7 +64,7 @@ public struct IdentityPrivateKey: Sendable {
 		AgentPrivateKey,
 		IdentityIntroduction
 	) {
-		let newAgent = AgentPrivateKey(algorithm: .curve25519)
+		let newAgent = AgentPrivateKey()
 
 		return (
 			newAgent,
@@ -82,7 +82,7 @@ public struct IdentityPrivateKey: Sendable {
 		AgentPrivateKey,
 		IdentityDelegate
 	) {
-		let newAgent = AgentPrivateKey(algorithm: .curve25519)
+		let newAgent = AgentPrivateKey()
 		let newAgentPubKey = newAgent.publicKey
 		let signature = try sign(
 			input: IdentityDelegate.TBS(
@@ -138,7 +138,7 @@ public struct IdentityPrivateKey: Sendable {
 		identityMutable: IdentityMutableData,
 		context: TypedDigest
 	) throws -> (AgentPrivateKey, IdentityHandoff) {
-		let newAgent = AgentPrivateKey(algorithm: .curve25519)
+		let newAgent = AgentPrivateKey()
 
 		let introduction = try createIntroduction(
 			signedIdentity: signedIdentity,

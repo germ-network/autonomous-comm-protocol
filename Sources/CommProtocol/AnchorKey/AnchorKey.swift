@@ -40,28 +40,6 @@ struct AnchorPrivateKey: Sendable {
 
 		}
 	}
-
-	//	//TODO: type constrain this for registration
-	//	public func sign(over body: Data) throws -> TypedSignature {
-	//		.init(
-	//			signingAlgorithm: type,
-	//			signature: try privateKey.signature(for: body)
-	//		)
-	//	}
-
-	//	func sign(anchor: ATProtoAnchor) throws -> SignedObject<ATProtoAnchor> {
-	//		.init(
-	//			content: anchor,
-	//			signature: .init(
-	//				signingAlgorithm: type,
-	//				signature:
-	//					try privateKey
-	//					.signature(
-	//						for: anchor.formatForSigning(anchorKey: publicKey)
-	//					)
-	//			)
-	//		)
-	//	}
 }
 
 public struct AnchorPublicKey: Sendable {
@@ -108,20 +86,12 @@ public struct AnchorPublicKey: Sendable {
 			publicKey.isValidSignature(signature, for: body)
 		}
 	}
+}
 
-	//	public func verify(signedAnchor: SignedObject<ATProtoAnchor>) throws -> ATProtoAnchor {
-	//		let format = signedAnchor.content.formatForSigning(anchorKey: self)
-	//		guard
-	//			publicKey.isValidSignature(
-	//				signedAnchor.signature.signature,
-	//				for: format
-	//			)
-	//		else {
-	//			throw ProtocolError.authenticationError
-	//		}
-	//
-	//		return signedAnchor.content
-	//	}
+extension AnchorPublicKey: Equatable {
+	public static func == (lhs: AnchorPublicKey, rhs: AnchorPublicKey) -> Bool {
+		lhs.wireFormat == rhs.wireFormat
+	}
 }
 
 extension TypedKeyMaterial {

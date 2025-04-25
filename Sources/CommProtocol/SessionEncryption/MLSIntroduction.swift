@@ -7,6 +7,9 @@
 
 import Foundation
 
+//legacy, we can now use defer to the MLS key package for
+//kemPublicKey and suite
+
 //we actually want an additional HPKE key for the basic message
 public struct MLSIntroduction: Sendable, Equatable {
 	public let suite: SessionEncryptionSuites

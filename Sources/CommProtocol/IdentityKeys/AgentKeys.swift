@@ -22,7 +22,7 @@ public struct AgentPrivateKey: Sendable {
 		Swift.type(of: privateKey).signingAlgorithm
 	}
 
-	public init(algorithm: SigningKeyAlgorithm) {
+	public init(algorithm: SigningKeyAlgorithm = .curve25519) {
 		switch algorithm {
 		case .curve25519:
 			self.privateKey = Curve25519.Signing.PrivateKey()
@@ -224,6 +224,19 @@ public struct AgentPrivateKey: Sendable {
 	//MARK: Implementation
 	private func sign(input: Data) throws -> TypedSignature {
 		try .init(prefix: type, checkedData: privateKey.signature(for: input))
+	}
+}
+
+//for new SigningContent generic
+extension AgentPrivateKey {
+	var signer: @Sendable (Data) throws -> TypedSignature {
+		{ body in
+			try .init(
+				signingAlgorithm: type,
+				signature: privateKey.signature(for: body)
+			)
+
+		}
 	}
 }
 

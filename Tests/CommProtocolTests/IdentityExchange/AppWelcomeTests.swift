@@ -11,7 +11,7 @@ import Testing
 
 struct AppWelcomeTests {
 	@Test func testValidation() throws {
-		let myAgent = AgentPrivateKey(algorithm: .curve25519)
+		let myAgent = AgentPrivateKey()
 
 		let mockWelcome = try AppWelcome.mock(
 			remoteAgentKey: myAgent.publicKey,

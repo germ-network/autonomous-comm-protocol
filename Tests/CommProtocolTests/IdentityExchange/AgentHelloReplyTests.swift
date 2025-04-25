@@ -23,7 +23,7 @@ struct TestAgentHelloReply {
 			try Mocks
 			.mockIdentity()
 
-		let remoteAgentKey = AgentPrivateKey(algorithm: .curve25519)
+		let remoteAgentKey = AgentPrivateKey()
 
 		(agentKey, introduction) =
 			try identityKey

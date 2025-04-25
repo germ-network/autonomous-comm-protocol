@@ -55,11 +55,65 @@ public struct PrivateActiveAnchor {
 
 		return (encryptedAttestation, publicKey, newSeed)
 	}
+}
 
-	//verify anchor
+extension PrivateActiveAnchor {
+	//may want to reuse the seed if we eventually upload multiple keypackages
+	public func createHello(
+		agentVersion: SemanticVersion,
+		mlsKeyPackages: [Data],
+		seed: SymmetricKey
+	) throws -> (AgentPrivateKey, Data) {
+		let derivedKey = try publicKey.deriveKey(with: seed)
 
-	//public func produceAnchorIntro() -> (encrypted: Data, seedGen: DataIdentifier) {
+		let (newAgent, anchorHello) = try createHello(
+			agentVersion: agentVersion,
+			mlsKeyPackages: mlsKeyPackages
+		)
 
+		let encryptedHello = try ChaChaPoly.seal(
+			try anchorHello.wireFormat,
+			using: derivedKey
+		).combined
+
+		return (newAgent, encryptedHello)
+	}
+
+	//not public, we'll wrap this in a public function that encrypts
+	func createHello(
+		agentVersion: SemanticVersion,
+		mlsKeyPackages: [Data]
+	) throws -> (AgentPrivateKey, AnchorHello) {
+		let newAgent = AgentPrivateKey()
+
+		let identitySigned = try SignedContent<AnchorHello.IdentitySigned>
+			.create(
+				content: .init(agentKey: newAgent.publicKey),
+				signer: privateKey.signer,
+				formatter: { $0.formatForSigning(delegationType: .hello) }
+			)
+
+		//capture the public key
+		let anchorPublicKey = publicKey
+		let agentSigned = try SignedContent<AnchorHello.AgentSigned>
+			.create(
+				content: .init(
+					version: agentVersion,
+					mlsKeyPackages: mlsKeyPackages
+				),
+				signer: newAgent.signer,
+				formatter: { try $0.formatForSigning(anchorKey: anchorPublicKey) }
+			)
+
+		return (
+			newAgent,
+			.init(
+				attestation: attestation,
+				delegate: identitySigned,
+				agentState: agentSigned
+			)
+		)
+	}
 }
 
 public struct RetiredAnchor {
@@ -67,8 +121,8 @@ public struct RetiredAnchor {
 }
 
 public struct PublicAnchor {
-	let publicKey: AnchorPublicKey
-	let verified: AnchorAttestation
+	public let publicKey: AnchorPublicKey
+	public let verified: AnchorAttestation
 
 	private init(publicKey: AnchorPublicKey, verified: AnchorAttestation) {
 		self.publicKey = publicKey
