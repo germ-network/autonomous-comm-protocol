@@ -46,10 +46,10 @@ public struct AnchorHello {
 	}
 
 	public struct Verified {
-		let publicAnchor: PublicAnchor
-		let agentPublicKey: AgentPublicKey
-		let version: SemanticVersion
-		let mlsKeyPackages: [Data]
+		public let publicAnchor: PublicAnchor
+		public let agentPublicKey: AgentPublicKey
+		public let version: SemanticVersion
+		public let mlsKeyPackages: [Data]
 	}
 }
 

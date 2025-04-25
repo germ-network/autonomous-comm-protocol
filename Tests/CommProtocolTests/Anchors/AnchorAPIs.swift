@@ -52,5 +52,6 @@ struct AnchorAPITests {
 			encryptedHello: encryptedHello,
 			seed: seedKey
 		)
+		#expect(verifiedAnchorHello.agentPublicKey == newAgent.publicKey)
 	}
 }
