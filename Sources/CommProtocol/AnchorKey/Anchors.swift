@@ -86,7 +86,7 @@ extension PrivateActiveAnchor {
 	) throws -> (AgentPrivateKey, AnchorHello) {
 		let newAgent = AgentPrivateKey()
 
-		let identitySigned = try SignedContent<AnchorDelegation>
+		let anchorDelegation = try SignedContent<AnchorDelegation>
 			.create(
 				content: .init(agentKey: newAgent.publicKey),
 				signer: privateKey.signer,
@@ -109,7 +109,46 @@ extension PrivateActiveAnchor {
 			newAgent,
 			.init(
 				attestation: attestation,
-				delegate: identitySigned,
+				delegate: anchorDelegation,
+				agentState: agentSigned
+			)
+		)
+	}
+}
+
+extension PrivateActiveAnchor {
+	//can then encrypt to the HPKE key in the hello
+	public func createReply(
+		agentVersion: SemanticVersion,
+		mlsWelcome: Data
+	) throws -> (AgentPrivateKey, AnchorReply) {
+		let newAgent = AgentPrivateKey()
+
+		let anchorDelegation = try SignedContent<AnchorDelegation>
+			.create(
+				content: .init(agentKey: newAgent.publicKey),
+				signer: privateKey.signer,
+				formatter: { $0.formatForSigning(delegationType: .reply) }
+			)
+
+		let anchorPublicKey = publicKey
+		let agentSigned = try SignedContent<AnchorReply.AgentSigned>
+			.create(
+				content: .init(
+					version: agentVersion,
+					mlsWelcome: mlsWelcome,
+					seqNo: .random(in: .min...(.max)),
+					sentTime: .now
+				),
+				signer: newAgent.signer,
+				formatter: { try $0.formatForSigning(anchorKey: anchorPublicKey) }
+			)
+
+		return (
+			newAgent,
+			.init(
+				attestation: attestation,
+				delegate: anchorDelegation,
 				agentState: agentSigned
 			)
 		)

@@ -10,16 +10,19 @@ import CryptoKit
 import Testing
 
 struct AnchorAPITests {
-	let mockDID = ATProtoDID.mock()
-	let privateAnchor: PrivateActiveAnchor
+	let alexDID = ATProtoDID.mock()
+	let alexPrivateAnchor: PrivateActiveAnchor
+	let blairDID = ATProtoDID.mock()
+	let blairPrivateAnchor: PrivateActiveAnchor
 
 	init() throws {
-		privateAnchor = try PrivateActiveAnchor.create(for: mockDID)
+		alexPrivateAnchor = try .create(for: alexDID)
+		blairPrivateAnchor = try .create(for: blairDID)
 	}
 
 	@Test func testAnchorValidate() throws {
 		let (encrypted, publicAnchorKey, seed) =
-			try privateAnchor.produceAnchor()
+			try alexPrivateAnchor.produceAnchor()
 
 		let publicAnchor = try PublicAnchor.create(
 			encrypted: encrypted,
@@ -30,28 +33,39 @@ struct AnchorAPITests {
 		let didAnchor = try #require(
 			publicAnchor.verified.anchorTo as? ATProtoDID
 		)
-		#expect(didAnchor == mockDID)
+		#expect(didAnchor == alexDID)
 		#expect(publicAnchor.verified.previousAnchor == nil)
 	}
 
 	@Test func testAnchorExchange() throws {
+		//Alex initiates Hello
 		let seed = DataIdentifier(width: .bits128)
 		let seedKey = SymmetricKey(data: seed.identifier)
 
-		let (newAgent, encryptedHello) =
-			try privateAnchor
+		let (alexAgent, encryptedHello) =
+			try alexPrivateAnchor
 			.createHello(
 				agentVersion: .mock(),
 				//parse seems to fail with empty data
-				mlsKeyPackages: ["test".utf8Data],
+				mlsKeyPackages: ["mock".utf8Data],
 				seed: seedKey
 			)
 
-		let publicAnchorKey = privateAnchor.publicKey
+		//Blair consumes the hello
+		let publicAnchorKey = alexPrivateAnchor.publicKey
 		let verifiedAnchorHello = try publicAnchorKey.verify(
 			encryptedHello: encryptedHello,
 			seed: seedKey
 		)
-		#expect(verifiedAnchorHello.agentPublicKey == newAgent.publicKey)
+		#expect(verifiedAnchorHello.agentPublicKey == alexAgent.publicKey)
+
+		//Blair geneates a reply
+		let (blairAgent, reply) =
+			try blairPrivateAnchor
+			.createReply(
+				agentVersion: .mock(),
+				mlsWelcome: "mock".utf8Data
+			)
+
 	}
 }

@@ -24,6 +24,25 @@ public struct AnchorDelegation {
 	}
 }
 
+extension AnchorDelegation: SignableContent {
+	public init(wireFormat: Data) throws {
+		self.agentKey = try .init(wireFormat: wireFormat)
+	}
+}
+
+extension AnchorDelegation: LinearEncodable {
+	public static func parse(_ input: Data) throws -> (AnchorDelegation, Int) {
+		let (typedKey, remainder) = try TypedKeyMaterial.parse(input)
+
+		return (
+			.init(agentKey: try .init(archive: typedKey)),
+			remainder
+		)
+	}
+
+	public var wireFormat: Data { agentKey.wireFormat }
+}
+
 //the Anchor Public Key is already known
 public struct AnchorHello {
 	let attestation: SignedContent<AnchorAttestation>
@@ -58,32 +77,14 @@ extension AnchorHello: LinearEncodedTriple {
 	public var third: SignedContent<AgentSigned> { agentState }
 
 	public init(
-		first: SignedContent<AnchorAttestation>, second: SignedContent<AnchorDelegation>,
+		first: SignedContent<AnchorAttestation>,
+		second: SignedContent<AnchorDelegation>,
 		third: SignedContent<AgentSigned>
 	) {
 		self.attestation = first
 		self.delegate = second
 		self.agentState = third
 	}
-}
-
-extension AnchorDelegation: SignableContent {
-	public init(wireFormat: Data) throws {
-		self.agentKey = try .init(wireFormat: wireFormat)
-	}
-}
-
-extension AnchorDelegation: LinearEncodable {
-	public static func parse(_ input: Data) throws -> (AnchorDelegation, Int) {
-		let (typedKey, remainder) = try TypedKeyMaterial.parse(input)
-
-		return (
-			.init(agentKey: try .init(archive: typedKey)),
-			remainder
-		)
-	}
-
-	public var wireFormat: Data { agentKey.wireFormat }
 }
 
 extension AnchorHello.AgentSigned: SignableContent {
@@ -96,7 +97,7 @@ extension AnchorHello.AgentSigned: LinearEncodedPair {
 	public var first: SemanticVersion { version }
 	public var second: [Data] { mlsKeyPackages }
 
-	public init(first: SemanticVersion, second: [Data]) throws {
+	public init(first: SemanticVersion, second: [Data]) {
 		self.version = first
 		self.mlsKeyPackages = second
 	}

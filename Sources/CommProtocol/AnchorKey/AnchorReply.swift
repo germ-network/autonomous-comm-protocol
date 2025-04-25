@@ -23,7 +23,7 @@ public struct AnchorReply {
 	//additional request
 	let attestation: SignedContent<AnchorAttestation>
 	let delegate: SignedContent<AnchorDelegation>
-	//	let agentState: SignedContent<AgentSigned>
+	let agentState: SignedContent<AgentSigned>
 
 	//no addresses
 	//mix in anchor key
@@ -47,5 +47,42 @@ public struct AnchorReply {
 		public let version: SemanticVersion
 		public let mlsWelcome: Data
 		public let seqNo: UInt32
+		public let sentTime: Date
+	}
+}
+
+extension AnchorReply: LinearEncodedTriple {
+	public var first: SignedContent<AnchorAttestation> { attestation }
+	public var second: SignedContent<AnchorDelegation> { delegate }
+	public var third: SignedContent<AgentSigned> { agentState }
+
+	public init(
+		first: SignedContent<AnchorAttestation>,
+		second: SignedContent<AnchorDelegation>,
+		third: SignedContent<AgentSigned>
+	) {
+		self.attestation = first
+		self.delegate = second
+		self.agentState = third
+	}
+}
+
+extension AnchorReply.AgentSigned: LinearEncodedQuad {
+	public var first: SemanticVersion { version }
+	public var second: Data { mlsWelcome }
+	public var third: UInt32 { seqNo }
+	public var fourth: Date { sentTime }
+
+	public init(first: SemanticVersion, second: Data, third: UInt32, fourth: Date) {
+		self.version = first
+		self.mlsWelcome = second
+		self.seqNo = third
+		self.sentTime = fourth
+	}
+}
+
+extension AnchorReply.AgentSigned: SignableContent {
+	public init(wireFormat: Data) throws {
+		self = try .finalParse(wireFormat)
 	}
 }
