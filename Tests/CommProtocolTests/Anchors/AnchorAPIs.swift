@@ -62,10 +62,15 @@ struct AnchorAPITests {
 		//Blair generates a reply
 		let blairReplyAgent = try blairPrivateAnchor.createReplyAgent()
 		//client creates an MLS welcome with the blairAgent
+		let mockDigest = try TypedDigest.mock()
 		let reply = try blairReplyAgent.createReply(
 			agentVersion: .mock(),
-			mlsWelcomeDigest: .mock()
+			mlsWelcomeDigest: mockDigest
 		)
+		
+		let verified = try blairPrivateAnchor.publicKey
+			.verify(reply: reply, mlsWelcomeDigest: mockDigest)
+		#expect(verified.agentPublicKey == blairReplyAgent.publicKey)
 
 	}
 }

@@ -92,6 +92,13 @@ extension PrivateAnchorAgent {
 		agentVersion: SemanticVersion,
 		mlsWelcomeDigest: TypedDigest
 	) throws -> AnchorReply {
+		//this should only ever be called once, so maybe that's
+		//mutable state we should handle
+		guard delegateType == .reply else {
+			throw ProtocolError.unexpected("incorrect type for operation")
+		}
+		
+			
 		//capture the public key
 		let anchorPublicKey = self.anchorPublicKey
 		let agentSigned = try SignedContent<AnchorReply.AgentSigned>
