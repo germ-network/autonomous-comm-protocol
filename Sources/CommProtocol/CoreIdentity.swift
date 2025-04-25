@@ -122,7 +122,7 @@ extension UInt8: LinearEncodable {
 }
 
 extension String {
-	var utf8Data: Data {
+	public var utf8Data: Data {
 		Data(utf8)
 	}
 }

@@ -10,7 +10,7 @@ import Foundation
 
 public struct PrivateActiveAnchor {
 	let privateKey: AnchorPrivateKey
-	let publicKey: AnchorPublicKey
+	public let publicKey: AnchorPublicKey
 	let attestation: SignedContent<AnchorAttestation>
 
 	public static func create(for did: ATProtoDID) throws -> Self {
@@ -142,8 +142,17 @@ public struct PublicAnchor {
 			.init(combined: encrypted),
 			using: derivedKey
 		)
-		let signedAttestation = try SignedContent<AnchorAttestation>
-			.finalParse(decrypted)
+
+		return try create(
+			publicKey: publicKey,
+			signedAttestation: try .finalParse(decrypted)
+		)
+	}
+
+	static func create(
+		publicKey: AnchorPublicKey,
+		signedAttestation: SignedContent<AnchorAttestation>
+	) throws -> Self {
 		let verified = try signedAttestation.verified(
 			formatter: publicKey.formatter,
 			verifier: publicKey.verifier

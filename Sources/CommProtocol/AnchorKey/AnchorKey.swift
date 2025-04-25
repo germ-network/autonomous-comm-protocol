@@ -88,6 +88,44 @@ public struct AnchorPublicKey: Sendable {
 	}
 }
 
+extension AnchorPublicKey {
+	public func verify(
+		encryptedHello: Data,
+		seed: SymmetricKey
+	) throws -> AnchorHello.Verified {
+		let derivedKey = try deriveKey(with: seed)
+
+		let decrypted = try ChaChaPoly.open(
+			.init(combined: encryptedHello),
+			using: derivedKey
+		)
+
+		let anchorHello = try AnchorHello.finalParse(decrypted)
+
+		let publicAnchor = try PublicAnchor.create(
+			publicKey: self,
+			signedAttestation: anchorHello.attestation
+		)
+
+		let agentPublicKey = try anchorHello.delegate.verified(
+			formatter: { $0.formatForSigning(delegationType: .hello) },
+			verifier: verifier
+		).agentKey
+
+		let agentSigned = try anchorHello.agentState.verified(
+			formatter: { try $0.formatForSigning(anchorKey: self) },
+			verifier: agentPublicKey.verifier
+		)
+
+		return .init(
+			publicAnchor: publicAnchor,
+			agentPublicKey: agentPublicKey,
+			version: agentSigned.version,
+			mlsKeyPackages: agentSigned.mlsKeyPackages
+		)
+	}
+}
+
 extension AnchorPublicKey: Equatable {
 	public static func == (lhs: AnchorPublicKey, rhs: AnchorPublicKey) -> Bool {
 		lhs.wireFormat == rhs.wireFormat

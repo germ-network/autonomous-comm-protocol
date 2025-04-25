@@ -14,13 +14,13 @@ enum AnchorDelegationType: UInt8 {
 }
 
 //the Anchor Public Key is already known
-struct AnchorHello {
+public struct AnchorHello {
 	let attestation: SignedContent<AnchorAttestation>
 	let delegate: SignedContent<IdentitySigned>
 	let agentState: SignedContent<AgentSigned>
 
 	//mix in AnchorDelegationType when formatting for signing
-	struct IdentitySigned {
+	public struct IdentitySigned {
 		static let discriminator = "AnchorHello.IdentitySigned"
 		let agentKey: AgentPublicKey
 
@@ -33,7 +33,7 @@ struct AnchorHello {
 
 	//no addresses
 	//mix in anchor key
-	struct AgentSigned {
+	public struct AgentSigned {
 		static let discriminator = "AnchorHello.AgentSigned"
 		let version: SemanticVersion
 		let mlsKeyPackages: [Data]
@@ -44,14 +44,21 @@ struct AnchorHello {
 				+ mlsKeyPackages.wireFormat
 		}
 	}
+
+	public struct Verified {
+		let publicAnchor: PublicAnchor
+		let agentPublicKey: AgentPublicKey
+		let version: SemanticVersion
+		let mlsKeyPackages: [Data]
+	}
 }
 
 extension AnchorHello: LinearEncodedTriple {
-	var first: SignedContent<AnchorAttestation> { attestation }
-	var second: SignedContent<IdentitySigned> { delegate }
-	var third: SignedContent<AgentSigned> { agentState }
+	public var first: SignedContent<AnchorAttestation> { attestation }
+	public var second: SignedContent<IdentitySigned> { delegate }
+	public var third: SignedContent<AgentSigned> { agentState }
 
-	init(
+	public init(
 		first: SignedContent<AnchorAttestation>, second: SignedContent<IdentitySigned>,
 		third: SignedContent<AgentSigned>
 	) {
@@ -62,7 +69,7 @@ extension AnchorHello: LinearEncodedTriple {
 }
 
 extension AnchorHello.IdentitySigned: SignableContent {
-	init(wireFormat: Data) throws {
+	public init(wireFormat: Data) throws {
 		self.agentKey = try .init(wireFormat: wireFormat)
 	}
 }
@@ -77,20 +84,20 @@ extension AnchorHello.IdentitySigned: LinearEncodable {
 		)
 	}
 
-	var wireFormat: Data { agentKey.wireFormat }
+	public var wireFormat: Data { agentKey.wireFormat }
 }
 
 extension AnchorHello.AgentSigned: SignableContent {
-	init(wireFormat: Data) throws {
+	public init(wireFormat: Data) throws {
 		self = try .finalParse(wireFormat)
 	}
 }
 
 extension AnchorHello.AgentSigned: LinearEncodedPair {
-	var first: SemanticVersion { version }
-	var second: [Data] { mlsKeyPackages }
+	public var first: SemanticVersion { version }
+	public var second: [Data] { mlsKeyPackages }
 
-	init(first: SemanticVersion, second: [Data]) throws {
+	public init(first: SemanticVersion, second: [Data]) throws {
 		self.version = first
 		self.mlsKeyPackages = second
 	}

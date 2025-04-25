@@ -6,6 +6,7 @@
 //
 
 import CommProtocol
+import CryptoKit
 import Testing
 
 struct AnchorAPITests {
@@ -35,13 +36,21 @@ struct AnchorAPITests {
 
 	@Test func testAnchorExchange() throws {
 		let seed = DataIdentifier(width: .bits128)
+		let seedKey = SymmetricKey(data: seed.identifier)
 
 		let (newAgent, encryptedHello) =
 			try privateAnchor
 			.createHello(
 				agentVersion: .mock(),
-				mlsKeyPackages: [.init()],
-				seed: .init(data: seed.identifier)
+				//parse seems to fail with empty data
+				mlsKeyPackages: ["test".utf8Data],
+				seed: seedKey
 			)
+
+		let publicAnchorKey = privateAnchor.publicKey
+		let verifiedAnchorHello = try publicAnchorKey.verify(
+			encryptedHello: encryptedHello,
+			seed: seedKey
+		)
 	}
 }

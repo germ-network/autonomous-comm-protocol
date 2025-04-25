@@ -335,6 +335,15 @@ public struct AgentPublicKey: Sendable {
 	}
 }
 
+//for new SigningContent generic
+extension AgentPublicKey {
+	var verifier: @Sendable (Data, Data) -> Bool {
+		{ signature, body in
+			publicKey.isValidSignature(signature, for: body)
+		}
+	}
+}
+
 extension AgentPublicKey: Hashable {
 	//MARK: Hashable
 	public func hash(into hasher: inout Hasher) {
