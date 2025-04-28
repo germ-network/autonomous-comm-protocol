@@ -68,9 +68,17 @@ struct AnchorAPITests {
 			mlsWelcomeDigest: mockDigest
 		)
 
+		//Alex processes the reply
 		let verified = try blairPrivateAnchor.publicKey
 			.verify(reply: reply, mlsWelcomeDigest: mockDigest)
 		#expect(verified.agentPublicKey == blairReplyAgent.publicKey)
 
+		//Alex transitions from the hello agent to a steady-state agent
+		//with an agent handoff
+
+		let handoff = try alexPrivateAnchor.handOffNewAgent(
+			agentUpdate: .mock(),
+			from: alexAgent
+		)
 	}
 }

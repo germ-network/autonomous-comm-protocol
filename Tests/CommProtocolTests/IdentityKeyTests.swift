@@ -23,7 +23,7 @@ struct IdentityKeyTests {
 				describedImage: DescribedImage.mock())
 	}
 
-	@Test func testCreation() async throws {
+	@Test func testCreation() throws {
 		try print("CoreIdentity size \(signedIdentity.content.wireFormat.count)")
 		try print("Signed CoreIdentity size \(signedIdentity.wireFormat.count)")
 

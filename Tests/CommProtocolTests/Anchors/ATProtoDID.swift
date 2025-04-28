@@ -11,7 +11,7 @@ import Testing
 
 struct TestAnchorFull {
 
-	@Test func testRestore() async throws {
+	@Test func testRestore() throws {
 		#expect(throws: ATProtoDIDError.invalidPrefix) {
 			let _ = try ATProtoDID(fullId: "di:plc:example")
 		}

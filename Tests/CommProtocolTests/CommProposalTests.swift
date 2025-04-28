@@ -88,7 +88,7 @@ struct CommProposalTests {
 		}
 	}
 
-	@Test func testSameIdentity() async throws {
+	@Test func testSameIdentity() throws {
 		let mockContext = try TypedDigest.mock()
 
 		let (newAgent, identityDelegate) =
@@ -133,7 +133,7 @@ struct CommProposalTests {
 		#expect(validatedAgent.agentData == newAgentData)
 	}
 
-	@Test func testSameIdentityErrors() async throws {
+	@Test func testSameIdentityErrors() throws {
 		let mockContext = try TypedDigest.mock()
 
 		let (newAgent, identityDelegate) =

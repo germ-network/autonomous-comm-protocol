@@ -27,7 +27,9 @@ public struct PrivateActiveAnchor {
 				formatter: { content in
 					try content
 						.formatForSigning(
-							anchorKey: anchorPrivateKey.publicKey)
+							anchorKey: anchorPrivateKey.publicKey
+						)
+						.wireFormat
 				}
 			)
 
@@ -90,7 +92,9 @@ extension PrivateActiveAnchor {
 			.create(
 				content: .init(agentKey: newAgent.publicKey),
 				signer: privateKey.signer,
-				formatter: { try $0.formatForSigning(delegationType: .hello) }
+				formatter: {
+					try $0.formatForSigning(delegationType: .hello).wireFormat
+				}
 			)
 
 		//capture the public key
@@ -130,7 +134,9 @@ extension PrivateActiveAnchor {
 			.create(
 				content: .init(agentKey: newAgent.publicKey),
 				signer: privateKey.signer,
-				formatter: { try $0.formatForSigning(delegationType: .reply) }
+				formatter: {
+					try $0.formatForSigning(delegationType: .reply).wireFormat
+				}
 			)
 
 		return .init(
@@ -141,6 +147,62 @@ extension PrivateActiveAnchor {
 			delegateType: .reply
 		)
 	}
+}
+
+extension PrivateActiveAnchor {
+	public func handOffNewAgent(
+		agentUpdate: AgentUpdate,
+		from predecessorAgent: AgentPrivateKey,
+	) throws -> AnchorHandoff {
+		let newAgent = AgentPrivateKey()
+		let newAgentData = AnchorHandoff.Agent.NewData(
+			anchorDelegation: .init(agentKey: newAgent.publicKey),
+			agentUpdate: agentUpdate
+		)
+
+		let anchorSignature = try privateKey.signer(
+			try newAgentData
+				.anchorSigningFormat(
+					newAnchorKey: publicKey,
+					anchorAttestation: attestation.content,
+					replacing: nil
+				)
+				.wireFormat
+		)
+
+		let predecessorSignature = try predecessorAgent.signer(
+			//			.signAsPredecessor(
+			newAgentData
+				.predecessorSigningFormat(
+					predecessor: predecessorAgent.publicKey
+				)
+				.wireFormat
+		)
+
+		let successorSignature = try newAgent.signer(
+			newAgentData
+				.successorSigningFormat(knownAgent: predecessorAgent.publicKey)
+				.wireFormat
+		)
+
+		return .init(
+			newAnchor: nil,
+			newAgent: .init(
+				newAgent: .init(
+					anchorDelegation: .init(agentKey: newAgent.publicKey),
+					agentUpdate: agentUpdate
+				),
+				predecessorSignature: predecessorSignature,
+				successorSignature: successorSignature,
+				anchorSignature: anchorSignature
+			)
+		)
+	}
+
+	//	public func handOffNewAnchor(from predecessor: PrivateAnchorAgent,
+	//fromAgent: PrivateAnchorAgent) -> AnchorHandoff {
+	//
+	//	}
 }
 
 public struct RetiredAnchor {

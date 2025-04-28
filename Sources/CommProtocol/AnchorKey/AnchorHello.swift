@@ -21,18 +21,18 @@ public struct AnchorDelegation {
 	//we don't transmit the type as it's expected in context, but is baked
 	//into the signed body
 
-	private struct Format: LinearEncodedTriple {
+	struct Format: LinearEncodedTriple {
 		let first: String
 		let second: UInt8
 		let third: TypedKeyMaterial
 	}
 
-	func formatForSigning(delegationType: AnchorDelegationType) throws -> Data {
-		try Format(
+	func formatForSigning(delegationType: AnchorDelegationType) -> Format {
+		.init(
 			first: Self.discriminator,
 			second: delegationType.rawValue,
 			third: agentKey.id
-		).wireFormat
+		)
 	}
 }
 

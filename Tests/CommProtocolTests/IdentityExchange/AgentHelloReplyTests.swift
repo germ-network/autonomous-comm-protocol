@@ -44,7 +44,7 @@ struct TestAgentHelloReply {
 		)
 	}
 
-	@Test func testAgentHelloReply() async throws {
+	@Test func testAgentHelloReply() throws {
 		// Write your test here and use APIs like `#expect(...)` to check expected conditions.
 
 	}

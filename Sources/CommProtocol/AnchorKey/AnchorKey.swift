@@ -77,7 +77,7 @@ public struct AnchorPublicKey: Sendable {
 	}
 
 	var formatter: @Sendable (AnchorAttestation) throws -> Data {
-		{ try $0.formatForSigning(anchorKey: self) }
+		{ try $0.formatForSigning(anchorKey: self).wireFormat }
 	}
 
 	//signature, data
@@ -108,7 +108,9 @@ extension AnchorPublicKey {
 		)
 
 		let agentPublicKey = try anchorHello.delegate.verified(
-			formatter: { try $0.formatForSigning(delegationType: .hello) },
+			formatter: {
+				try $0.formatForSigning(delegationType: .hello).wireFormat
+			},
 			verifier: verifier
 		).agentKey
 
@@ -137,7 +139,9 @@ extension AnchorPublicKey {
 		)
 
 		let agentPublicKey = try reply.delegation.verified(
-			formatter: { try $0.formatForSigning(delegationType: .reply) },
+			formatter: {
+				try $0.formatForSigning(delegationType: .reply).wireFormat
+			},
 			verifier: verifier
 		).agentKey
 

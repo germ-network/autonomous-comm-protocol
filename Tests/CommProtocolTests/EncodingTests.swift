@@ -93,7 +93,7 @@ struct EncodingTests {
 	}
 
 	//not currently used
-	@Test func testSessionSuitesFixedEncoding() async throws {
+	@Test func testSessionSuitesFixedEncoding() throws {
 		for suite in SessionEncryptionSuites.allCases {
 			#expect(suite.fixedWidth.count == 2)
 			let decoded = try SessionEncryptionSuites(fixedWidth: suite.fixedWidth)

@@ -35,7 +35,7 @@ extension AnchorHandoff {
 		//new identity data
 		let newAnchor: NewData
 		//existing identity signature
-		let predecessorSignature: TypedDigest
+		let predecessorSignature: TypedSignature
 		//new identity signature, covering the AnchorAttestation, is included
 		//in the AnchorHandoff.Anchor.anchorSignature signature
 
@@ -44,19 +44,21 @@ extension AnchorHandoff {
 			let attestation: AnchorAttestation
 		}
 
-		private struct PredecessorFormat: LinearEncodedTriple {
+		struct PredecessorFormat: LinearEncodedTriple {
 			static let discriminator = "AnchorHandoff.Anchor.PredecessorFormat"
 			let first: String
 			let second: TypedKeyMaterial  //prececessor
 			let third: TypedKeyMaterial  //successor
 		}
 
-		func predecessorSigningFormat(predecessor: AnchorPublicKey) throws -> Data {
-			try PredecessorFormat(
+		func predecessorSigningFormat(predecessor: AnchorPublicKey) throws
+			-> PredecessorFormat
+		{
+			PredecessorFormat(
 				first: PredecessorFormat.discriminator,
 				second: predecessor.archive,
 				third: newAnchor.publicKey.archive
-			).wireFormat
+			)
 		}
 	}
 }
@@ -64,10 +66,10 @@ extension AnchorHandoff {
 extension AnchorHandoff {
 	public struct Agent {
 		let newAgent: NewData
-		let predecessorSignature: TypedDigest
-		let successorSignature: TypedDigest
+		let predecessorSignature: TypedSignature
+		let successorSignature: TypedSignature
 		//covers the previous signature
-		let anchorSignature: TypedDigest
+		let anchorSignature: TypedSignature
 
 		struct NewData {
 			static private let discriminator = "AnchorHandoff.Agent.NewData"
@@ -75,62 +77,65 @@ extension AnchorHandoff {
 			let anchorDelegation: AnchorDelegation
 			let agentUpdate: AgentUpdate  //semVer, isAppClip, addresses
 
-			private struct PredecessorFormat: LinearEncodedTriple {
+			struct PredecessorFormat: LinearEncodedTriple {
 				static let discriminator =
 					"AnchorHandoff.Agent.NewData.PredecessorFormat"
 				let first: String
 				let second: TypedKeyMaterial  //predecessor
 				let third: TypedKeyMaterial  //successor
 			}
-			func predecessorSigningFormat(predecessor: AgentPublicKey) throws -> Data {
-				try PredecessorFormat(
+			func predecessorSigningFormat(
+				predecessor: AgentPublicKey
+			) -> PredecessorFormat {
+				.init(
 					first: PredecessorFormat.discriminator,
 					second: predecessor.id,
 					third: anchorDelegation.agentKey.id
-				).wireFormat
+				)
 			}
 
-			private struct SuccessorFormat: LinearEncodedQuad {
+			struct SuccessorFormat: LinearEncodedQuad {
 				static let discriminator =
 					"AnchorHandoff.Agent.NewData.SuccessorFormat"
 				let first: String
 				let second: TypedKeyMaterial  //predecessor anchorKey.archive
-				let third: Data  //AnchorDelegation.formatForSigning
+				let third: AnchorDelegation.Format  //AnchorDelegation.formatForSigning
 				let fourth: AgentUpdate
 			}
-			func successorSigningFormat(knownAgent: AgentPublicKey) throws -> Data {
-				try SuccessorFormat(
+			func successorSigningFormat(knownAgent: AgentPublicKey) -> SuccessorFormat {
+				.init(
 					first: SuccessorFormat.discriminator,
 					second: knownAgent.id,
-					third:
-						anchorDelegation
-						.formatForSigning(delegationType: .steady),
+					third: anchorDelegation.formatForSigning(
+						delegationType: .steady),
 					fourth: agentUpdate
-				).wireFormat
+				)
 
 			}
 
-			private struct AnchorFormat: LinearEncodedQuad {
+			struct AnchorFormat: LinearEncodedQuad {
 				static let discriminator =
 					"AnchorHandoff.Agent.NewData.AnchorFormat"
 				let first: String
 				//previous AnchorPublicKey if differernt
 				let second: TypedKeyMaterial?
-				let third: TypedKeyMaterial  //new AnchorPublicKey
-				let fourth: Data  //anchorDelegation.formatForSigning
+				let third: AnchorAttestation.Format
+				let fourth: AnchorDelegation.Format  //anchorDelegation.formatForSigning
 			}
 			func anchorSigningFormat(
 				newAnchorKey: AnchorPublicKey,
+				anchorAttestation: AnchorAttestation,
 				replacing: AnchorPublicKey?
-			) throws -> Data {
-				try AnchorFormat(
+			) -> AnchorFormat {
+				.init(
 					first: AnchorFormat.discriminator,
 					second: replacing?.archive,
-					third: newAnchorKey.archive,
-					fourth:
-						anchorDelegation
-						.formatForSigning(delegationType: .steady)
-				).wireFormat
+					third:
+						anchorAttestation
+						.formatForSigning(anchorKey: newAnchorKey),
+					fourth: anchorDelegation.formatForSigning(
+						delegationType: .steady)
+				)
 			}
 		}
 	}
