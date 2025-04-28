@@ -79,6 +79,16 @@ public struct AnchorPublicKey: Sendable {
 	var formatter: @Sendable (AnchorAttestation) throws -> Data {
 		{ try $0.formatForSigning(anchorKey: self).wireFormat }
 	}
+	
+	//signature, data
+	var typedVerifier: @Sendable (TypedSignature, Data) -> Bool {
+		{ signature, body in
+			guard signature.signingAlgorithm == type else {
+				return false
+			}
+			return publicKey.isValidSignature(signature.signature, for: body)
+		}
+	}
 
 	//signature, data
 	var verifier: @Sendable (Data, Data) -> Bool {
@@ -99,32 +109,43 @@ extension AnchorPublicKey {
 			.init(combined: encryptedHello),
 			using: derivedKey
 		)
-
-		let anchorHello = try AnchorHello.finalParse(decrypted)
-
-		let publicAnchor = try PublicAnchor.create(
-			publicKey: self,
-			signedAttestation: anchorHello.attestation
+		
+		let verifiedPackage = try verify(hello: .finalParse(decrypted))
+		let newAgentKey = try AgentPublicKey(
+			archive: verifiedPackage.first.second
 		)
-
-		let agentPublicKey = try anchorHello.delegate.verified(
-			formatter: {
-				try $0.formatForSigning(delegationType: .hello).wireFormat
-			},
-			verifier: verifier
-		).agentKey
-
-		let agentSigned = try anchorHello.agentState.verified(
-			formatter: { try $0.formatForSigning(anchorKey: self) },
-			verifier: agentPublicKey.verifier
-		)
+		
+		guard newAgentKey.typedVerifier(
+			verifiedPackage.second,
+			try verifiedPackage.first.agentSignatureBody().wireFormat
+		) else {
+			throw ProtocolError.authenticationError
+		}
+		let content = verifiedPackage.first
 
 		return .init(
-			publicAnchor: publicAnchor,
-			agentPublicKey: agentPublicKey,
-			version: agentSigned.version,
-			mlsKeyPackages: agentSigned.mlsKeyPackages
+			publicAnchor: .init(
+				publicKey: self,
+				verified: content.first
+			),
+			agentPublicKey: newAgentKey,
+			version: content.third,
+			mlsKeyPackages: content.fourth
 		)
+	}
+	
+	private func verify(hello: AnchorHello) throws -> AnchorHello.Package {
+		guard typedVerifier(
+			hello.first,
+			try AnchorHello.AnchorSignatureBody(
+				encodedPackage: hello.second,
+				knownAnchor: self
+			).wireFormat
+		) else {
+			throw ProtocolError.authenticationError
+		}
+		
+		return try .finalParse(hello.second)
 	}
 }
 

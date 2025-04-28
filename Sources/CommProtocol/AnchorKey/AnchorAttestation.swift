@@ -27,22 +27,25 @@ public enum AnchorTypes: UInt16, Sendable {
 //anchor key
 public struct AnchorAttestation {
 	static let discriminator = "anchor"
+	public let anchorType: AnchorTypes
 	public let anchorTo: AnchorTo
 	public let previousAnchor: AnchorPublicKey?
 
-	struct Format: LinearEncodedQuad {
+	struct Format: LinearEncodedQuintuple {
 		let first: String
-		let second: Data
-		let third: TypedKeyMaterial
-		let fourth: TypedKeyMaterial?
+		let second: UInt16
+		let third: Data
+		let fourth: TypedKeyMaterial
+		let fifth: TypedKeyMaterial?
 	}
 
 	func formatForSigning(anchorKey: AnchorPublicKey) -> Format {
 		.init(
 			first: Self.discriminator,
-			second: anchorTo.stableEncoded,
-			third: anchorKey.archive,
-			fourth: previousAnchor?.archive
+			second: anchorType.rawValue,
+			third: anchorTo.stableEncoded,
+			fourth: anchorKey.archive,
+			fifth: previousAnchor?.archive
 		)
 	}
 }
@@ -63,19 +66,22 @@ extension AnchorAttestation: LinearEncodedTriple {
 		second: Data,
 		third: TypedKeyMaterial?,
 	) throws {
+		let (type, anchorTo) = try Self.anchorToFactory(type: first, encoded: second)
+		
 		self.init(
-			anchorTo: try Self.anchorToFactory(type: first, encoded: second),
+			anchorType: type,
+			anchorTo: anchorTo,
 			previousAnchor: try third?.asAnchorPublicKey
 		)
 	}
 
-	static func anchorToFactory(type: UInt16, encoded: Data) throws -> AnchorTo {
+	static func anchorToFactory(type: UInt16, encoded: Data) throws -> (AnchorTypes, AnchorTo) {
 		guard let anchorType = AnchorTypes(rawValue: type) else {
 			throw LinearEncodingError.invalidPrefix
 		}
 		switch anchorType {
 		case .atProto:
-			return try ATProtoDID(type: .atProto, encoded: encoded)
+			return (anchorType, try ATProtoDID(type: .atProto, encoded: encoded))
 		}
 	}
 }

@@ -16,6 +16,7 @@ public struct PrivateActiveAnchor {
 	public static func create(for did: ATProtoDID) throws -> Self {
 		let anchorPrivateKey = AnchorPrivateKey()
 		let attestationContents = AnchorAttestation(
+			anchorType: .atProto,
 			anchorTo: did,
 			previousAnchor: nil
 		)
@@ -87,34 +88,30 @@ extension PrivateActiveAnchor {
 		mlsKeyPackages: [Data]
 	) throws -> (AgentPrivateKey, AnchorHello) {
 		let newAgent = AgentPrivateKey()
-
-		let anchorDelegation = try SignedContent<AnchorDelegation>
-			.create(
-				content: .init(agentKey: newAgent.publicKey),
-				signer: privateKey.signer,
-				formatter: {
-					try $0.formatForSigning(delegationType: .hello).wireFormat
-				}
-			)
-
-		//capture the public key
-		let anchorPublicKey = publicKey
-		let agentSigned = try SignedContent<AnchorHello.AgentSigned>
-			.create(
-				content: .init(
-					version: agentVersion,
-					mlsKeyPackages: mlsKeyPackages
-				),
-				signer: newAgent.signer,
-				formatter: { try $0.formatForSigning(anchorKey: anchorPublicKey) }
-			)
-
+		
+		let content = AnchorHello.Content(
+			first: attestation.content,
+			second: newAgent.publicKey.id,
+			third: agentVersion,
+			fourth: mlsKeyPackages
+		)
+		
+		let package = AnchorHello.Package(
+			first: content,
+			second: try newAgent
+				.signer(content.agentSignatureBody().wireFormat)
+		)
+		
 		return (
 			newAgent,
 			.init(
-				attestation: attestation,
-				delegate: anchorDelegation,
-				agentState: agentSigned
+				first: try privateKey.signer(
+					try AnchorHello.AnchorSignatureBody(
+						encodedPackage: try package.wireFormat,
+						knownAnchor: publicKey
+					).wireFormat
+				),
+				second: try package.wireFormat
 			)
 		)
 	}
@@ -213,7 +210,7 @@ public struct PublicAnchor {
 	public let publicKey: AnchorPublicKey
 	public let verified: AnchorAttestation
 
-	private init(publicKey: AnchorPublicKey, verified: AnchorAttestation) {
+	init(publicKey: AnchorPublicKey, verified: AnchorAttestation) {
 		self.publicKey = publicKey
 		self.verified = verified
 	}

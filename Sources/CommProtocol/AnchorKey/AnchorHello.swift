@@ -56,61 +56,71 @@ extension AnchorDelegation: LinearEncodable {
 }
 
 //the Anchor Public Key is already known
-public struct AnchorHello {
-	let attestation: SignedContent<AnchorAttestation>
-	let delegate: SignedContent<AnchorDelegation>
-	let agentState: SignedContent<AgentSigned>
+//repackaging this so we can check signature with known key before unwrapping
+//Pattern:
+//- Inner content that we are transmitting
+//- Signatures constructed from the content, maybe with additional context
+//- Wrap those in one data structure signed with the known key
+//- Mix in additional context as needed when verifying the outher signature
 
-	//no addresses
-	//mix in anchor key
-	public struct AgentSigned {
-		static let discriminator = "AnchorHello.AgentSigned"
-		let version: SemanticVersion
-		let mlsKeyPackages: [Data]
-
-		func formatForSigning(anchorKey: AnchorPublicKey) throws -> Data {
-			try Self.discriminator.utf8Data
-				+ version.wireFormat
-				+ mlsKeyPackages.wireFormat
+public struct AnchorHello:LinearEncodedPair {
+	struct Content: LinearEncodedQuad {
+		let first: AnchorAttestation
+		let second: TypedKeyMaterial //AgentPublicKey
+		let third: SemanticVersion
+		let fourth: [Data] //mlsKeyPackages
+		
+		func agentSignatureBody() -> AgentSignatureBody {
+			.init(
+				first: AnchorHello.AgentSignatureBody.discriminator,
+				second: self
+			)
 		}
 	}
-
+	
+	struct Package: LinearEncodedPair {
+		let first: Content //Content.wireformat
+		let second: TypedSignature //delegated agent signature
+	}
+	public let first: TypedSignature
+	public let second: Data //Package.wireformat
+	
+	public init(first: TypedSignature, second: Data) {
+		self.first = first
+		self.second = second
+	}
+	
+	struct AgentSignatureBody: LinearEncodedPair {
+		static let discriminator = "AnchorHello.AgentSignatureBody"
+		let first: String //discriminator maps 1:1 to the delegation type
+		let second: Content
+	}
+	
+	struct AnchorSignatureBody: LinearEncodedTriple  {
+		static let discriminator = "AnchorHello.AnchorSignatureBody"
+		let first: String //discriminator maps 1:1 to the delegation type
+		let second: Data //Package.wireformat
+		let third: TypedKeyMaterial //AnchorPublicKey
+		
+		init(first: String, second: Data, third: TypedKeyMaterial) {
+			self.first = first
+			self.second = second
+			self.third = third
+		}
+		
+		init(encodedPackage: Data, knownAnchor: AnchorPublicKey) throws {
+			self.init(
+				first: Self.discriminator,
+				second: encodedPackage,
+				third: knownAnchor.archive
+			)
+		}
+	}
+	
 	public struct Verified {
 		public let publicAnchor: PublicAnchor
 		public let agentPublicKey: AgentPublicKey
 		public let version: SemanticVersion
 		public let mlsKeyPackages: [Data]
-	}
-}
-
-extension AnchorHello: LinearEncodedTriple {
-	public var first: SignedContent<AnchorAttestation> { attestation }
-	public var second: SignedContent<AnchorDelegation> { delegate }
-	public var third: SignedContent<AgentSigned> { agentState }
-
-	public init(
-		first: SignedContent<AnchorAttestation>,
-		second: SignedContent<AnchorDelegation>,
-		third: SignedContent<AgentSigned>
-	) {
-		self.attestation = first
-		self.delegate = second
-		self.agentState = third
-	}
-}
-
-extension AnchorHello.AgentSigned: SignableContent {
-	public init(wireFormat: Data) throws {
-		self = try .finalParse(wireFormat)
-	}
-}
-
-extension AnchorHello.AgentSigned: LinearEncodedPair {
-	public var first: SemanticVersion { version }
-	public var second: [Data] { mlsKeyPackages }
-
-	public init(first: SemanticVersion, second: [Data]) {
-		self.version = first
-		self.mlsKeyPackages = second
 	}
 }

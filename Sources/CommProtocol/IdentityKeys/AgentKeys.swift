@@ -335,8 +335,19 @@ public struct AgentPublicKey: Sendable {
 	}
 }
 
-//for new SigningContent generic
+
 extension AgentPublicKey {
+	//signature, data
+	var typedVerifier: @Sendable (TypedSignature, Data) -> Bool {
+		{ signature, body in
+			guard signature.signingAlgorithm == keyType else {
+				return false
+			}
+			return publicKey.isValidSignature(signature.signature, for: body)
+		}
+	}
+	
+	//for new SigningContent generic
 	var verifier: @Sendable (Data, Data) -> Bool {
 		{ signature, body in
 			publicKey.isValidSignature(signature, for: body)
