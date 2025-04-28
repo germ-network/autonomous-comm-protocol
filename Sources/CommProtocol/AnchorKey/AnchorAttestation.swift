@@ -67,7 +67,7 @@ extension AnchorAttestation: LinearEncodedTriple {
 		third: TypedKeyMaterial?,
 	) throws {
 		let (type, anchorTo) = try Self.anchorToFactory(type: first, encoded: second)
-		
+
 		self.init(
 			anchorType: type,
 			anchorTo: anchorTo,

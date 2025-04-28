@@ -99,7 +99,8 @@ extension AnchorHandoff {
 					"AnchorHandoff.Agent.NewData.SuccessorFormat"
 				let first: String
 				let second: TypedKeyMaterial  //predecessor anchorKey.archive
-				let third: AnchorDelegation.Format  //AnchorDelegation.formatForSigning
+				//AnchorDelegation.formatForSigning
+				let third: AnchorDelegation.Format
 				let fourth: AgentUpdate
 			}
 			func successorSigningFormat(knownAgent: AgentPublicKey) -> SuccessorFormat {
@@ -120,7 +121,8 @@ extension AnchorHandoff {
 				//previous AnchorPublicKey if differernt
 				let second: TypedKeyMaterial?
 				let third: AnchorAttestation.Format
-				let fourth: AnchorDelegation.Format  //anchorDelegation.formatForSigning
+				//anchorDelegation.formatForSigning
+				let fourth: AnchorDelegation.Format
 			}
 			func anchorSigningFormat(
 				newAnchorKey: AnchorPublicKey,

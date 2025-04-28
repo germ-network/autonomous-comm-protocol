@@ -79,7 +79,7 @@ public struct AnchorPublicKey: Sendable {
 	var formatter: @Sendable (AnchorAttestation) throws -> Data {
 		{ try $0.formatForSigning(anchorKey: self).wireFormat }
 	}
-	
+
 	//signature, data
 	var typedVerifier: @Sendable (TypedSignature, Data) -> Bool {
 		{ signature, body in
@@ -109,16 +109,18 @@ extension AnchorPublicKey {
 			.init(combined: encryptedHello),
 			using: derivedKey
 		)
-		
+
 		let verifiedPackage = try verify(hello: .finalParse(decrypted))
 		let newAgentKey = try AgentPublicKey(
 			archive: verifiedPackage.first.second
 		)
-		
-		guard newAgentKey.typedVerifier(
-			verifiedPackage.second,
-			try verifiedPackage.first.agentSignatureBody().wireFormat
-		) else {
+
+		guard
+			newAgentKey.typedVerifier(
+				verifiedPackage.second,
+				try verifiedPackage.first.agentSignatureBody().wireFormat
+			)
+		else {
 			throw ProtocolError.authenticationError
 		}
 		let content = verifiedPackage.first
@@ -133,18 +135,20 @@ extension AnchorPublicKey {
 			mlsKeyPackages: content.fourth
 		)
 	}
-	
+
 	private func verify(hello: AnchorHello) throws -> AnchorHello.Package {
-		guard typedVerifier(
-			hello.first,
-			try AnchorHello.AnchorSignatureBody(
-				encodedPackage: hello.second,
-				knownAnchor: self
-			).wireFormat
-		) else {
+		guard
+			typedVerifier(
+				hello.first,
+				try AnchorHello.AnchorSignatureBody(
+					encodedPackage: hello.second,
+					knownAnchor: self
+				).wireFormat
+			)
+		else {
 			throw ProtocolError.authenticationError
 		}
-		
+
 		return try .finalParse(hello.second)
 	}
 }

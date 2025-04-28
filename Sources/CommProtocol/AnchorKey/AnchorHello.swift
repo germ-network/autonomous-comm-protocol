@@ -63,13 +63,13 @@ extension AnchorDelegation: LinearEncodable {
 //- Wrap those in one data structure signed with the known key
 //- Mix in additional context as needed when verifying the outher signature
 
-public struct AnchorHello:LinearEncodedPair {
+public struct AnchorHello: LinearEncodedPair {
 	struct Content: LinearEncodedQuad {
 		let first: AnchorAttestation
-		let second: TypedKeyMaterial //AgentPublicKey
+		let second: TypedKeyMaterial  //AgentPublicKey
 		let third: SemanticVersion
-		let fourth: [Data] //mlsKeyPackages
-		
+		let fourth: [Data]  //mlsKeyPackages
+
 		func agentSignatureBody() -> AgentSignatureBody {
 			.init(
 				first: AnchorHello.AgentSignatureBody.discriminator,
@@ -77,37 +77,37 @@ public struct AnchorHello:LinearEncodedPair {
 			)
 		}
 	}
-	
+
 	struct Package: LinearEncodedPair {
-		let first: Content //Content.wireformat
-		let second: TypedSignature //delegated agent signature
+		let first: Content  //Content.wireformat
+		let second: TypedSignature  //delegated agent signature
 	}
 	public let first: TypedSignature
-	public let second: Data //Package.wireformat
-	
+	public let second: Data  //Package.wireformat
+
 	public init(first: TypedSignature, second: Data) {
 		self.first = first
 		self.second = second
 	}
-	
+
 	struct AgentSignatureBody: LinearEncodedPair {
 		static let discriminator = "AnchorHello.AgentSignatureBody"
-		let first: String //discriminator maps 1:1 to the delegation type
+		let first: String  //discriminator maps 1:1 to the delegation type
 		let second: Content
 	}
-	
-	struct AnchorSignatureBody: LinearEncodedTriple  {
+
+	struct AnchorSignatureBody: LinearEncodedTriple {
 		static let discriminator = "AnchorHello.AnchorSignatureBody"
-		let first: String //discriminator maps 1:1 to the delegation type
-		let second: Data //Package.wireformat
-		let third: TypedKeyMaterial //AnchorPublicKey
-		
+		let first: String  //discriminator maps 1:1 to the delegation type
+		let second: Data  //Package.wireformat
+		let third: TypedKeyMaterial  //AnchorPublicKey
+
 		init(first: String, second: Data, third: TypedKeyMaterial) {
 			self.first = first
 			self.second = second
 			self.third = third
 		}
-		
+
 		init(encodedPackage: Data, knownAnchor: AnchorPublicKey) throws {
 			self.init(
 				first: Self.discriminator,
@@ -116,7 +116,7 @@ public struct AnchorHello:LinearEncodedPair {
 			)
 		}
 	}
-	
+
 	public struct Verified {
 		public let publicAnchor: PublicAnchor
 		public let agentPublicKey: AgentPublicKey

@@ -335,7 +335,6 @@ public struct AgentPublicKey: Sendable {
 	}
 }
 
-
 extension AgentPublicKey {
 	//signature, data
 	var typedVerifier: @Sendable (TypedSignature, Data) -> Bool {
@@ -346,7 +345,7 @@ extension AgentPublicKey {
 			return publicKey.isValidSignature(signature.signature, for: body)
 		}
 	}
-	
+
 	//for new SigningContent generic
 	var verifier: @Sendable (Data, Data) -> Bool {
 		{ signature, body in

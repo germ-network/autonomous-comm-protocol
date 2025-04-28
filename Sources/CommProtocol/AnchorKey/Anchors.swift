@@ -88,20 +88,21 @@ extension PrivateActiveAnchor {
 		mlsKeyPackages: [Data]
 	) throws -> (AgentPrivateKey, AnchorHello) {
 		let newAgent = AgentPrivateKey()
-		
+
 		let content = AnchorHello.Content(
 			first: attestation.content,
 			second: newAgent.publicKey.id,
 			third: agentVersion,
 			fourth: mlsKeyPackages
 		)
-		
+
 		let package = AnchorHello.Package(
 			first: content,
-			second: try newAgent
+			second:
+				try newAgent
 				.signer(content.agentSignatureBody().wireFormat)
 		)
-		
+
 		return (
 			newAgent,
 			.init(
@@ -209,11 +210,6 @@ public struct RetiredAnchor {
 public struct PublicAnchor {
 	public let publicKey: AnchorPublicKey
 	public let verified: AnchorAttestation
-
-	init(publicKey: AnchorPublicKey, verified: AnchorAttestation) {
-		self.publicKey = publicKey
-		self.verified = verified
-	}
 
 	//counterpart to PrivateActiveAnchor.create
 	public static func create(
