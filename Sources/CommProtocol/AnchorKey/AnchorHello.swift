@@ -18,6 +18,8 @@ enum AnchorDelegationType: UInt8 {
 public struct AnchorDelegation {
 	static let discriminator = "AnchorDelegation"
 	let agentKey: AgentPublicKey
+	//we don't transmit the type as it's expected in context, but is baked
+	//into the signed body
 
 	private struct Format: LinearEncodedTriple {
 		let first: String
