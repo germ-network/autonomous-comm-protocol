@@ -67,7 +67,7 @@ struct AnchorAPITests {
 			agentVersion: .mock(),
 			mlsWelcomeDigest: mockDigest
 		)
-		
+
 		let verified = try blairPrivateAnchor.publicKey
 			.verify(reply: reply, mlsWelcomeDigest: mockDigest)
 		#expect(verified.agentPublicKey == blairReplyAgent.publicKey)

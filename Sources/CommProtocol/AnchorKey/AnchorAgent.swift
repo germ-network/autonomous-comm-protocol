@@ -97,8 +97,7 @@ extension PrivateAnchorAgent {
 		guard delegateType == .reply else {
 			throw ProtocolError.unexpected("incorrect type for operation")
 		}
-		
-			
+
 		//capture the public key
 		let anchorPublicKey = self.anchorPublicKey
 		let agentSigned = try SignedContent<AnchorReply.AgentSigned>
