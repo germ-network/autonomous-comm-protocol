@@ -20,23 +20,6 @@ struct AnchorAPITests {
 		blairPrivateAnchor = try .create(for: blairDID)
 	}
 
-	@Test func testAnchorValidate() throws {
-		let (encrypted, publicAnchorKey, seed) =
-			try alexPrivateAnchor.produceAnchor()
-
-		let publicAnchor = try PublicAnchor.create(
-			encrypted: encrypted,
-			publicKey: publicAnchorKey,
-			seed: seed
-		)
-		#expect(publicAnchor.publicKey == publicAnchorKey)
-		let didAnchor = try #require(
-			publicAnchor.verified.anchorTo as? ATProtoDID
-		)
-		#expect(didAnchor == alexDID)
-		#expect(publicAnchor.verified.previousAnchor == nil)
-	}
-
 	@Test func testAnchorExchange() throws {
 		//Alex initiates Hello
 		let seed = DataIdentifier(width: .bits128)

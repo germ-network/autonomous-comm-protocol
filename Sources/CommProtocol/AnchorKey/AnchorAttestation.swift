@@ -50,12 +50,6 @@ public struct AnchorAttestation {
 	}
 }
 
-extension AnchorAttestation: SignableContent {
-	public init(wireFormat: Data) throws {
-		self = try Self.finalParse(wireFormat)
-	}
-}
-
 extension AnchorAttestation: LinearEncodedTriple {
 	public var first: UInt16 { anchorTo.type.rawValue }
 	public var second: Data { anchorTo.stableEncoded }

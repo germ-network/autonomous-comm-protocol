@@ -16,23 +16,14 @@ public struct PrivateAnchorAgent {
 
 	//immutable creation data
 	let anchorPublicKey: AnchorPublicKey
-	let attestation: SignedContent<AnchorAttestation>
-	let delegation: SignedContent<AnchorDelegation>
-	let delegateType: AnchorDelegationType
 
 	init(
 		privateKey: AgentPrivateKey,
 		anchorPublicKey: AnchorPublicKey,
-		attestation: SignedContent<AnchorAttestation>,
-		delegation: SignedContent<AnchorDelegation>,
-		delegateType: AnchorDelegationType
 	) {
 		self.privateKey = privateKey
 		self.publicKey = privateKey.publicKey
 		self.anchorPublicKey = anchorPublicKey
-		self.attestation = attestation
-		self.delegation = delegation
-		self.delegateType = delegateType
 	}
 }
 
@@ -42,35 +33,18 @@ extension PrivateAnchorAgent {
 
 		//immutable creation data
 		let anchorPublicKey: Data
-		let attestation: Data  //SignedContent<AnchorAttestation>.wireformat
-		let delegation: Data  //SignedContent<AnchorDelegation>.wireformat
-		let delegateType: UInt8  // AnchorDelegationType.rawValue
 	}
 
 	public init(archive: Archive) throws {
 		let privateKey = try AgentPrivateKey(
 			archive: .init(wireFormat: archive.privateKey)
 		)
-		let delegation = try SignedContent<AnchorDelegation>
-			.finalParse(archive.delegation)
-		assert(privateKey.publicKey == delegation.content.agentKey)
-
-		guard
-			let delegateType = AnchorDelegationType(
-				rawValue: archive.delegateType
-			)
-		else {
-			throw ProtocolError.unexpected("unexpected type")
-		}
 
 		self.init(
 			privateKey: privateKey,
 			anchorPublicKey: try .init(
 				archive: .init(wireFormat: archive.anchorPublicKey)
 			),
-			attestation: try .finalParse(archive.attestation),
-			delegation: delegation,
-			delegateType: delegateType
 		)
 	}
 
@@ -79,9 +53,6 @@ extension PrivateAnchorAgent {
 			.init(
 				privateKey: privateKey.archive.wireFormat,
 				anchorPublicKey: anchorPublicKey.wireFormat,
-				attestation: try attestation.wireFormat,
-				delegation: try delegation.wireFormat,
-				delegateType: delegateType.rawValue
 			)
 		}
 	}

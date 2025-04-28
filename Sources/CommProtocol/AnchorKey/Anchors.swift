@@ -11,7 +11,7 @@ import Foundation
 public struct PrivateActiveAnchor {
 	let privateKey: AnchorPrivateKey
 	public let publicKey: AnchorPublicKey
-	let attestation: SignedContent<AnchorAttestation>
+	let attestation: AnchorAttestation
 
 	public static func create(for did: ATProtoDID) throws -> Self {
 		let anchorPrivateKey = AnchorPrivateKey()
@@ -21,23 +21,10 @@ public struct PrivateActiveAnchor {
 			previousAnchor: nil
 		)
 
-		let signedContents = try SignedContent<AnchorAttestation>
-			.create(
-				content: attestationContents,
-				signer: anchorPrivateKey.signer,
-				formatter: { content in
-					try content
-						.formatForSigning(
-							anchorKey: anchorPrivateKey.publicKey
-						)
-						.wireFormat
-				}
-			)
-
 		return .init(
 			privateKey: anchorPrivateKey,
 			publicKey: anchorPrivateKey.publicKey,
-			attestation: signedContents
+			attestation: attestationContents
 		)
 	}
 
@@ -90,7 +77,7 @@ extension PrivateActiveAnchor {
 		let newAgent = AgentPrivateKey()
 
 		let content = AnchorHello.Content(
-			first: attestation.content,
+			first: attestation,
 			second: newAgent.publicKey.id,
 			third: agentVersion,
 			fourth: mlsKeyPackages
@@ -130,21 +117,9 @@ extension PrivateActiveAnchor {
 	public func createReplyAgent() throws -> PrivateAnchorAgent {
 		let newAgent = AgentPrivateKey()
 
-		let anchorDelegation = try SignedContent<AnchorDelegation>
-			.create(
-				content: .init(agentKey: newAgent.publicKey),
-				signer: privateKey.signer,
-				formatter: {
-					try $0.formatForSigning(delegationType: .reply).wireFormat
-				}
-			)
-
 		return .init(
 			privateKey: newAgent,
 			anchorPublicKey: publicKey,
-			attestation: attestation,
-			delegation: anchorDelegation,
-			delegateType: .reply
 		)
 	}
 
@@ -153,12 +128,9 @@ extension PrivateActiveAnchor {
 		mlsWelcomeDigest: TypedDigest,
 		privateAgent: PrivateAnchorAgent,
 	) throws -> AnchorReply {
-		guard privateAgent.delegateType == .reply else {
-			throw ProtocolError.unexpected("incorrect type for operation")
-		}
 
 		let content = AnchorReply.Content(
-			first: attestation.content,
+			first: attestation,
 			second: privateAgent.publicKey.id,
 			third: agentVersion,
 			fourth: .random(in: .min...(.max)),
@@ -206,7 +178,7 @@ extension PrivateActiveAnchor {
 			try newAgentData
 				.anchorSigningFormat(
 					newAnchorKey: publicKey,
-					anchorAttestation: attestation.content,
+					anchorAttestation: attestation,
 					replacing: nil
 				)
 				.wireFormat
@@ -240,11 +212,6 @@ extension PrivateActiveAnchor {
 			)
 		)
 	}
-
-	//	public func handOffNewAnchor(from predecessor: PrivateAnchorAgent,
-	//fromAgent: PrivateAnchorAgent) -> AnchorHandoff {
-	//
-	//	}
 }
 
 public struct RetiredAnchor {
@@ -254,35 +221,4 @@ public struct RetiredAnchor {
 public struct PublicAnchor {
 	public let publicKey: AnchorPublicKey
 	public let verified: AnchorAttestation
-
-	//counterpart to PrivateActiveAnchor.create
-	public static func create(
-		encrypted: Data,
-		publicKey: AnchorPublicKey,
-		seed: DataIdentifier
-	) throws -> Self {
-		let newSeedKey = SymmetricKey(data: seed.identifier)
-		let derivedKey = try publicKey.deriveKey(with: newSeedKey)
-
-		let decrypted = try ChaChaPoly.open(
-			.init(combined: encrypted),
-			using: derivedKey
-		)
-
-		return try create(
-			publicKey: publicKey,
-			signedAttestation: try .finalParse(decrypted)
-		)
-	}
-
-	static func create(
-		publicKey: AnchorPublicKey,
-		signedAttestation: SignedContent<AnchorAttestation>
-	) throws -> Self {
-		let verified = try signedAttestation.verified(
-			formatter: publicKey.formatter,
-			verifier: publicKey.verifier
-		)
-		return .init(publicKey: publicKey, verified: verified)
-	}
 }

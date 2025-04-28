@@ -36,12 +36,6 @@ public struct AnchorDelegation {
 	}
 }
 
-extension AnchorDelegation: SignableContent {
-	public init(wireFormat: Data) throws {
-		self.agentKey = try .init(wireFormat: wireFormat)
-	}
-}
-
 extension AnchorDelegation: LinearEncodable {
 	public static func parse(_ input: Data) throws -> (AnchorDelegation, Int) {
 		let (typedKey, remainder) = try TypedKeyMaterial.parse(input)
