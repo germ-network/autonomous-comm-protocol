@@ -63,9 +63,10 @@ struct AnchorAPITests {
 		let blairReplyAgent = try blairPrivateAnchor.createReplyAgent()
 		//client creates an MLS welcome with the blairAgent
 		let mockDigest = try TypedDigest.mock()
-		let reply = try blairReplyAgent.createReply(
+		let reply = try blairPrivateAnchor.createReply(
 			agentVersion: .mock(),
-			mlsWelcomeDigest: mockDigest
+			mlsWelcomeDigest: mockDigest,
+			privateAgent: blairReplyAgent
 		)
 
 		//Alex processes the reply

@@ -103,15 +103,17 @@ extension PrivateActiveAnchor {
 				.signer(content.agentSignatureBody().wireFormat)
 		)
 
+		let outerSignature = try privateKey.signer(
+			try AnchorHello.AnchorSignatureBody(
+				encodedPackage: try package.wireFormat,
+				knownAnchor: publicKey
+			).wireFormat
+		)
+
 		return (
 			newAgent,
 			.init(
-				first: try privateKey.signer(
-					try AnchorHello.AnchorSignatureBody(
-						encodedPackage: try package.wireFormat,
-						knownAnchor: publicKey
-					).wireFormat
-				),
+				first: outerSignature,
 				second: try package.wireFormat
 			)
 		)
@@ -143,6 +145,48 @@ extension PrivateActiveAnchor {
 			attestation: attestation,
 			delegation: anchorDelegation,
 			delegateType: .reply
+		)
+	}
+
+	public func createReply(
+		agentVersion: SemanticVersion,
+		mlsWelcomeDigest: TypedDigest,
+		privateAgent: PrivateAnchorAgent,
+	) throws -> AnchorReply {
+		guard privateAgent.delegateType == .reply else {
+			throw ProtocolError.unexpected("incorrect type for operation")
+		}
+
+		let content = AnchorReply.Content(
+			first: attestation.content,
+			second: privateAgent.publicKey.id,
+			third: agentVersion,
+			fourth: .random(in: .min...(.max)),
+			fifth: .now
+		)
+
+		let package = AnchorReply.Package(
+			first: content,
+			second: try privateAgent.privateKey
+				.signer(
+					content
+						.agentSignatureBody(
+							mlsWelcomeDigest: mlsWelcomeDigest
+						)
+						.wireFormat
+				)
+		)
+
+		let outerSignature = try privateKey.signer(
+			try AnchorReply.AnchorSignatureBody(
+				encodedPackage: try package.wireFormat,
+				knownAnchor: publicKey
+			).wireFormat
+		)
+
+		return .init(
+			first: outerSignature,
+			second: try package.wireFormat
 		)
 	}
 }

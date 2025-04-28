@@ -11,7 +11,7 @@ import Foundation
 //the base key that retains the immutable creation state
 
 public struct PrivateAnchorAgent {
-	private let privateKey: AgentPrivateKey
+	let privateKey: AgentPrivateKey
 	public let publicKey: AgentPublicKey
 
 	//immutable creation data
@@ -84,43 +84,6 @@ extension PrivateAnchorAgent {
 				delegateType: delegateType.rawValue
 			)
 		}
-	}
-}
-
-extension PrivateAnchorAgent {
-	public func createReply(
-		agentVersion: SemanticVersion,
-		mlsWelcomeDigest: TypedDigest
-	) throws -> AnchorReply {
-		//this should only ever be called once, so maybe that's
-		//mutable state we should handle
-		guard delegateType == .reply else {
-			throw ProtocolError.unexpected("incorrect type for operation")
-		}
-
-		//capture the public key
-		let anchorPublicKey = self.anchorPublicKey
-		let agentSigned = try SignedContent<AnchorReply.AgentSigned>
-			.create(
-				content: .init(
-					version: agentVersion,
-					seqNo: .random(in: .min...(.max)),
-					sentTime: .now
-				),
-				signer: privateKey.signer,
-				formatter: {
-					try $0.formatForSigning(
-						anchorKey: anchorPublicKey,
-						mlsWelcomeDigest: mlsWelcomeDigest
-					)
-				}
-			)
-
-		return .init(
-			attestation: attestation,
-			delegation: delegation,
-			agentState: agentSigned
-		)
 	}
 }
 

@@ -19,47 +19,62 @@ import Foundation
 //- expect Alex to know Blair's anchor key
 
 public struct AnchorReply {
-	//could fetch this but sending it saves us an
-	//additional request
-	let attestation: SignedContent<AnchorAttestation>
-	let delegation: SignedContent<AnchorDelegation>
-	let agentState: SignedContent<AgentSigned>
+	struct Content: LinearEncodedQuintuple {
+		let first: AnchorAttestation
+		let second: TypedKeyMaterial  //AgentPublicKey
+		let third: SemanticVersion
+		let fourth: UInt32
+		let fifth: Date
 
-	//no addresses
-	//mix in anchor key
-	public struct AgentSigned {
-		static let discriminator = "AnchorHello.AgentSigned"
-		let version: SemanticVersion
-		let seqNo: UInt32  //sets initial seqNo
-		let sentTime: Date
+		func agentSignatureBody(
+			mlsWelcomeDigest: TypedDigest
+		) -> AgentSignatureBody {
+			.init(
+				first: AnchorHello.AgentSignatureBody.discriminator,
+				second: self,
+				third: mlsWelcomeDigest
+			)
+		}
+	}
 
-		private struct Format: LinearEncodedQuad {
-			let first: String
-			let second: Inner
-			let third: TypedKeyMaterial
-			let fourth: TypedDigest
+	struct Package: LinearEncodedPair {
+		let first: Content  //Content.wireformat
+		let second: TypedSignature  //delegated agent signature
+	}
+	//MARK: Properties
+	public let first: TypedSignature
+	public let second: Data  //Package.wireformat
 
-			struct Inner: LinearEncodedTriple {
-				let first: SemanticVersion
-				let second: UInt32
-				let third: Date
-			}
+	public init(first: TypedSignature, second: Data) {
+		self.first = first
+		self.second = second
+	}
+
+	struct AgentSignatureBody: LinearEncodedTriple {
+		static let discriminator = "AnchorReply.AgentSignatureBody"
+		let first: String  //discriminator maps 1:1 to the delegation type
+		let second: Content
+		let third: TypedDigest
+	}
+
+	struct AnchorSignatureBody: LinearEncodedTriple {
+		static let discriminator = "AnchorReply.AnchorSignatureBody"
+		let first: String  //discriminator maps 1:1 to the delegation type
+		let second: Data  //Package.wireformat
+		let third: TypedKeyMaterial  //AnchorPublicKey
+
+		init(first: String, second: Data, third: TypedKeyMaterial) {
+			self.first = first
+			self.second = second
+			self.third = third
 		}
 
-		func formatForSigning(
-			anchorKey: AnchorPublicKey,
-			mlsWelcomeDigest: TypedDigest
-		) throws -> Data {
-			try Format(
+		init(encodedPackage: Data, knownAnchor: AnchorPublicKey) throws {
+			self.init(
 				first: Self.discriminator,
-				second: .init(
-					first: version,
-					second: seqNo,
-					third: sentTime
-				),
-				third: anchorKey.archive,
-				fourth: mlsWelcomeDigest
-			).wireFormat
+				second: encodedPackage,
+				third: knownAnchor.archive
+			)
 		}
 	}
 
@@ -69,39 +84,5 @@ public struct AnchorReply {
 		public let version: SemanticVersion
 		public let seqNo: UInt32
 		public let sentTime: Date
-	}
-}
-
-extension AnchorReply: LinearEncodedTriple {
-	public var first: SignedContent<AnchorAttestation> { attestation }
-	public var second: SignedContent<AnchorDelegation> { delegation }
-	public var third: SignedContent<AgentSigned> { agentState }
-
-	public init(
-		first: SignedContent<AnchorAttestation>,
-		second: SignedContent<AnchorDelegation>,
-		third: SignedContent<AgentSigned>
-	) {
-		self.attestation = first
-		self.delegation = second
-		self.agentState = third
-	}
-}
-
-extension AnchorReply.AgentSigned: LinearEncodedTriple {
-	public var first: SemanticVersion { version }
-	public var second: UInt32 { seqNo }
-	public var third: Date { sentTime }
-
-	public init(first: SemanticVersion, second: UInt32, third: Date) {
-		self.version = first
-		self.seqNo = second
-		self.sentTime = third
-	}
-}
-
-extension AnchorReply.AgentSigned: SignableContent {
-	public init(wireFormat: Data) throws {
-		self = try .finalParse(wireFormat)
 	}
 }

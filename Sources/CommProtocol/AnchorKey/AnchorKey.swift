@@ -158,35 +158,51 @@ extension AnchorPublicKey {
 		reply: AnchorReply,
 		mlsWelcomeDigest: TypedDigest,
 	) throws -> AnchorReply.Verified {
-		let publicAnchor = try PublicAnchor.create(
-			publicKey: self,
-			signedAttestation: reply.attestation
+		let verifiedPackage = try verify(reply: reply)
+		let newAgentKey = try AgentPublicKey(
+			archive: verifiedPackage.first.second
 		)
 
-		let agentPublicKey = try reply.delegation.verified(
-			formatter: {
-				try $0.formatForSigning(delegationType: .reply).wireFormat
-			},
-			verifier: verifier
-		).agentKey
+		let agentSignatureBody = try verifiedPackage.first
+			.agentSignatureBody(mlsWelcomeDigest: mlsWelcomeDigest)
+			.wireFormat
 
-		let agentSigned = try reply.agentState.verified(
-			formatter: {
-				try $0.formatForSigning(
-					anchorKey: self,
-					mlsWelcomeDigest: mlsWelcomeDigest
-				)
-			},
-			verifier: agentPublicKey.verifier
-		)
+		guard
+			newAgentKey.typedVerifier(
+				verifiedPackage.second,
+				agentSignatureBody
+			)
+		else {
+			throw ProtocolError.authenticationError
+		}
+		let content = verifiedPackage.first
 
 		return .init(
-			publicAnchor: publicAnchor,
-			agentPublicKey: agentPublicKey,
-			version: agentSigned.version,
-			seqNo: agentSigned.seqNo,
-			sentTime: agentSigned.sentTime
+			publicAnchor: .init(
+				publicKey: self,
+				verified: content.first
+			),
+			agentPublicKey: newAgentKey,
+			version: content.third,
+			seqNo: content.fourth,
+			sentTime: content.fifth
 		)
+	}
+
+	private func verify(reply: AnchorReply) throws -> AnchorReply.Package {
+		guard
+			typedVerifier(
+				reply.first,
+				try AnchorReply.AnchorSignatureBody(
+					encodedPackage: reply.second,
+					knownAnchor: self
+				).wireFormat
+			)
+		else {
+			throw ProtocolError.authenticationError
+		}
+
+		return try .finalParse(reply.second)
 	}
 }
 

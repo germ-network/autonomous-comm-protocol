@@ -82,6 +82,7 @@ public struct AnchorHello: LinearEncodedPair {
 		let first: Content  //Content.wireformat
 		let second: TypedSignature  //delegated agent signature
 	}
+	//MARK: Properties
 	public let first: TypedSignature
 	public let second: Data  //Package.wireformat
 
