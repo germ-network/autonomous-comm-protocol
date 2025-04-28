@@ -66,6 +66,8 @@ extension AnchorHandoff {
 		let anchorSignature: TypedDigest
 
 		struct NewData {
+			static private let discriminator = "AnchorHandoff.Agent.NewData"
+
 			let publicKey: AgentPublicKey
 			let agentDelegation: AnchorDelegation
 			let agentUpdate: AgentUpdate  //semVer, isAppClip, addresses

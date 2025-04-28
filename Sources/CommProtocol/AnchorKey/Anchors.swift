@@ -25,7 +25,7 @@ public struct PrivateActiveAnchor {
 				content: attestationContents,
 				signer: anchorPrivateKey.signer,
 				formatter: { content in
-					content
+					try content
 						.formatForSigning(
 							anchorKey: anchorPrivateKey.publicKey)
 				}
@@ -90,7 +90,7 @@ extension PrivateActiveAnchor {
 			.create(
 				content: .init(agentKey: newAgent.publicKey),
 				signer: privateKey.signer,
-				formatter: { $0.formatForSigning(delegationType: .hello) }
+				formatter: { try $0.formatForSigning(delegationType: .hello) }
 			)
 
 		//capture the public key
@@ -130,7 +130,7 @@ extension PrivateActiveAnchor {
 			.create(
 				content: .init(agentKey: newAgent.publicKey),
 				signer: privateKey.signer,
-				formatter: { $0.formatForSigning(delegationType: .reply) }
+				formatter: { try $0.formatForSigning(delegationType: .reply) }
 			)
 
 		return .init(

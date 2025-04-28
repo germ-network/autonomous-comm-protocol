@@ -33,13 +33,33 @@ public struct AnchorReply {
 		let seqNo: UInt32  //sets initial seqNo
 		let sentTime: Date
 
+		private struct Format: LinearEncodedQuad {
+			let first: String
+			let second: Inner
+			let third: TypedKeyMaterial
+			let fourth: TypedDigest
+
+			struct Inner: LinearEncodedTriple {
+				let first: SemanticVersion
+				let second: UInt32
+				let third: Date
+			}
+		}
+
 		func formatForSigning(
 			anchorKey: AnchorPublicKey,
 			mlsWelcomeDigest: TypedDigest
 		) throws -> Data {
-			try Self.discriminator.utf8Data
-				+ version.wireFormat
-				+ mlsWelcomeDigest.wireFormat
+			try Format(
+				first: Self.discriminator,
+				second: .init(
+					first: version,
+					second: seqNo,
+					third: sentTime
+				),
+				third: anchorKey.archive,
+				fourth: mlsWelcomeDigest
+			).wireFormat
 		}
 	}
 

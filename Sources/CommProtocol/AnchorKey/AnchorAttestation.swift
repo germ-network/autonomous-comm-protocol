@@ -30,9 +30,20 @@ public struct AnchorAttestation {
 	public let anchorTo: AnchorTo
 	public let previousAnchor: AnchorPublicKey?
 
-	func formatForSigning(anchorKey: AnchorPublicKey) -> Data {
-		Self.discriminator.utf8Data + anchorTo.stableEncoded + anchorKey.wireFormat
-			+ (previousAnchor?.wireFormat ?? .init())
+	private struct Format: LinearEncodedQuad {
+		let first: String
+		let second: Data
+		let third: TypedKeyMaterial
+		let fourth: TypedKeyMaterial?
+	}
+
+	func formatForSigning(anchorKey: AnchorPublicKey) throws -> Data {
+		try Format(
+			first: Self.discriminator,
+			second: anchorTo.stableEncoded,
+			third: anchorKey.archive,
+			fourth: previousAnchor?.archive
+		).wireFormat
 	}
 }
 

@@ -19,10 +19,18 @@ public struct AnchorDelegation {
 	static let discriminator = "AnchorDelegation"
 	let agentKey: AgentPublicKey
 
-	func formatForSigning(delegationType: AnchorDelegationType) -> Data {
-		Self.discriminator.utf8Data
-			+ [delegationType.rawValue]
-			+ agentKey.wireFormat
+	private struct Format: LinearEncodedTriple {
+		let first: String
+		let second: UInt8
+		let third: TypedKeyMaterial
+	}
+
+	func formatForSigning(delegationType: AnchorDelegationType) throws -> Data {
+		try Format(
+			first: Self.discriminator,
+			second: delegationType.rawValue,
+			third: agentKey.id
+		).wireFormat
 	}
 }
 
