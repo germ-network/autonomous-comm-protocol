@@ -11,19 +11,26 @@ import Foundation
 //the base key that retains the immutable creation state
 
 public struct PrivateAnchorAgent {
-	let privateKey: AgentPrivateKey
+	private let privateKey: AgentPrivateKey
 	public let publicKey: AgentPublicKey
 
 	//immutable creation data
 	let anchorPublicKey: AnchorPublicKey
+	let delegationType: AnchorDelegationType
+	
+	var signer: @Sendable (Data) throws -> TypedSignature {
+		privateKey.signer
+	}
 
 	init(
 		privateKey: AgentPrivateKey,
 		anchorPublicKey: AnchorPublicKey,
+		delegationType: AnchorDelegationType
 	) {
 		self.privateKey = privateKey
 		self.publicKey = privateKey.publicKey
 		self.anchorPublicKey = anchorPublicKey
+		self.delegationType = delegationType
 	}
 }
 
@@ -33,18 +40,24 @@ extension PrivateAnchorAgent {
 
 		//immutable creation data
 		let anchorPublicKey: Data
+		let delegationType: UInt8
 	}
 
 	public init(archive: Archive) throws {
 		let privateKey = try AgentPrivateKey(
 			archive: .init(wireFormat: archive.privateKey)
 		)
+		
+		guard let delegationType = AnchorDelegationType(rawValue: archive.delegationType) else {
+			throw ProtocolError.missingOptional("AnchorDelegationType")
+		}
 
 		self.init(
 			privateKey: privateKey,
 			anchorPublicKey: try .init(
 				archive: .init(wireFormat: archive.anchorPublicKey)
 			),
+			delegationType: delegationType
 		)
 	}
 
@@ -53,6 +66,7 @@ extension PrivateAnchorAgent {
 			.init(
 				privateKey: privateKey.archive.wireFormat,
 				anchorPublicKey: anchorPublicKey.wireFormat,
+				delegationType: delegationType.rawValue,
 			)
 		}
 	}
@@ -84,7 +98,7 @@ extension PublicAnchorAgent {
 
 		guard
 			activeAnchor
-				.typedVerifier(
+				.verifier(
 					verifiedPackage.second,
 					try content.activeAnchorBody.wireFormat
 				)
@@ -96,7 +110,7 @@ extension PublicAnchorAgent {
 			archive: content.first.first
 		)
 		guard
-			newAgentKey.typedVerifier(
+			newAgentKey.verifier(
 				verifiedPackage.third,
 				try content.activeAgentBody.wireFormat
 			)
@@ -117,7 +131,7 @@ extension PublicAnchorAgent {
 		guard let newAnchor else { return nil }
 		let content = newAnchor.first
 		guard
-			anchorkey.typedVerifier(
+			anchorkey.verifier(
 				newAnchor.second,
 				try content.retiredAnchorBody.wireFormat
 			)
@@ -138,7 +152,7 @@ extension PublicAnchorAgent {
 		mlsUpdateDigest: TypedDigest
 	) throws -> AnchorHandoff.Package {
 		guard
-			agentKey.typedVerifier(
+			agentKey.verifier(
 				handoff.first,
 				try AnchorHandoff
 					.RetiredAgentBody(

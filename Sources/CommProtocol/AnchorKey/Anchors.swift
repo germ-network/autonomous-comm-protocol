@@ -42,7 +42,7 @@ public struct PrivateActiveAnchor {
 		//underlying generation is from a CryptoKit symmetric key
 		let newSeed = DataIdentifier(width: .bits128)
 		let newSeedKey = SymmetricKey(data: newSeed.identifier)
-		let derivedKey = try publicKey.deriveKey(with: newSeedKey)
+		let derivedKey = publicKey.deriveKey(with: newSeedKey)
 
 		let encryptedAttestation = try ChaChaPoly.seal(
 			try attestation.wireFormat,
@@ -108,9 +108,8 @@ public struct PrivateActiveAnchor {
 			try handoffContent.activeAnchorBody.wireFormat
 		)
 
-		let newAgentSignature = try newAgent.privateKey.signer(
-			try handoffContent.activeAgentBody.wireFormat
-		)
+		let newAgentSignature = try newAgent
+			.signer( try handoffContent.activeAgentBody.wireFormat )
 
 		let package = AnchorHandoff.Package(
 			first: handoffContent,
@@ -119,7 +118,7 @@ public struct PrivateActiveAnchor {
 		)
 
 		let encodedPackage = try package.wireFormat
-		let retiredAgentSignature = try previousAgent.privateKey.signer(
+		let retiredAgentSignature = try previousAgent.signer(
 			try AnchorHandoff.RetiredAgentBody(
 				encodedPackage: encodedPackage,
 				mlsUpdateDigest: mlsUpdateDigest,
@@ -140,8 +139,8 @@ extension PrivateActiveAnchor {
 		agentVersion: SemanticVersion,
 		mlsKeyPackages: [Data],
 		seed: SymmetricKey
-	) throws -> (AgentPrivateKey, Data) {
-		let derivedKey = try publicKey.deriveKey(with: seed)
+	) throws -> (PrivateAnchorAgent, Data) {
+		let derivedKey = publicKey.deriveKey(with: seed)
 
 		let (newAgent, anchorHello) = try createHello(
 			agentVersion: agentVersion,
@@ -160,8 +159,8 @@ extension PrivateActiveAnchor {
 	func createHello(
 		agentVersion: SemanticVersion,
 		mlsKeyPackages: [Data]
-	) throws -> (AgentPrivateKey, AnchorHello) {
-		let newAgent = AgentPrivateKey()
+	) throws -> (PrivateAnchorAgent, AnchorHello) {
+		let newAgent = createNewAgent(type: .hello)
 
 		let content = AnchorHello.Content(
 			first: attestation,
@@ -172,9 +171,7 @@ extension PrivateActiveAnchor {
 
 		let package = AnchorHello.Package(
 			first: content,
-			second:
-				try newAgent
-				.signer(content.agentSignatureBody().wireFormat)
+			second: try newAgent.signer(content.agentSignatureBody().wireFormat)
 		)
 
 		let outerSignature = try privateKey.signer(
@@ -201,10 +198,13 @@ extension PrivateActiveAnchor {
 	//2. generate appWelcome bound to the welcome
 
 	//can then encrypt to the HPKE key in the hello
-	public func createNewAgent() -> PrivateAnchorAgent {
+	public func createNewAgent(
+		type: AnchorDelegationType = .steady
+	) -> PrivateAnchorAgent {
 		.init(
 			privateKey: .init(),
 			anchorPublicKey: publicKey,
+			delegationType: type
 		)
 	}
 
@@ -224,7 +224,7 @@ extension PrivateActiveAnchor {
 
 		let package = AnchorReply.Package(
 			first: content,
-			second: try privateAgent.privateKey
+			second: try privateAgent
 				.signer(
 					content
 						.agentSignatureBody(
@@ -256,7 +256,7 @@ extension PrivateActiveAnchor {
 	public func createNewAgentHandoff(
 		agentUpdate: AgentUpdate,
 		newAgent: PrivateAnchorAgent,
-		from retiredAgent: AgentPrivateKey,
+		from retiredAgent: PrivateAnchorAgent,
 		mlsUpdateDigest: TypedDigest,
 	) throws -> AnchorHandoff {
 		let handoffContent = AnchorHandoff.Content(
@@ -271,7 +271,7 @@ extension PrivateActiveAnchor {
 			try handoffContent.activeAnchorBody.wireFormat
 		)
 
-		let newAgentSignature = try newAgent.privateKey.signer(
+		let newAgentSignature = try newAgent.signer(
 			try handoffContent.activeAgentBody.wireFormat
 		)
 

@@ -7,46 +7,10 @@
 
 import Foundation
 
-//mix this in as appropriate
-enum AnchorDelegationType: UInt8 {
+public enum AnchorDelegationType: UInt8 {
 	case hello
 	case reply
 	case steady
-	//messaging - same as reply?
-}
-
-public struct AnchorDelegation {
-	static let discriminator = "AnchorDelegation"
-	let agentKey: AgentPublicKey
-	//we don't transmit the type as it's expected in context, but is baked
-	//into the signed body
-
-	struct Format: LinearEncodedTriple {
-		let first: String
-		let second: UInt8
-		let third: TypedKeyMaterial
-	}
-
-	func formatForSigning(delegationType: AnchorDelegationType) -> Format {
-		.init(
-			first: Self.discriminator,
-			second: delegationType.rawValue,
-			third: agentKey.id
-		)
-	}
-}
-
-extension AnchorDelegation: LinearEncodable {
-	public static func parse(_ input: Data) throws -> (AnchorDelegation, Int) {
-		let (typedKey, remainder) = try TypedKeyMaterial.parse(input)
-
-		return (
-			.init(agentKey: try .init(archive: typedKey)),
-			remainder
-		)
-	}
-
-	public var wireFormat: Data { agentKey.wireFormat }
 }
 
 //the Anchor Public Key is already known

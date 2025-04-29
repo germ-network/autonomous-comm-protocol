@@ -43,7 +43,7 @@ struct AnchorAPITests {
 		#expect(verifiedAnchorHello.agentPublicKey == alexAgent.publicKey)
 
 		//Blair generates a reply
-		let blairReplyAgent = blairPrivateAnchor.createNewAgent()
+		let blairReplyAgent = blairPrivateAnchor.createNewAgent(type: .reply)
 		//client creates an MLS welcome with the blairAgent
 		let mockDigest = try TypedDigest.mock()
 		let reply = try blairPrivateAnchor.createReply(

@@ -66,7 +66,7 @@ public struct AnchorPublicKey: Sendable {
 		}
 	}
 
-	func deriveKey(with seed: SymmetricKey) throws -> SymmetricKey {
+	func deriveKey(with seed: SymmetricKey) -> SymmetricKey {
 		HKDF<SHA256>
 			.deriveKey(
 				inputKeyMaterial: seed,
@@ -77,19 +77,12 @@ public struct AnchorPublicKey: Sendable {
 	}
 
 	//signature, data
-	var typedVerifier: @Sendable (TypedSignature, Data) -> Bool {
+	var verifier: @Sendable (TypedSignature, Data) -> Bool {
 		{ signature, body in
 			guard signature.signingAlgorithm == type else {
 				return false
 			}
 			return publicKey.isValidSignature(signature.signature, for: body)
-		}
-	}
-
-	//signature, data
-	var verifier: @Sendable (Data, Data) -> Bool {
-		{ signature, body in
-			publicKey.isValidSignature(signature, for: body)
 		}
 	}
 }
@@ -99,7 +92,7 @@ extension AnchorPublicKey {
 		encryptedHello: Data,
 		seed: SymmetricKey
 	) throws -> AnchorHello.Verified {
-		let derivedKey = try deriveKey(with: seed)
+		let derivedKey = deriveKey(with: seed)
 
 		let decrypted = try ChaChaPoly.open(
 			.init(combined: encryptedHello),
@@ -112,7 +105,7 @@ extension AnchorPublicKey {
 		)
 
 		guard
-			newAgentKey.typedVerifier(
+			newAgentKey.verifier(
 				verifiedPackage.second,
 				try verifiedPackage.first.agentSignatureBody().wireFormat
 			)
@@ -134,7 +127,7 @@ extension AnchorPublicKey {
 
 	private func verify(hello: AnchorHello) throws -> AnchorHello.Package {
 		guard
-			typedVerifier(
+			verifier(
 				hello.first,
 				try AnchorHello.AnchorSignatureBody(
 					encodedPackage: hello.second,
@@ -164,7 +157,7 @@ extension AnchorPublicKey {
 			.wireFormat
 
 		guard
-			newAgentKey.typedVerifier(
+			newAgentKey.verifier(
 				verifiedPackage.second,
 				agentSignatureBody
 			)
@@ -187,7 +180,7 @@ extension AnchorPublicKey {
 
 	private func verify(reply: AnchorReply) throws -> AnchorReply.Package {
 		guard
-			typedVerifier(
+			verifier(
 				reply.first,
 				try AnchorReply.AnchorSignatureBody(
 					encodedPackage: reply.second,
@@ -205,13 +198,5 @@ extension AnchorPublicKey {
 extension AnchorPublicKey: Equatable {
 	public static func == (lhs: AnchorPublicKey, rhs: AnchorPublicKey) -> Bool {
 		lhs.wireFormat == rhs.wireFormat
-	}
-}
-
-extension TypedKeyMaterial {
-	var asAnchorPublicKey: AnchorPublicKey {
-		get throws {
-			try .init(archive: self)
-		}
 	}
 }

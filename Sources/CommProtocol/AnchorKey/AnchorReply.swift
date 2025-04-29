@@ -30,7 +30,7 @@ public struct AnchorReply {
 			mlsWelcomeDigest: TypedDigest
 		) -> AgentSignatureBody {
 			.init(
-				first: AnchorHello.AgentSignatureBody.discriminator,
+				first: AnchorReply.AgentSignatureBody.discriminator,
 				second: self,
 				third: mlsWelcomeDigest
 			)
