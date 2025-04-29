@@ -69,5 +69,16 @@ struct AnchorAPITests {
 			mlsUpdateDigest: mockUpdateDigest
 		)
 
+		//Blair receives this
+		let blairLocal = PublicAnchorAgent(
+			anchorkey: verifiedAnchorHello.publicAnchor.publicKey,
+			agentKey: verifiedAnchorHello.agentPublicKey
+		)
+	
+		let verifiedHandoff = try blairLocal.verify(
+			anchorHandoff: handoff,
+			mlsUpdateDigest: mockUpdateDigest
+		)
+	
 	}
 }

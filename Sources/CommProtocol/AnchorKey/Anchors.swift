@@ -198,7 +198,8 @@ extension PrivateActiveAnchor {
 		let retiredAgentSignature = try retiredAgent.signer(
 			try AnchorHandoff.RetiredAgentBody(
 				encodedPackage: encodedPackage,
-				mlsUpdateDigest: mlsUpdateDigest
+				mlsUpdateDigest: mlsUpdateDigest,
+				knownAgent: retiredAgent.publicKey
 			).wireFormat
 		)
 

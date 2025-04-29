@@ -77,6 +77,13 @@ extension AnchorHandoff {
 				self.first = first
 				self.second = second
 			}
+			
+			var retiredAnchorBody: RetiredAnchorBody {
+				.init(
+					first: RetiredAgentBody.discriminator,
+					second: self
+				)
+			}
 
 		}
 		let first: Content
@@ -102,8 +109,10 @@ extension AnchorHandoff {
 		}
 	}
 
-	struct Verified {
-
+	public struct Verified {
+		let newAnchor: NewAnchor.Content?
+		let newAgent: AgentPublicKey
+		let newAgentUpdate: AgentUpdate
 	}
 }
 
@@ -127,22 +136,34 @@ extension AnchorHandoff {
 		let second: Content
 	}
 
-	struct RetiredAgentBody: LinearEncodedTriple {
+	struct RetiredAgentBody: LinearEncodedQuad {
 		static let discriminator = "AnchorHandoff.ActiveAgentBody"
 		let first: String
 		let second: Data  //Package.wireformat
-		let third: TypedDigest
+		let third: TypedDigest //mls update mdigest
+		let fourth: TypedKeyMaterial
 
-		init(first: String, second: Data, third: TypedDigest) {
+		init(
+			first: String,
+			second: Data,
+			third: TypedDigest,
+			fourth: TypedKeyMaterial
+		) {
 			self.first = first
 			self.second = second
 			self.third = third
+			self.fourth = fourth
 		}
 
-		init(encodedPackage: Data, mlsUpdateDigest: TypedDigest) {
+		init(
+			encodedPackage: Data,
+			mlsUpdateDigest: TypedDigest,
+			knownAgent: AgentPublicKey
+		) {
 			self.first = Self.discriminator
 			self.second = encodedPackage
 			self.third = mlsUpdateDigest
+			self.fourth = knownAgent.id
 		}
 	}
 }
