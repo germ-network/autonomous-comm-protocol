@@ -74,11 +74,11 @@ struct AnchorAPITests {
 			anchorkey: verifiedAnchorHello.publicAnchor.publicKey,
 			agentKey: verifiedAnchorHello.agentPublicKey
 		)
-	
+
 		let verifiedHandoff = try blairLocal.verify(
 			anchorHandoff: handoff,
 			mlsUpdateDigest: mockUpdateDigest
 		)
-	
+
 	}
 }

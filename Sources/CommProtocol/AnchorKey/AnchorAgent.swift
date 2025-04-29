@@ -61,7 +61,7 @@ extension PrivateAnchorAgent {
 public struct PublicAnchorAgent {
 	let anchorkey: AnchorPublicKey
 	let agentKey: AgentPublicKey
-	
+
 	public init(anchorkey: AnchorPublicKey, agentKey: AgentPublicKey) {
 		self.anchorkey = anchorkey
 		self.agentKey = agentKey
@@ -77,51 +77,59 @@ extension PublicAnchorAgent {
 			handoff: anchorHandoff,
 			mlsUpdateDigest: mlsUpdateDigest
 		)
-		
+
 		let content = verifiedPackage.first
 		let newAnchor = try verify(newAnchor: content.second)
 		let activeAnchor = newAnchor?.1 ?? anchorkey
-		
-		guard activeAnchor
-			.typedVerifier(
-				verifiedPackage.second,
-				try content.activeAnchorBody.wireFormat
-			) else {
+
+		guard
+			activeAnchor
+				.typedVerifier(
+					verifiedPackage.second,
+					try content.activeAnchorBody.wireFormat
+				)
+		else {
 			throw ProtocolError.authenticationError
 		}
-		
+
 		let newAgentKey = try AgentPublicKey(
 			archive: content.first.first
 		)
-		guard newAgentKey.typedVerifier(
-			verifiedPackage.third,
-			try content.activeAgentBody.wireFormat
-		) else {
+		guard
+			newAgentKey.typedVerifier(
+				verifiedPackage.third,
+				try content.activeAgentBody.wireFormat
+			)
+		else {
 			throw ProtocolError.authenticationError
 		}
-		
+
 		return .init(
 			newAnchor: newAnchor?.0,
 			newAgent: newAgentKey,
 			newAgentUpdate: content.first.second
 		)
 	}
-	
-	private func verify(newAnchor: AnchorHandoff.NewAnchor?) throws -> (AnchorHandoff.NewAnchor.Content, AnchorPublicKey)? {
+
+	private func verify(newAnchor: AnchorHandoff.NewAnchor?) throws -> (
+		AnchorHandoff.NewAnchor.Content, AnchorPublicKey
+	)? {
 		guard let newAnchor else { return nil }
 		let content = newAnchor.first
-		guard anchorkey.typedVerifier(
-			newAnchor.second,
-			try content.retiredAnchorBody.wireFormat
-		) else {
+		guard
+			anchorkey.typedVerifier(
+				newAnchor.second,
+				try content.retiredAnchorBody.wireFormat
+			)
+		else {
 			throw ProtocolError.authenticationError
 		}
-		
+
 		let newAnchorKey = try AnchorPublicKey(archive: content.first)
-		
+
 		return (content, newAnchorKey)
 	}
-	
+
 	private func verifyPackage(
 		handoff: AnchorHandoff,
 		mlsUpdateDigest: TypedDigest

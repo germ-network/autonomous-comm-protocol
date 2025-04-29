@@ -77,7 +77,7 @@ extension AnchorHandoff {
 				self.first = first
 				self.second = second
 			}
-			
+
 			var retiredAnchorBody: RetiredAnchorBody {
 				.init(
 					first: RetiredAgentBody.discriminator,
@@ -140,7 +140,7 @@ extension AnchorHandoff {
 		static let discriminator = "AnchorHandoff.ActiveAgentBody"
 		let first: String
 		let second: Data  //Package.wireformat
-		let third: TypedDigest //mls update mdigest
+		let third: TypedDigest  //mls update mdigest
 		let fourth: TypedKeyMaterial
 
 		init(
