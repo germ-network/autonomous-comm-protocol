@@ -1,5 +1,5 @@
 //
-//  Anchors.swift
+//  PrivateActiveAnchor.swift
 //  CommProtocol
 //
 //  Created by Mark @ Germ on 4/24/25.
@@ -34,23 +34,23 @@ public struct PrivateActiveAnchor {
 		)
 	}
 
-	public func produceAnchor() throws -> (
-		encrypted: Data,
-		publicKey: AnchorPublicKey,
-		seed: DataIdentifier
-	) {
-		//underlying generation is from a CryptoKit symmetric key
-		let newSeed = DataIdentifier(width: .bits128)
-		let newSeedKey = SymmetricKey(data: newSeed.identifier)
-		let derivedKey = publicKey.deriveKey(with: newSeedKey)
-
-		let encryptedAttestation = try ChaChaPoly.seal(
-			try attestation.wireFormat,
-			using: derivedKey
-		).combined
-
-		return (encryptedAttestation, publicKey, newSeed)
-	}
+//	public func produceAnchor() throws -> (
+//		encrypted: Data,
+//		publicKey: AnchorPublicKey,
+//		seed: DataIdentifier
+//	) {
+//		//underlying generation is from a CryptoKit symmetric key
+//		let newSeed = DataIdentifier(width: .bits128)
+//		let newSeedKey = SymmetricKey(data: newSeed.identifier)
+//		let derivedKey = publicKey.deriveKey(with: newSeedKey)
+//
+//		let encryptedAttestation = try ChaChaPoly.seal(
+//			try attestation.wireFormat,
+//			using: derivedKey
+//		).combined
+//
+//		return (encryptedAttestation, publicKey, newSeed)
+//	}
 
 	public func handOff() throws -> PrivateActiveAnchor {
 		let newAnchor = AnchorPrivateKey()
@@ -296,6 +296,72 @@ extension PrivateActiveAnchor {
 			first: retiredAgentSignature,
 			second: encodedPackage
 		)
+	}
+}
+
+extension PrivateActiveAnchor {
+	public struct Archive: Codable {
+		public let privateKey: Data //TypedKeyMaterial.wireformat
+		public let attestationType: UInt16
+		public let anchorTo: Data
+		let continuity: Continuity.Archive?
+	}
+	
+	public var archive: Archive {
+		get throws {
+			.init(
+				privateKey: privateKey.archive.wireFormat,
+				attestationType: attestation.anchorType.rawValue,
+				anchorTo: attestation.anchorTo.stableEncoded,
+				continuity: try handoff?.archive
+			)
+		}
+	}
+	
+	public init(archive: Archive) throws {
+		let privateKey = try AnchorPrivateKey(archive: .init(wireFormat: archive.privateKey))
+		
+		let (type, anchor) = try AnchorAttestation.anchorToFactory(
+			type: archive.attestationType,
+			encoded: archive.anchorTo
+		)
+		
+		self.init(
+			privateKey: privateKey,
+			publicKey: privateKey.publicKey,
+			attestation: .init(
+				anchorType: type,
+				anchorTo: anchor
+			),
+			handoff: try archive.continuity?.restored
+		)
+	}
+}
+
+extension PrivateActiveAnchor.Continuity {
+	struct Archive: Codable {
+		let previousAnchorKey: Data //AnchorPublicKey.wireformat
+		let handoff: Data //AnchorHandoff.NewAnchor.wireformat
+		
+		var restored: PrivateActiveAnchor.Continuity {
+			get throws {
+				try .init(archive: self)
+			}
+		}
+	}
+	
+	var archive: Archive {
+		get throws {
+			.init(
+				previousAnchorKey: previousAnchor.wireFormat,
+				handoff: try handoff.wireFormat
+			)
+		}
+	}
+	
+	init(archive: Archive) throws {
+		self.previousAnchor = try .init(wireFormat: archive.previousAnchorKey)
+		self.handoff = try .finalParse(archive.handoff)
 	}
 }
 

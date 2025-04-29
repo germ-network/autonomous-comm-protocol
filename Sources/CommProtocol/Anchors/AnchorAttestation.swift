@@ -28,15 +28,6 @@ public enum AnchorTypes: UInt16, Sendable {
 public struct AnchorAttestation {
 	public let anchorType: AnchorTypes
 	public let anchorTo: AnchorTo
-
-	//	struct Format: LinearEncodedQuintuple {
-	//		let first: String
-	//		let second: UInt16
-	//		let third: Data
-	//		let fourth: TypedKeyMaterial
-	//		let fifth: TypedKeyMaterial?
-	//	}
-
 }
 
 extension AnchorAttestation: LinearEncodedPair {
