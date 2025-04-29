@@ -28,34 +28,30 @@ public enum AnchorTypes: UInt16, Sendable {
 public struct AnchorAttestation {
 	public let anchorType: AnchorTypes
 	public let anchorTo: AnchorTo
-	public let previousAnchor: AnchorPublicKey?
 
-	struct Format: LinearEncodedQuintuple {
-		let first: String
-		let second: UInt16
-		let third: Data
-		let fourth: TypedKeyMaterial
-		let fifth: TypedKeyMaterial?
-	}
+	//	struct Format: LinearEncodedQuintuple {
+	//		let first: String
+	//		let second: UInt16
+	//		let third: Data
+	//		let fourth: TypedKeyMaterial
+	//		let fifth: TypedKeyMaterial?
+	//	}
 
 }
 
-extension AnchorAttestation: LinearEncodedTriple {
+extension AnchorAttestation: LinearEncodedPair {
 	public var first: UInt16 { anchorTo.type.rawValue }
 	public var second: Data { anchorTo.stableEncoded }
-	public var third: TypedKeyMaterial? { previousAnchor?.archive }
 
 	public init(
 		first: UInt16,
 		second: Data,
-		third: TypedKeyMaterial?,
 	) throws {
 		let (type, anchorTo) = try Self.anchorToFactory(type: first, encoded: second)
 
 		self.init(
 			anchorType: type,
 			anchorTo: anchorTo,
-			previousAnchor: try third?.asAnchorPublicKey
 		)
 	}
 

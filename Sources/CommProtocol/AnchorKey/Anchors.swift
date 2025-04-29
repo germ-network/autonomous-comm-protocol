@@ -12,19 +12,25 @@ public struct PrivateActiveAnchor {
 	let privateKey: AnchorPrivateKey
 	public let publicKey: AnchorPublicKey
 	let attestation: AnchorAttestation
+	let handoff: Continuity?
+
+	struct Continuity {
+		let previousAnchor: AnchorPublicKey
+		let handoff: AnchorHandoff.NewAnchor
+	}
 
 	public static func create(for did: ATProtoDID) throws -> Self {
 		let anchorPrivateKey = AnchorPrivateKey()
 		let attestationContents = AnchorAttestation(
 			anchorType: .atProto,
-			anchorTo: did,
-			previousAnchor: nil
+			anchorTo: did
 		)
 
 		return .init(
 			privateKey: anchorPrivateKey,
 			publicKey: anchorPrivateKey.publicKey,
-			attestation: attestationContents
+			attestation: attestationContents,
+			handoff: nil
 		)
 	}
 
@@ -44,6 +50,87 @@ public struct PrivateActiveAnchor {
 		).combined
 
 		return (encryptedAttestation, publicKey, newSeed)
+	}
+
+	public func handOff() throws -> PrivateActiveAnchor {
+		let newAnchor = AnchorPrivateKey()
+		let attestationContents = AnchorAttestation(
+			anchorType: .atProto,
+			anchorTo: attestation.anchorTo,
+		)
+
+		let content = AnchorHandoff.NewAnchor.Content(
+			publicKey: newAnchor.publicKey,
+			attestation: attestationContents
+		)
+
+		let signature =
+			try privateKey
+			.signer(content.retiredAnchorBody.wireFormat)
+
+		return .init(
+			privateKey: newAnchor,
+			publicKey: publicKey,
+			attestation: attestationContents,
+			handoff: .init(
+				previousAnchor: publicKey,
+				handoff: .init(
+					first: content,
+					second: signature
+				)
+			)
+		)
+	}
+
+	//handing off anchor cross-agent
+	public func handOffAgent(
+		previousAgent: PrivateAnchorAgent,
+		newAgent: PrivateAnchorAgent,
+		agentUpdate: AgentUpdate,
+		mlsUpdateDigest: TypedDigest,
+	) throws -> AnchorHandoff {
+		guard let handoff else {
+			throw ProtocolError.incorrectAnchorState
+		}
+		guard previousAgent.anchorPublicKey == handoff.previousAnchor else {
+			throw ProtocolError.incorrectAnchorState
+		}
+
+		let handoffContent = AnchorHandoff.Content(
+			first: .init(
+				publicKey: newAgent.publicKey,
+				agentUpdate: agentUpdate
+			),
+			second: handoff.handoff
+		)
+
+		let activeAnchorSignature = try privateKey.signer(
+			try handoffContent.activeAnchorBody.wireFormat
+		)
+
+		let newAgentSignature = try newAgent.privateKey.signer(
+			try handoffContent.activeAgentBody.wireFormat
+		)
+
+		let package = AnchorHandoff.Package(
+			first: handoffContent,
+			second: activeAnchorSignature,  //active anchor
+			third: newAgentSignature  //new agent
+		)
+
+		let encodedPackage = try package.wireFormat
+		let retiredAgentSignature = try previousAgent.privateKey.signer(
+			try AnchorHandoff.RetiredAgentBody(
+				encodedPackage: encodedPackage,
+				mlsUpdateDigest: mlsUpdateDigest,
+				knownAgent: previousAgent.publicKey
+			).wireFormat
+		)
+
+		return .init(
+			first: retiredAgentSignature,
+			second: encodedPackage
+		)
 	}
 }
 
@@ -210,9 +297,9 @@ extension PrivateActiveAnchor {
 	}
 }
 
-public struct RetiredAnchor {
-	let publicKey: any PublicSigningKey
-}
+//public struct RetiredAnchor {
+//	let publicKey: any PublicSigningKey
+//}
 
 public struct PublicAnchor {
 	public let publicKey: AnchorPublicKey
