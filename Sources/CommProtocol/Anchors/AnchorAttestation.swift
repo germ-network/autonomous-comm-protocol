@@ -30,6 +30,24 @@ public struct AnchorAttestation {
 	public let anchorTo: AnchorTo
 }
 
+extension AnchorAttestation {
+	public struct Archive: Codable {
+		let anchorType: UInt16
+		let anchorTo: Data
+	}
+
+	var archive: Archive {
+		.init(anchorType: anchorType.rawValue, anchorTo: anchorTo.stableEncoded)
+	}
+
+	init(archive: Archive) throws {
+		(anchorType, anchorTo) = try AnchorAttestation.anchorToFactory(
+			type: archive.anchorType,
+			encoded: archive.anchorTo
+		)
+	}
+}
+
 extension AnchorAttestation: LinearEncodedPair {
 	public var first: UInt16 { anchorTo.type.rawValue }
 	public var second: Data { anchorTo.stableEncoded }

@@ -32,7 +32,7 @@ public struct PrivateActiveAnchor {
 			handoff: nil
 		)
 	}
-	
+
 	init(
 		privateKey: AnchorPrivateKey,
 		attestation: AnchorAttestation,
@@ -44,23 +44,23 @@ public struct PrivateActiveAnchor {
 		self.handoff = handoff
 	}
 
-//	public func produceAnchor() throws -> (
-//		encrypted: Data,
-//		publicKey: AnchorPublicKey,
-//		seed: DataIdentifier
-//	) {
-//		//underlying generation is from a CryptoKit symmetric key
-//		let newSeed = DataIdentifier(width: .bits128)
-//		let newSeedKey = SymmetricKey(data: newSeed.identifier)
-//		let derivedKey = publicKey.deriveKey(with: newSeedKey)
-//
-//		let encryptedAttestation = try ChaChaPoly.seal(
-//			try attestation.wireFormat,
-//			using: derivedKey
-//		).combined
-//
-//		return (encryptedAttestation, publicKey, newSeed)
-//	}
+	//	public func produceAnchor() throws -> (
+	//		encrypted: Data,
+	//		publicKey: AnchorPublicKey,
+	//		seed: DataIdentifier
+	//	) {
+	//		//underlying generation is from a CryptoKit symmetric key
+	//		let newSeed = DataIdentifier(width: .bits128)
+	//		let newSeedKey = SymmetricKey(data: newSeed.identifier)
+	//		let derivedKey = publicKey.deriveKey(with: newSeedKey)
+	//
+	//		let encryptedAttestation = try ChaChaPoly.seal(
+	//			try attestation.wireFormat,
+	//			using: derivedKey
+	//		).combined
+	//
+	//		return (encryptedAttestation, publicKey, newSeed)
+	//	}
 
 	public func handOff() throws -> PrivateActiveAnchor {
 		let newAnchor = AnchorPrivateKey()
@@ -94,10 +94,10 @@ public struct PrivateActiveAnchor {
 	//handing off anchor cross-agent
 	public func handOffAgent(
 		previousAgent: PrivateAnchorAgent,
-		newAgent: PrivateAnchorAgent,
+		newAgentKey: AgentPrivateKey,
 		agentUpdate: AgentUpdate,
 		mlsUpdateDigest: TypedDigest,
-	) throws -> AnchorHandoff {
+	) throws -> (PrivateAnchorAgent, AnchorHandoff) {
 		guard let handoff else {
 			throw ProtocolError.incorrectAnchorState
 		}
@@ -107,7 +107,7 @@ public struct PrivateActiveAnchor {
 
 		let handoffContent = AnchorHandoff.Content(
 			first: .init(
-				publicKey: newAgent.publicKey,
+				publicKey: newAgentKey.publicKey,
 				agentUpdate: agentUpdate
 			),
 			second: handoff.handoff
@@ -118,7 +118,7 @@ public struct PrivateActiveAnchor {
 		)
 
 		let newAgentSignature =
-			try newAgent
+			try newAgentKey
 			.signer(try handoffContent.activeAgentBody.wireFormat)
 
 		let package = AnchorHandoff.Package(
@@ -136,9 +136,18 @@ public struct PrivateActiveAnchor {
 			).wireFormat
 		)
 
-		return .init(
+		let anchorHandoff = AnchorHandoff(
 			first: retiredAgentSignature,
 			second: encodedPackage
+		)
+
+		return (
+			.init(
+				privateKey: newAgentKey,
+				anchorPublicKey: publicKey,
+				source: .handoff(anchorHandoff)
+			),
+			anchorHandoff
 		)
 	}
 }
@@ -170,7 +179,7 @@ extension PrivateActiveAnchor {
 		agentVersion: SemanticVersion,
 		mlsKeyPackages: [Data]
 	) throws -> (PrivateAnchorAgent, AnchorHello) {
-		let newAgent = createNewAgent(type: .hello)
+		let newAgent = AgentPrivateKey()
 
 		let content = AnchorHello.Content(
 			first: attestation,
@@ -191,42 +200,34 @@ extension PrivateActiveAnchor {
 			).wireFormat
 		)
 
+		let anchorHello = AnchorHello(
+			first: outerSignature,
+			second: try package.wireFormat
+		)
+
 		return (
-			newAgent,
 			.init(
-				first: outerSignature,
-				second: try package.wireFormat
-			)
+				privateKey: newAgent,
+				anchorPublicKey: publicKey,
+				source: .hello(anchorHello)
+			),
+			anchorHello
 		)
 	}
 }
 
 extension PrivateActiveAnchor {
-	//have to break this into 2 steps
-	//1. generate delegate agent
-	//client then generates welcome bound to the agent id
-	//2. generate appWelcome bound to the welcome
-
-	//can then encrypt to the HPKE key in the hello
-	public func createNewAgent(
-		type: AnchorDelegationType = .steady
-	) -> PrivateAnchorAgent {
-		.init(
-			privateKey: .init(),
-			anchorPublicKey: publicKey,
-			delegationType: type
-		)
-	}
-
+	//agent isn't bound to the anchor until this step
+	//so we expect the client to generate a fresh agent (no reuse)
+	//generate an mlsWelcome, and provide them as input here
 	public func createReply(
 		agentVersion: SemanticVersion,
 		mlsWelcomeDigest: TypedDigest,
-		privateAgent: PrivateAnchorAgent,
-	) throws -> AnchorReply {
-
+		newAgentKey: AgentPrivateKey,
+	) throws -> (PrivateAnchorAgent, AnchorReply) {
 		let content = AnchorReply.Content(
 			first: attestation,
-			second: privateAgent.publicKey.id,
+			second: newAgentKey.publicKey.id,
 			third: agentVersion,
 			fourth: .random(in: .min...(.max)),
 			fifth: .now
@@ -235,7 +236,7 @@ extension PrivateActiveAnchor {
 		let package = AnchorReply.Package(
 			first: content,
 			second:
-				try privateAgent
+				try newAgentKey
 				.signer(
 					content
 						.agentSignatureBody(
@@ -252,9 +253,18 @@ extension PrivateActiveAnchor {
 			).wireFormat
 		)
 
-		return .init(
+		let reply = AnchorReply(
 			first: outerSignature,
 			second: try package.wireFormat
+		)
+
+		return (
+			.init(
+				privateKey: newAgentKey,
+				anchorPublicKey: publicKey,
+				source: .reply(reply)
+			),
+			reply
 		)
 	}
 }
@@ -266,7 +276,7 @@ extension PrivateActiveAnchor {
 
 	public func createNewAgentHandoff(
 		agentUpdate: AgentUpdate,
-		newAgent: PrivateAnchorAgent,
+		newAgent: AgentPrivateKey,
 		from retiredAgent: PrivateAnchorAgent,
 		mlsUpdateDigest: TypedDigest,
 	) throws -> AnchorHandoff {
@@ -310,37 +320,27 @@ extension PrivateActiveAnchor {
 
 extension PrivateActiveAnchor {
 	public struct Archive: Codable {
-		public let privateKey: Data //TypedKeyMaterial.wireformat
-		public let attestationType: UInt16
-		public let anchorTo: Data
+		public let privateKey: Data  //TypedKeyMaterial.wireformat
+		public let attestation: AnchorAttestation.Archive
 		let continuity: Continuity.Archive?
 	}
-	
+
 	public var archive: Archive {
 		get throws {
 			.init(
 				privateKey: privateKey.archive.wireFormat,
-				attestationType: attestation.anchorType.rawValue,
-				anchorTo: attestation.anchorTo.stableEncoded,
+				attestation: attestation.archive,
 				continuity: try handoff?.archive
 			)
 		}
 	}
-	
+
 	public init(archive: Archive) throws {
-		let privateKey = try AnchorPrivateKey(archive: .init(wireFormat: archive.privateKey))
-		
-		let (type, anchor) = try AnchorAttestation.anchorToFactory(
-			type: archive.attestationType,
-			encoded: archive.anchorTo
-		)
-		
+		let privateKey = try AnchorPrivateKey(
+			archive: .init(wireFormat: archive.privateKey))
 		self.init(
 			privateKey: privateKey,
-			attestation: .init(
-				anchorType: type,
-				anchorTo: anchor
-			),
+			attestation: try .init(archive: archive.attestation),
 			handoff: try archive.continuity?.restored
 		)
 	}
@@ -348,16 +348,16 @@ extension PrivateActiveAnchor {
 
 extension PrivateActiveAnchor.Continuity {
 	struct Archive: Codable {
-		let previousAnchorKey: Data //AnchorPublicKey.wireformat
-		let handoff: Data //AnchorHandoff.NewAnchor.wireformat
-		
+		let previousAnchorKey: Data  //AnchorPublicKey.wireformat
+		let handoff: Data  //AnchorHandoff.NewAnchor.wireformat
+
 		var restored: PrivateActiveAnchor.Continuity {
 			get throws {
 				try .init(archive: self)
 			}
 		}
 	}
-	
+
 	var archive: Archive {
 		get throws {
 			.init(
@@ -366,7 +366,7 @@ extension PrivateActiveAnchor.Continuity {
 			)
 		}
 	}
-	
+
 	init(archive: Archive) throws {
 		self.previousAnchor = try .init(wireFormat: archive.previousAnchorKey)
 		self.handoff = try .finalParse(archive.handoff)
@@ -376,8 +376,3 @@ extension PrivateActiveAnchor.Continuity {
 //public struct RetiredAnchor {
 //	let publicKey: any PublicSigningKey
 //}
-
-public struct PublicAnchor {
-	public let publicKey: AnchorPublicKey
-	public let verified: AnchorAttestation
-}

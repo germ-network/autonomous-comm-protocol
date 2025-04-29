@@ -22,7 +22,7 @@ struct AnchorPrivateKey: Sendable {
 
 	//for local storage
 	public var archive: TypedKeyMaterial { .init(typedKey: privateKey) }
-	
+
 	init(archive: TypedKeyMaterial) throws {
 		switch archive.algorithm {
 		case .curve25519Signing:
@@ -33,7 +33,7 @@ struct AnchorPrivateKey: Sendable {
 		default: throw ProtocolError.typedKeyArchiveMismatch
 		}
 	}
-	
+
 	private init(concrete: any PrivateSigningKey) {
 		privateKey = concrete
 		publicKey = .init(concrete: concrete.publicKey)
@@ -69,7 +69,7 @@ public struct AnchorPublicKey: Sendable {
 		publicKey = concrete
 		archive = .init(typedKey: publicKey)
 	}
-	
+
 	init(wireFormat: Data) throws {
 		try self.init(archive: .init(wireFormat: wireFormat))
 	}
@@ -136,7 +136,7 @@ extension AnchorPublicKey {
 
 		return .init(
 			agent: .init(
-				anchor: .init(publicKey: self, verified: content.first),
+				anchor: .init(publicKey: self, attestation: content.first),
 				agentKey: newAgentKey
 			),
 			version: content.third,
@@ -189,7 +189,7 @@ extension AnchorPublicKey {
 			agent: .init(
 				anchor: .init(
 					publicKey: self,
-					verified: content.first
+					attestation: content.first
 				),
 				agentKey: newAgentKey
 			),

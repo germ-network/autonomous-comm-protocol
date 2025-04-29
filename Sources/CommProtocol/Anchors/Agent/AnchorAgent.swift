@@ -15,8 +15,9 @@ public struct PrivateAnchorAgent {
 	public let publicKey: AgentPublicKey
 
 	//immutable creation data
-	let anchorPublicKey: AnchorPublicKey
-	let delegationType: AnchorDelegationType
+	public let anchorPublicKey: AnchorPublicKey
+	//anchorPubKey is duplicated in new anchor handoff
+	public let source: Source
 
 	var signer: @Sendable (Data) throws -> TypedSignature {
 		privateKey.signer
@@ -25,12 +26,12 @@ public struct PrivateAnchorAgent {
 	init(
 		privateKey: AgentPrivateKey,
 		anchorPublicKey: AnchorPublicKey,
-		delegationType: AnchorDelegationType
+		source: Source
 	) {
 		self.privateKey = privateKey
 		self.publicKey = privateKey.publicKey
 		self.anchorPublicKey = anchorPublicKey
-		self.delegationType = delegationType
+		self.source = source
 	}
 }
 
@@ -40,25 +41,16 @@ extension PrivateAnchorAgent {
 
 		//immutable creation data
 		let anchorPublicKey: Data
-		let delegationType: UInt8
+		let source: Source.Archive
 	}
 
 	public init(archive: Archive) throws {
-		let privateKey = try AgentPrivateKey(
-			archive: .init(wireFormat: archive.privateKey)
-		)
-
-		guard let delegationType = AnchorDelegationType(rawValue: archive.delegationType)
-		else {
-			throw ProtocolError.missingOptional("AnchorDelegationType")
-		}
-
 		self.init(
-			privateKey: privateKey,
-			anchorPublicKey: try .init(
-				archive: .init(wireFormat: archive.anchorPublicKey)
+			privateKey: try .init(
+				archive: .init(wireFormat: archive.privateKey)
 			),
-			delegationType: delegationType
+			anchorPublicKey: try .init(wireFormat: archive.anchorPublicKey),
+			source: try .init(archive: archive.source)
 		)
 	}
 
@@ -67,7 +59,7 @@ extension PrivateAnchorAgent {
 			.init(
 				privateKey: privateKey.archive.wireFormat,
 				anchorPublicKey: anchorPublicKey.wireFormat,
-				delegationType: delegationType.rawValue,
+				source: try source.archive
 			)
 		}
 	}
@@ -76,7 +68,7 @@ extension PrivateAnchorAgent {
 public struct PublicAnchorAgent {
 	public let anchor: PublicAnchor
 	public let agentKey: AgentPublicKey
-	
+
 	public var anchorKey: AnchorPublicKey { anchor.publicKey }
 
 	public init(anchor: PublicAnchor, agentKey: AgentPublicKey) {
@@ -149,7 +141,7 @@ extension PublicAnchorAgent {
 
 		return .init(
 			publicKey: newAnchorKey,
-			verified: content.second
+			attestation: content.second
 		)
 	}
 
@@ -173,5 +165,21 @@ extension PublicAnchorAgent {
 		}
 
 		return try .finalParse(handoff.second)
+	}
+}
+
+extension PublicAnchorAgent {
+	public struct Archive {
+		let anchor: PublicAnchor.Archive
+		let agent: Data
+	}
+
+	public var archive: Archive {
+		.init(anchor: anchor.archive, agent: agentKey.wireFormat)
+	}
+
+	public init(archive: Archive) throws {
+		self.anchor = try .init(archive: archive.anchor)
+		self.agentKey = try .init(wireFormat: archive.agent)
 	}
 }

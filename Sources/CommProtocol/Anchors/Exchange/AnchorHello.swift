@@ -1,24 +1,11 @@
 //
-//  AnchorDelegation.swift
+//  AnchorHello.swift
 //  CommProtocol
 //
 //  Created by Mark @ Germ on 4/24/25.
 //
 
 import Foundation
-
-public enum AnchorDelegationType: UInt8 {
-	case hello
-	case reply
-	case steady
-	
-	init(archive: UInt8) throws {
-		guard let value = AnchorDelegationType(rawValue: archive) else {
-			throw ProtocolError.missingOptional("AnchorDelegationType")
-		}
-		self = value
-	}
-}
 
 //the Anchor Public Key is already known
 //repackaging this so we can check signature with known key before unwrapping

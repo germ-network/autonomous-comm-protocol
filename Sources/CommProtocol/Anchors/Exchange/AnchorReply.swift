@@ -18,7 +18,17 @@ import Foundation
 //AnchorReply is constructed for the return, authenticated path
 //- expect Alex to know Blair's anchor key
 
-public struct AnchorReply {
+public struct AnchorReply: LinearEncodedPair {
+	public let first: TypedSignature
+	public let second: Data  //Package.wireformat
+
+	public init(first: TypedSignature, second: Data) {
+		self.first = first
+		self.second = second
+	}
+}
+
+extension AnchorReply {
 	struct Content: LinearEncodedQuintuple {
 		let first: AnchorAttestation
 		let second: TypedKeyMaterial  //AgentPublicKey
@@ -40,14 +50,6 @@ public struct AnchorReply {
 	struct Package: LinearEncodedPair {
 		let first: Content  //Content.wireformat
 		let second: TypedSignature  //delegated agent signature
-	}
-	//MARK: Properties
-	public let first: TypedSignature
-	public let second: Data  //Package.wireformat
-
-	public init(first: TypedSignature, second: Data) {
-		self.first = first
-		self.second = second
 	}
 
 	struct AgentSignatureBody: LinearEncodedTriple {
