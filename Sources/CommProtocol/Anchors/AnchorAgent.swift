@@ -74,8 +74,10 @@ extension PrivateAnchorAgent {
 }
 
 public struct PublicAnchorAgent {
-	let anchor: PublicAnchor
+	public let anchor: PublicAnchor
 	public let agentKey: AgentPublicKey
+	
+	public var anchorKey: AnchorPublicKey { anchor.publicKey }
 
 	public init(anchor: PublicAnchor, agentKey: AgentPublicKey) {
 		self.anchor = anchor

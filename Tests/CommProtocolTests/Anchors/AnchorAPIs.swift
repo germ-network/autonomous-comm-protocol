@@ -70,7 +70,6 @@ struct AnchorAPITests {
 		)
 
 		//Blair receives this
-
 		let verifiedHandoff = try verifiedAnchorHello.agent.verify(
 			anchorHandoff: handoff,
 			mlsUpdateDigest: mockUpdateDigest
@@ -95,6 +94,7 @@ struct AnchorAPITests {
 			mlsUpdateDigest: mockBlairUpdateDigest
 		)
 		#expect(verifiedBlairHandoff.newAnchor == true)
+		#expect(verifiedBlairHandoff.agent.anchorKey == blairNewAnchor.publicKey)
 	}
 	
 	@Test func testArchive() throws {

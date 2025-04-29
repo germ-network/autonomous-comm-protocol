@@ -28,10 +28,20 @@ public struct PrivateActiveAnchor {
 
 		return .init(
 			privateKey: anchorPrivateKey,
-			publicKey: anchorPrivateKey.publicKey,
 			attestation: attestationContents,
 			handoff: nil
 		)
+	}
+	
+	init(
+		privateKey: AnchorPrivateKey,
+		attestation: AnchorAttestation,
+		handoff: Continuity?
+	) {
+		self.privateKey = privateKey
+		self.publicKey = privateKey.publicKey
+		self.attestation = attestation
+		self.handoff = handoff
 	}
 
 //	public func produceAnchor() throws -> (
@@ -70,7 +80,6 @@ public struct PrivateActiveAnchor {
 
 		return .init(
 			privateKey: newAnchor,
-			publicKey: publicKey,
 			attestation: attestationContents,
 			handoff: .init(
 				previousAnchor: publicKey,
@@ -328,7 +337,6 @@ extension PrivateActiveAnchor {
 		
 		self.init(
 			privateKey: privateKey,
-			publicKey: privateKey.publicKey,
 			attestation: .init(
 				anchorType: type,
 				anchorTo: anchor
