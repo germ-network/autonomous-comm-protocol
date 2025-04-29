@@ -110,8 +110,8 @@ extension AnchorHandoff {
 	}
 
 	public struct Verified {
-		public let newAnchor: PublicAnchor?
-		public let newAgent: AgentPublicKey
+		public let newAnchor: Bool
+		public let agent: PublicAnchorAgent
 		public let newAgentUpdate: AgentUpdate
 	}
 }

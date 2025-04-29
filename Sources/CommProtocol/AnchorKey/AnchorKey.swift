@@ -115,11 +115,10 @@ extension AnchorPublicKey {
 		let content = verifiedPackage.first
 
 		return .init(
-			publicAnchor: .init(
-				publicKey: self,
-				verified: content.first
+			agent: .init(
+				anchor: .init(publicKey: self, verified: content.first),
+				agentKey: newAgentKey
 			),
-			agentPublicKey: newAgentKey,
 			version: content.third,
 			mlsKeyPackages: content.fourth
 		)
@@ -167,11 +166,13 @@ extension AnchorPublicKey {
 		let content = verifiedPackage.first
 
 		return .init(
-			publicAnchor: .init(
-				publicKey: self,
-				verified: content.first
+			agent: .init(
+				anchor: .init(
+					publicKey: self,
+					verified: content.first
+				),
+				agentKey: newAgentKey
 			),
-			agentPublicKey: newAgentKey,
 			version: content.third,
 			seqNo: content.fourth,
 			sentTime: content.fifth

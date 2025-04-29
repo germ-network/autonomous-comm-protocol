@@ -231,9 +231,9 @@ public struct AgentPrivateKey: Sendable {
 extension AgentPrivateKey {
 	var signer: @Sendable (Data) throws -> TypedSignature {
 		{ body in
-			try .init(
+			.init(
 				signingAlgorithm: type,
-				signature: privateKey.signature(for: body)
+				signature: try privateKey.signature(for: body)
 			)
 
 		}

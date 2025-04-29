@@ -108,8 +108,9 @@ public struct PrivateActiveAnchor {
 			try handoffContent.activeAnchorBody.wireFormat
 		)
 
-		let newAgentSignature = try newAgent
-			.signer( try handoffContent.activeAgentBody.wireFormat )
+		let newAgentSignature =
+			try newAgent
+			.signer(try handoffContent.activeAgentBody.wireFormat)
 
 		let package = AnchorHandoff.Package(
 			first: handoffContent,
@@ -224,7 +225,8 @@ extension PrivateActiveAnchor {
 
 		let package = AnchorReply.Package(
 			first: content,
-			second: try privateAgent
+			second:
+				try privateAgent
 				.signer(
 					content
 						.agentSignatureBody(

@@ -79,8 +79,7 @@ extension AnchorHello {
 	}
 
 	public struct Verified {
-		public let publicAnchor: PublicAnchor
-		public let agentPublicKey: AgentPublicKey
+		public let agent: PublicAnchorAgent
 		public let version: SemanticVersion
 		public let mlsKeyPackages: [Data]
 	}

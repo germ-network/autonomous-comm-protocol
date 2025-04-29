@@ -40,7 +40,7 @@ struct AnchorAPITests {
 			encryptedHello: encryptedHello,
 			seed: seedKey
 		)
-		#expect(verifiedAnchorHello.agentPublicKey == alexAgent.publicKey)
+		#expect(verifiedAnchorHello.agent.agentKey == alexAgent.publicKey)
 
 		//Blair generates a reply
 		let blairReplyAgent = blairPrivateAnchor.createNewAgent(type: .reply)
@@ -55,7 +55,7 @@ struct AnchorAPITests {
 		//Alex processes the reply
 		let verifiedReply = try blairPrivateAnchor.publicKey
 			.verify(reply: reply, mlsWelcomeDigest: mockDigest)
-		#expect(verifiedReply.agentPublicKey == blairReplyAgent.publicKey)
+		#expect(verifiedReply.agent.agentKey == blairReplyAgent.publicKey)
 
 		//Alex transitions from the hello agent to a steady-state agent
 		//with an agent handoff
@@ -70,17 +70,13 @@ struct AnchorAPITests {
 		)
 
 		//Blair receives this
-		let blairLocal = PublicAnchorAgent(
-			anchorkey: verifiedAnchorHello.publicAnchor.publicKey,
-			agentKey: verifiedAnchorHello.agentPublicKey
-		)
 
-		let verifiedHandoff = try blairLocal.verify(
+		let verifiedHandoff = try verifiedAnchorHello.agent.verify(
 			anchorHandoff: handoff,
 			mlsUpdateDigest: mockUpdateDigest
 		)
-		#expect(verifiedHandoff.newAnchor == nil)
-		#expect(verifiedHandoff.newAgent == alexHandoffAgent.publicKey)
+		#expect(verifiedHandoff.newAnchor == false)
+		#expect(verifiedHandoff.agent.agentKey == alexHandoffAgent.publicKey)
 
 		//Finally, blair performs a full rollover
 		let blairNewAnchor = try blairPrivateAnchor.handOff()
@@ -94,13 +90,10 @@ struct AnchorAPITests {
 			mlsUpdateDigest: mockBlairUpdateDigest
 		)
 
-		let alexLocal = PublicAnchorAgent(
-			anchorkey: verifiedReply.publicAnchor.publicKey,
-			agentKey: verifiedReply.agentPublicKey
-		)
-		let verifiedBlairHandoff = try alexLocal.verify(
+		let verifiedBlairHandoff = try verifiedReply.agent.verify(
 			anchorHandoff: blairHandoff,
 			mlsUpdateDigest: mockBlairUpdateDigest
 		)
+		#expect(verifiedBlairHandoff.newAnchor == true)
 	}
 }

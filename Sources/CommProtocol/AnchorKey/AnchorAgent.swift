@@ -17,7 +17,7 @@ public struct PrivateAnchorAgent {
 	//immutable creation data
 	let anchorPublicKey: AnchorPublicKey
 	let delegationType: AnchorDelegationType
-	
+
 	var signer: @Sendable (Data) throws -> TypedSignature {
 		privateKey.signer
 	}
@@ -47,8 +47,9 @@ extension PrivateAnchorAgent {
 		let privateKey = try AgentPrivateKey(
 			archive: .init(wireFormat: archive.privateKey)
 		)
-		
-		guard let delegationType = AnchorDelegationType(rawValue: archive.delegationType) else {
+
+		guard let delegationType = AnchorDelegationType(rawValue: archive.delegationType)
+		else {
 			throw ProtocolError.missingOptional("AnchorDelegationType")
 		}
 
@@ -73,11 +74,11 @@ extension PrivateAnchorAgent {
 }
 
 public struct PublicAnchorAgent {
-	let anchorkey: AnchorPublicKey
-	let agentKey: AgentPublicKey
+	let anchor: PublicAnchor
+	public let agentKey: AgentPublicKey
 
-	public init(anchorkey: AnchorPublicKey, agentKey: AgentPublicKey) {
-		self.anchorkey = anchorkey
+	public init(anchor: PublicAnchor, agentKey: AgentPublicKey) {
+		self.anchor = anchor
 		self.agentKey = agentKey
 	}
 }
@@ -94,7 +95,7 @@ extension PublicAnchorAgent {
 
 		let content = verifiedPackage.first
 		let newAnchor = try verify(newAnchor: content.second)
-		let activeAnchor = newAnchor?.publicKey ?? anchorkey
+		let activeAnchor = newAnchor?.publicKey ?? anchor.publicKey
 
 		guard
 			activeAnchor
@@ -119,8 +120,11 @@ extension PublicAnchorAgent {
 		}
 
 		return .init(
-			newAnchor: newAnchor,
-			newAgent: newAgentKey,
+			newAnchor: newAnchor != nil,
+			agent: .init(
+				anchor: newAnchor ?? anchor,
+				agentKey: newAgentKey
+			),
 			newAgentUpdate: content.first.second
 		)
 	}
@@ -131,7 +135,7 @@ extension PublicAnchorAgent {
 		guard let newAnchor else { return nil }
 		let content = newAnchor.first
 		guard
-			anchorkey.verifier(
+			anchor.publicKey.verifier(
 				newAnchor.second,
 				try content.retiredAnchorBody.wireFormat
 			)
