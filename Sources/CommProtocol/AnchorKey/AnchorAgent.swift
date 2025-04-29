@@ -59,11 +59,11 @@ extension PrivateAnchorAgent {
 }
 
 extension PrivateAnchorAgent {
-	func signAsPredecessor(
-		_ format: AnchorHandoff.Agent.NewData.PredecessorFormat
-	) throws -> TypedSignature {
-		try privateKey.signer(try format.wireFormat)
-	}
+	//	func signAsPredecessor(
+	//		_ format: AnchorHandoff.Agent.NewData.PredecessorFormat
+	//	) throws -> TypedSignature {
+	//		try privateKey.signer(try format.wireFormat)
+	//	}
 
 	//	func signAsSuccessor(
 	//		_ format: AnchorHandoff.Agent.NewData.PredecessorFormat

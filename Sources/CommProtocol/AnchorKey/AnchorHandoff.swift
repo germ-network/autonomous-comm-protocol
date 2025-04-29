@@ -25,12 +25,135 @@ import Foundation
 //required new? identity signature
 
 public struct AnchorHandoff {
+	public let first: TypedSignature  //known agent signature
+	public let second: Data  //Package.wireformat
+
+	public init(first: TypedSignature, second: Data) {
+		self.first = first
+		self.second = second
+	}
+}
+
+extension AnchorHandoff {
+	struct Content: LinearEncodedPair {
+		let first: NewAgent
+		let second: NewAnchor?
+
+		var activeAnchorBody: ActiveAnchorBody {
+			.init(
+				first: ActiveAnchorBody.discriminator,
+				second: self
+			)
+		}
+
+		var activeAgentBody: ActiveAgentBody {
+			.init(
+				first: ActiveAgentBody.discriminator,
+				second: self
+			)
+		}
+	}
+
+	struct Package: LinearEncodedTriple {
+		let first: Content
+		let second: TypedSignature  //active anchor signature
+		let third: TypedSignature  //new agent signature
+	}
+
+	struct NewAnchor: LinearEncodedPair {
+		struct Content: LinearEncodedPair {
+			let first: TypedKeyMaterial  //AnchorPublicKey
+			let second: AnchorAttestation
+
+			init(
+				publicKey: AnchorPublicKey,
+				attestation: AnchorAttestation
+			) {
+				self.first = publicKey.archive
+				self.second = attestation
+			}
+
+			init(first: TypedKeyMaterial, second: AnchorAttestation) throws {
+				self.first = first
+				self.second = second
+			}
+
+		}
+		let first: Content
+		//if we introduce a new anchor we need the previous anchor to endorse this
+		let second: TypedSignature
+	}
+
+	struct NewAgent: LinearEncodedPair {
+		let first: TypedKeyMaterial
+		let second: AgentUpdate
+
+		init(
+			publicKey: AgentPublicKey,
+			agentUpdate: AgentUpdate
+		) {
+			self.first = publicKey.id
+			self.second = agentUpdate
+		}
+
+		init(first: TypedKeyMaterial, second: AgentUpdate) throws {
+			self.first = first
+			self.second = second
+		}
+	}
+
+	struct Verified {
+
+	}
+}
+
+//signature bodies
+extension AnchorHandoff {
+	struct RetiredAnchorBody: LinearEncodedPair {
+		static let discriminator = "AnchorHandoff.RetiredAnchorBody"
+		let first: String
+		let second: NewAnchor.Content
+	}
+
+	struct ActiveAnchorBody: LinearEncodedPair {
+		static let discriminator = "AnchorHandoff.ActiveAnchorBody"
+		let first: String
+		let second: Content
+	}
+
+	struct ActiveAgentBody: LinearEncodedPair {
+		static let discriminator = "AnchorHandoff.RetiredAgentBody"
+		let first: String
+		let second: Content
+	}
+
+	struct RetiredAgentBody: LinearEncodedTriple {
+		static let discriminator = "AnchorHandoff.ActiveAgentBody"
+		let first: String
+		let second: Data  //Package.wireformat
+		let third: TypedDigest
+
+		init(first: String, second: Data, third: TypedDigest) {
+			self.first = first
+			self.second = second
+			self.third = third
+		}
+
+		init(encodedPackage: Data, mlsUpdateDigest: TypedDigest) {
+			self.first = Self.discriminator
+			self.second = encodedPackage
+			self.third = mlsUpdateDigest
+		}
+	}
+}
+
+public struct AnchorHandoffDep {
 	let newAnchor: Anchor?
 	let newAgent: Agent
 }
 
 //MARK: Types
-extension AnchorHandoff {
+extension AnchorHandoffDep {
 	public struct Anchor {
 		//new identity data
 		let newAnchor: NewData
@@ -63,7 +186,7 @@ extension AnchorHandoff {
 	}
 }
 
-extension AnchorHandoff {
+extension AnchorHandoffDep {
 	public struct Agent {
 		let newAgent: NewData
 		let predecessorSignature: TypedSignature
@@ -143,7 +266,7 @@ extension AnchorHandoff {
 	}
 }
 
-extension AnchorHandoff.Agent.NewData: LinearEncodedPair {
+extension AnchorHandoffDep.Agent.NewData: LinearEncodedPair {
 	public var first: TypedKeyMaterial { anchorDelegation.agentKey.id }
 	public var second: AgentUpdate { agentUpdate }
 

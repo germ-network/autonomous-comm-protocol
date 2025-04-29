@@ -55,9 +55,19 @@ extension AnchorDelegation: LinearEncodable {
 //- Inner content that we are transmitting
 //- Signatures constructed from the content, maybe with additional context
 //- Wrap those in one data structure signed with the known key
-//- Mix in additional context as needed when verifying the outher signature
+//- Mix in additional context as needed when verifying the outer signature
 
 public struct AnchorHello: LinearEncodedPair {
+	public let first: TypedSignature
+	public let second: Data  //Package.wireformat
+
+	public init(first: TypedSignature, second: Data) {
+		self.first = first
+		self.second = second
+	}
+}
+
+extension AnchorHello {
 	struct Content: LinearEncodedQuad {
 		let first: AnchorAttestation
 		let second: TypedKeyMaterial  //AgentPublicKey
@@ -75,14 +85,6 @@ public struct AnchorHello: LinearEncodedPair {
 	struct Package: LinearEncodedPair {
 		let first: Content  //Content.wireformat
 		let second: TypedSignature  //delegated agent signature
-	}
-	//MARK: Properties
-	public let first: TypedSignature
-	public let second: Data  //Package.wireformat
-
-	public init(first: TypedSignature, second: Data) {
-		self.first = first
-		self.second = second
 	}
 
 	struct AgentSignatureBody: LinearEncodedPair {

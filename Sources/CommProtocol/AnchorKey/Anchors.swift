@@ -114,11 +114,9 @@ extension PrivateActiveAnchor {
 	//2. generate appWelcome bound to the welcome
 
 	//can then encrypt to the HPKE key in the hello
-	public func createReplyAgent() throws -> PrivateAnchorAgent {
-		let newAgent = AgentPrivateKey()
-
-		return .init(
-			privateKey: newAgent,
+	public func createNewAgent() -> PrivateAnchorAgent {
+		.init(
+			privateKey: .init(),
 			anchorPublicKey: publicKey,
 		)
 	}
@@ -164,52 +162,49 @@ extension PrivateActiveAnchor {
 }
 
 extension PrivateActiveAnchor {
-	public func handOffNewAgent(
+	//like with Reply, need to spawn the agent, create an MLS update with the
+	//new agent as credential, then pass back here so the agent can sign over
+	//the MLS update
+
+	public func createNewAgentHandoff(
 		agentUpdate: AgentUpdate,
-		from predecessorAgent: AgentPrivateKey,
+		newAgent: PrivateAnchorAgent,
+		from retiredAgent: AgentPrivateKey,
+		mlsUpdateDigest: TypedDigest,
 	) throws -> AnchorHandoff {
-		let newAgent = AgentPrivateKey()
-		let newAgentData = AnchorHandoff.Agent.NewData(
-			anchorDelegation: .init(agentKey: newAgent.publicKey),
-			agentUpdate: agentUpdate
+		let handoffContent = AnchorHandoff.Content(
+			first: .init(
+				publicKey: newAgent.publicKey,
+				agentUpdate: agentUpdate
+			),
+			second: nil
 		)
 
-		let anchorSignature = try privateKey.signer(
-			try newAgentData
-				.anchorSigningFormat(
-					newAnchorKey: publicKey,
-					anchorAttestation: attestation,
-					replacing: nil
-				)
-				.wireFormat
+		let activeAnchorSignature = try privateKey.signer(
+			try handoffContent.activeAnchorBody.wireFormat
 		)
 
-		let predecessorSignature = try predecessorAgent.signer(
-			//			.signAsPredecessor(
-			newAgentData
-				.predecessorSigningFormat(
-					predecessor: predecessorAgent.publicKey
-				)
-				.wireFormat
+		let newAgentSignature = try newAgent.privateKey.signer(
+			try handoffContent.activeAgentBody.wireFormat
 		)
 
-		let successorSignature = try newAgent.signer(
-			newAgentData
-				.successorSigningFormat(knownAgent: predecessorAgent.publicKey)
-				.wireFormat
+		let package = AnchorHandoff.Package(
+			first: handoffContent,
+			second: activeAnchorSignature,  //active anchor
+			third: newAgentSignature  //new agent
+		)
+
+		let encodedPackage = try package.wireFormat
+		let retiredAgentSignature = try retiredAgent.signer(
+			try AnchorHandoff.RetiredAgentBody(
+				encodedPackage: encodedPackage,
+				mlsUpdateDigest: mlsUpdateDigest
+			).wireFormat
 		)
 
 		return .init(
-			newAnchor: nil,
-			newAgent: .init(
-				newAgent: .init(
-					anchorDelegation: .init(agentKey: newAgent.publicKey),
-					agentUpdate: agentUpdate
-				),
-				predecessorSignature: predecessorSignature,
-				successorSignature: successorSignature,
-				anchorSignature: anchorSignature
-			)
+			first: retiredAgentSignature,
+			second: encodedPackage
 		)
 	}
 }
