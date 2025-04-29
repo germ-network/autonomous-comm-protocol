@@ -26,7 +26,6 @@ public enum AnchorTypes: UInt16, Sendable {
 //for simplicity of decoding, pulling out the
 //anchor key
 public struct AnchorAttestation {
-	static let discriminator = "anchor"
 	public let anchorType: AnchorTypes
 	public let anchorTo: AnchorTo
 	public let previousAnchor: AnchorPublicKey?
@@ -39,15 +38,6 @@ public struct AnchorAttestation {
 		let fifth: TypedKeyMaterial?
 	}
 
-	func formatForSigning(anchorKey: AnchorPublicKey) -> Format {
-		.init(
-			first: Self.discriminator,
-			second: anchorType.rawValue,
-			third: anchorTo.stableEncoded,
-			fourth: anchorKey.archive,
-			fifth: previousAnchor?.archive
-		)
-	}
 }
 
 extension AnchorAttestation: LinearEncodedTriple {
@@ -79,16 +69,3 @@ extension AnchorAttestation: LinearEncodedTriple {
 		}
 	}
 }
-
-//extension AnchorAttestation: LinearEncodedTriple {
-//	public var first: TypedKeyMaterial { publicKey.archive }
-//	public var second: Contents { signedContents.content }
-//	public var third: TypedSignature { signedContents.signature }
-//
-//	public init(first: First, second: Second, third: Third) throws {
-//		self.init(
-//			publicKey: try .init(archive: first),
-//			signedContents: .init(content: second, signature: third)
-//		)
-//	}
-//}

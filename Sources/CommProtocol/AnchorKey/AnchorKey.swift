@@ -76,10 +76,6 @@ public struct AnchorPublicKey: Sendable {
 			)
 	}
 
-	var formatter: @Sendable (AnchorAttestation) throws -> Data {
-		{ try $0.formatForSigning(anchorKey: self).wireFormat }
-	}
-
 	//signature, data
 	var typedVerifier: @Sendable (TypedSignature, Data) -> Bool {
 		{ signature, body in
