@@ -79,6 +79,9 @@ struct AnchorAPITests {
 			anchorHandoff: handoff,
 			mlsUpdateDigest: mockUpdateDigest
 		)
+		#expect(verifiedHandoff.newAnchor == nil)
+		#expect(verifiedHandoff.newAgent == alexHandoffAgent.publicKey)
 
+		//Finally, blair performs a full rollover
 	}
 }

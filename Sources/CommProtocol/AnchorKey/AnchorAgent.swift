@@ -80,7 +80,7 @@ extension PublicAnchorAgent {
 
 		let content = verifiedPackage.first
 		let newAnchor = try verify(newAnchor: content.second)
-		let activeAnchor = newAnchor?.1 ?? anchorkey
+		let activeAnchor = newAnchor?.publicKey ?? anchorkey
 
 		guard
 			activeAnchor
@@ -105,15 +105,15 @@ extension PublicAnchorAgent {
 		}
 
 		return .init(
-			newAnchor: newAnchor?.0,
+			newAnchor: newAnchor,
 			newAgent: newAgentKey,
 			newAgentUpdate: content.first.second
 		)
 	}
 
-	private func verify(newAnchor: AnchorHandoff.NewAnchor?) throws -> (
-		AnchorHandoff.NewAnchor.Content, AnchorPublicKey
-	)? {
+	private func verify(
+		newAnchor: AnchorHandoff.NewAnchor?
+	) throws -> PublicAnchor? {
 		guard let newAnchor else { return nil }
 		let content = newAnchor.first
 		guard
@@ -127,7 +127,10 @@ extension PublicAnchorAgent {
 
 		let newAnchorKey = try AnchorPublicKey(archive: content.first)
 
-		return (content, newAnchorKey)
+		return .init(
+			publicKey: newAnchorKey,
+			verified: content.second
+		)
 	}
 
 	private func verifyPackage(

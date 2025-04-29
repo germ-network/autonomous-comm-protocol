@@ -80,7 +80,7 @@ extension AnchorHandoff {
 
 			var retiredAnchorBody: RetiredAnchorBody {
 				.init(
-					first: RetiredAgentBody.discriminator,
+					first: RetiredAnchorBody.discriminator,
 					second: self
 				)
 			}
@@ -110,9 +110,9 @@ extension AnchorHandoff {
 	}
 
 	public struct Verified {
-		let newAnchor: NewAnchor.Content?
-		let newAgent: AgentPublicKey
-		let newAgentUpdate: AgentUpdate
+		public let newAnchor: PublicAnchor?
+		public let newAgent: AgentPublicKey
+		public let newAgentUpdate: AgentUpdate
 	}
 }
 
@@ -165,134 +165,5 @@ extension AnchorHandoff {
 			self.third = mlsUpdateDigest
 			self.fourth = knownAgent.id
 		}
-	}
-}
-
-public struct AnchorHandoffDep {
-	let newAnchor: Anchor?
-	let newAgent: Agent
-}
-
-//MARK: Types
-extension AnchorHandoffDep {
-	public struct Anchor {
-		//new identity data
-		let newAnchor: NewData
-		//existing identity signature
-		let predecessorSignature: TypedSignature
-		//new identity signature, covering the AnchorAttestation, is included
-		//in the AnchorHandoff.Anchor.anchorSignature signature
-
-		public struct NewData {
-			let publicKey: AnchorPublicKey
-			let attestation: AnchorAttestation
-		}
-
-		struct PredecessorFormat: LinearEncodedTriple {
-			static let discriminator = "AnchorHandoff.Anchor.PredecessorFormat"
-			let first: String
-			let second: TypedKeyMaterial  //prececessor
-			let third: TypedKeyMaterial  //successor
-		}
-
-		func predecessorSigningFormat(predecessor: AnchorPublicKey) throws
-			-> PredecessorFormat
-		{
-			PredecessorFormat(
-				first: PredecessorFormat.discriminator,
-				second: predecessor.archive,
-				third: newAnchor.publicKey.archive
-			)
-		}
-	}
-}
-
-extension AnchorHandoffDep {
-	public struct Agent {
-		let newAgent: NewData
-		let predecessorSignature: TypedSignature
-		let successorSignature: TypedSignature
-		//covers the previous signature
-		let anchorSignature: TypedSignature
-
-		struct NewData {
-			static private let discriminator = "AnchorHandoff.Agent.NewData"
-
-			let anchorDelegation: AnchorDelegation
-			let agentUpdate: AgentUpdate  //semVer, isAppClip, addresses
-
-			struct PredecessorFormat: LinearEncodedTriple {
-				static let discriminator =
-					"AnchorHandoff.Agent.NewData.PredecessorFormat"
-				let first: String
-				let second: TypedKeyMaterial  //predecessor
-				let third: TypedKeyMaterial  //successor
-			}
-			func predecessorSigningFormat(
-				predecessor: AgentPublicKey
-			) -> PredecessorFormat {
-				.init(
-					first: PredecessorFormat.discriminator,
-					second: predecessor.id,
-					third: anchorDelegation.agentKey.id
-				)
-			}
-
-			struct SuccessorFormat: LinearEncodedQuad {
-				static let discriminator =
-					"AnchorHandoff.Agent.NewData.SuccessorFormat"
-				let first: String
-				let second: TypedKeyMaterial  //predecessor anchorKey.archive
-				//AnchorDelegation.formatForSigning
-				let third: AnchorDelegation.Format
-				let fourth: AgentUpdate
-			}
-			func successorSigningFormat(knownAgent: AgentPublicKey) -> SuccessorFormat {
-				.init(
-					first: SuccessorFormat.discriminator,
-					second: knownAgent.id,
-					third: anchorDelegation.formatForSigning(
-						delegationType: .steady),
-					fourth: agentUpdate
-				)
-
-			}
-
-			struct AnchorFormat: LinearEncodedQuad {
-				static let discriminator =
-					"AnchorHandoff.Agent.NewData.AnchorFormat"
-				let first: String
-				//previous AnchorPublicKey if differernt
-				let second: TypedKeyMaterial?
-				let third: AnchorAttestation.Format
-				//anchorDelegation.formatForSigning
-				let fourth: AnchorDelegation.Format
-			}
-			func anchorSigningFormat(
-				newAnchorKey: AnchorPublicKey,
-				anchorAttestation: AnchorAttestation,
-				replacing: AnchorPublicKey?
-			) -> AnchorFormat {
-				.init(
-					first: AnchorFormat.discriminator,
-					second: replacing?.archive,
-					third:
-						anchorAttestation
-						.formatForSigning(anchorKey: newAnchorKey),
-					fourth: anchorDelegation.formatForSigning(
-						delegationType: .steady)
-				)
-			}
-		}
-	}
-}
-
-extension AnchorHandoffDep.Agent.NewData: LinearEncodedPair {
-	public var first: TypedKeyMaterial { anchorDelegation.agentKey.id }
-	public var second: AgentUpdate { agentUpdate }
-
-	init(first: First, second: Second, ) throws {
-		self.anchorDelegation = .init(agentKey: try .init(archive: first))
-		self.agentUpdate = second
 	}
 }
