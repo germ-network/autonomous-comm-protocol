@@ -15,7 +15,7 @@ public protocol AnchorTo {
 }
 
 extension AnchorTo {
-	var type: AnchorTypes { Swift.type(of: self).anchorType }
+	public var type: AnchorTypes { Swift.type(of: self).anchorType }
 }
 
 public enum AnchorTypes: UInt16, Sendable {
