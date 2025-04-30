@@ -29,7 +29,7 @@ public struct AnchorAttestation {
 	public let anchorType: AnchorTypes
 	public let anchorTo: AnchorTo
 
-	init(anchorTo: AnchorTo) {
+	public init(anchorTo: AnchorTo) {
 		self.anchorType = anchorTo.type
 		self.anchorTo = anchorTo
 	}
