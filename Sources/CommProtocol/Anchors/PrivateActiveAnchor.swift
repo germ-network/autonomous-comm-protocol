@@ -19,7 +19,7 @@ public struct PrivateActiveAnchor {
 		let handoff: AnchorHandoff.NewAnchor
 	}
 
-	public static func create(for destination: AnchorTo) throws -> Self {
+	public static func create(for destination: AnchorTo) -> Self {
 		let anchorPrivateKey = AnchorPrivateKey()
 		let attestationContents = AnchorAttestation(anchorTo: destination)
 

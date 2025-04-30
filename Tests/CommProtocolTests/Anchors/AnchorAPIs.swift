@@ -16,8 +16,8 @@ struct AnchorAPITests {
 	let blairPrivateAnchor: PrivateActiveAnchor
 
 	init() throws {
-		alexPrivateAnchor = try .create(for: alexDID)
-		blairPrivateAnchor = try .create(for: blairDID)
+		alexPrivateAnchor = .create(for: alexDID)
+		blairPrivateAnchor = .create(for: blairDID)
 	}
 
 	@Test func testAnchorExchange() throws {
