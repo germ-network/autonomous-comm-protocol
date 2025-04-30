@@ -19,12 +19,9 @@ public struct PrivateActiveAnchor {
 		let handoff: AnchorHandoff.NewAnchor
 	}
 
-	public static func create(for did: ATProtoDID) throws -> Self {
+	public static func create(for destination: AnchorTo) throws -> Self {
 		let anchorPrivateKey = AnchorPrivateKey()
-		let attestationContents = AnchorAttestation(
-			anchorType: .atProto,
-			anchorTo: did
-		)
+		let attestationContents = AnchorAttestation(anchorTo: destination)
 
 		return .init(
 			privateKey: anchorPrivateKey,
@@ -65,8 +62,7 @@ public struct PrivateActiveAnchor {
 	public func handOff() throws -> PrivateActiveAnchor {
 		let newAnchor = AnchorPrivateKey()
 		let attestationContents = AnchorAttestation(
-			anchorType: .atProto,
-			anchorTo: attestation.anchorTo,
+			anchorTo: attestation.anchorTo
 		)
 
 		let content = AnchorHandoff.NewAnchor.Content(

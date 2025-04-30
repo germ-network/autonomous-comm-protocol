@@ -28,6 +28,11 @@ public enum AnchorTypes: UInt16, Sendable {
 public struct AnchorAttestation {
 	public let anchorType: AnchorTypes
 	public let anchorTo: AnchorTo
+
+	init(anchorTo: AnchorTo) {
+		self.anchorType = anchorTo.type
+		self.anchorTo = anchorTo
+	}
 }
 
 extension AnchorAttestation {
@@ -56,12 +61,9 @@ extension AnchorAttestation: LinearEncodedPair {
 		first: UInt16,
 		second: Data,
 	) throws {
-		let (type, anchorTo) = try Self.anchorToFactory(type: first, encoded: second)
-
-		self.init(
-			anchorType: type,
-			anchorTo: anchorTo,
-		)
+		(anchorType, anchorTo) =
+			try Self
+			.anchorToFactory(type: first, encoded: second)
 	}
 
 	static func anchorToFactory(type: UInt16, encoded: Data) throws -> (AnchorTypes, AnchorTo) {
