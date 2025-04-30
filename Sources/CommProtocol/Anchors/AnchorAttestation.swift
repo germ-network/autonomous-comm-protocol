@@ -36,7 +36,7 @@ public struct AnchorAttestation {
 }
 
 extension AnchorAttestation {
-	public struct Archive: Codable {
+	public struct Archive: Codable, Hashable {
 		let anchorType: UInt16
 		let anchorTo: Data
 	}

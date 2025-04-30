@@ -11,7 +11,7 @@ import Foundation
 public struct PrivateActiveAnchor {
 	let privateKey: AnchorPrivateKey
 	public let publicKey: AnchorPublicKey
-	let attestation: AnchorAttestation
+	public let attestation: AnchorAttestation
 	let handoff: Continuity?
 
 	struct Continuity {
