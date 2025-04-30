@@ -41,7 +41,7 @@ extension AnchorAttestation {
 		let anchorTo: Data
 	}
 
-	var archive: Archive {
+	public var archive: Archive {
 		.init(anchorType: anchorType.rawValue, anchorTo: anchorTo.stableEncoded)
 	}
 
