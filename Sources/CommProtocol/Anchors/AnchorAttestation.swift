@@ -45,7 +45,7 @@ extension AnchorAttestation {
 		.init(anchorType: anchorType.rawValue, anchorTo: anchorTo.stableEncoded)
 	}
 
-	init(archive: Archive) throws {
+	public init(archive: Archive) throws {
 		(anchorType, anchorTo) = try AnchorAttestation.anchorToFactory(
 			type: archive.anchorType,
 			encoded: archive.anchorTo
