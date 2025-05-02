@@ -153,13 +153,15 @@ extension PrivateActiveAnchor {
 	public func createHello(
 		agentVersion: SemanticVersion,
 		mlsKeyPackages: [Data],
+		newAgentKey: AgentPrivateKey,
 		seed: SymmetricKey
 	) throws -> (PrivateAnchorAgent, Data) {
 		let derivedKey = publicKey.deriveKey(with: seed)
 
 		let (newAgent, anchorHello) = try createHello(
 			agentVersion: agentVersion,
-			mlsKeyPackages: mlsKeyPackages
+			mlsKeyPackages: mlsKeyPackages,
+			newAgentKey: newAgentKey
 		)
 
 		let encryptedHello = try ChaChaPoly.seal(
@@ -173,20 +175,19 @@ extension PrivateActiveAnchor {
 	//not public, we'll wrap this in a public function that encrypts
 	func createHello(
 		agentVersion: SemanticVersion,
-		mlsKeyPackages: [Data]
+		mlsKeyPackages: [Data],
+		newAgentKey: AgentPrivateKey
 	) throws -> (PrivateAnchorAgent, AnchorHello) {
-		let newAgent = AgentPrivateKey()
-
 		let content = AnchorHello.Content(
 			first: attestation,
-			second: newAgent.publicKey.id,
+			second: newAgentKey.publicKey.id,
 			third: agentVersion,
 			fourth: mlsKeyPackages
 		)
 
 		let package = AnchorHello.Package(
 			first: content,
-			second: try newAgent.signer(content.agentSignatureBody().wireFormat)
+			second: try newAgentKey.signer(content.agentSignatureBody().wireFormat)
 		)
 
 		let outerSignature = try privateKey.signer(
@@ -203,7 +204,7 @@ extension PrivateActiveAnchor {
 
 		return (
 			.init(
-				privateKey: newAgent,
+				privateKey: newAgentKey,
 				anchorPublicKey: publicKey,
 				source: .hello(anchorHello)
 			),

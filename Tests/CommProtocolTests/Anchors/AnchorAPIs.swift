@@ -31,6 +31,7 @@ struct AnchorAPITests {
 				agentVersion: .mock(),
 				//parse seems to fail with empty data
 				mlsKeyPackages: ["mock".utf8Data],
+				newAgentKey: .init(),
 				seed: seedKey
 			)
 
@@ -106,6 +107,7 @@ struct AnchorAPITests {
 		let (alexAgent, encryptedHello) = try restoredAlex.createHello(
 			agentVersion: .mock(),
 			mlsKeyPackages: ["mock".utf8Data],
+			newAgentKey: .init(),
 			seed: newSeed
 		)
 
