@@ -12,7 +12,7 @@ import Foundation
 //Private and Public Agent encapsulate more of the associated data
 //instead of being just a typed wrapper on
 
-struct AnchorPrivateKey: Sendable {
+public struct AnchorPrivateKey: Sendable {
 	private let privateKey: any PrivateSigningKey
 	public let publicKey: AnchorPublicKey
 

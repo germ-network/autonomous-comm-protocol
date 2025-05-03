@@ -9,7 +9,7 @@ import CryptoKit
 import Foundation
 
 public struct PrivateActiveAnchor {
-	let privateKey: AnchorPrivateKey
+	public let privateKey: AnchorPrivateKey
 	public let publicKey: AnchorPublicKey
 	public let attestation: AnchorAttestation
 	let handoff: Continuity?
