@@ -56,6 +56,13 @@ public struct AnchorPrivateKey: Sendable {
 
 		}
 	}
+	
+	public func sign(over body: Data) throws -> TypedSignature {
+		.init(
+			signingAlgorithm: type,
+			signature: try privateKey.signature(for: body)
+		)
+	}
 }
 
 public struct AnchorPublicKey: Sendable {
