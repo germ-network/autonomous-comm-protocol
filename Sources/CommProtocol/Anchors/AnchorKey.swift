@@ -228,3 +228,11 @@ extension AnchorPublicKey: Equatable {
 		lhs.wireFormat == rhs.wireFormat
 	}
 }
+
+extension AnchorPublicKey: Hashable {
+	//MARK: Hashable
+	public func hash(into hasher: inout Hasher) {
+		hasher.combine("Anchor Public Key")
+		hasher.combine(archive)
+	}
+}
