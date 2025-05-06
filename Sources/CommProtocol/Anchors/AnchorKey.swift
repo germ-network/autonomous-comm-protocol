@@ -77,11 +77,11 @@ public struct AnchorPublicKey: Sendable {
 		archive = .init(typedKey: publicKey)
 	}
 
-	init(wireFormat: Data) throws {
+	public init(wireFormat: Data) throws {
 		try self.init(archive: .init(wireFormat: wireFormat))
 	}
 
-	init(archive: TypedKeyMaterial) throws {
+	public init(archive: TypedKeyMaterial) throws {
 		switch archive.algorithm {
 		case .curve25519Signing:
 			self.init(
