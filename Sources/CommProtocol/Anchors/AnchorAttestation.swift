@@ -37,8 +37,13 @@ public struct AnchorAttestation {
 
 extension AnchorAttestation {
 	public struct Archive: Codable, Hashable, Sendable {
-		let anchorType: UInt16
-		let anchorTo: Data
+		public let anchorType: UInt16
+		public let anchorTo: Data
+
+		public init(anchorType: UInt16, anchorTo: Data) {
+			self.anchorType = anchorType
+			self.anchorTo = anchorTo
+		}
 	}
 
 	public var archive: Archive {
