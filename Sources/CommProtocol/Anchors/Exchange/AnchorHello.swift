@@ -71,10 +71,46 @@ extension AnchorHello {
 			)
 		}
 	}
+}
 
+extension AnchorHello {
 	public struct Verified {
 		public let agent: PublicAnchorAgent
 		public let version: SemanticVersion
 		public let mlsKeyPackages: [Data]
+
+		init(
+			agent: PublicAnchorAgent,
+			version: SemanticVersion,
+			mlsKeyPackages: [Data]
+		) {
+			self.agent = agent
+			self.version = version
+			self.mlsKeyPackages = mlsKeyPackages
+		}
+
+		struct Archive: Codable {
+			public let agent: PublicAnchorAgent.Archive
+			public let version: Data
+			public let mlsKeyPackages: [Data]
+		}
+
+		var archive: Archive {
+			get throws {
+				.init(
+					agent: agent.archive,
+					version: try version.wireFormat,
+					mlsKeyPackages: mlsKeyPackages
+				)
+			}
+		}
+
+		init(archive: Archive) throws {
+			self.init(
+				agent: try .init(archive: archive.agent),
+				version: try .finalParse(archive.version),
+				mlsKeyPackages: archive.mlsKeyPackages
+			)
+		}
 	}
 }

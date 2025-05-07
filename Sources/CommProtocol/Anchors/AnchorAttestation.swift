@@ -85,7 +85,7 @@ extension AnchorAttestation: LinearEncodedPair {
 extension AnchorAttestation.Archive: LinearEncodedPair {
 	public var first: UInt16 { anchorType }
 	public var second: Data { anchorTo }
-	
+
 	public init(first: UInt16, second: Data) throws {
 		self.init(anchorType: first, anchorTo: second)
 	}

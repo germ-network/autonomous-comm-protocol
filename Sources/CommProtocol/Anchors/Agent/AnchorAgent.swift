@@ -169,7 +169,7 @@ extension PublicAnchorAgent {
 }
 
 extension PublicAnchorAgent {
-	public struct Archive {
+	public struct Archive: Codable {
 		let anchor: PublicAnchor.Archive
 		let agent: Data
 	}
