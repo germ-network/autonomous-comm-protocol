@@ -89,13 +89,13 @@ extension AnchorHello {
 			self.mlsKeyPackages = mlsKeyPackages
 		}
 
-		struct Archive: Codable {
+		public struct Archive: Codable {
 			public let agent: PublicAnchorAgent.Archive
 			public let version: Data
 			public let mlsKeyPackages: [Data]
 		}
 
-		var archive: Archive {
+		public var archive: Archive {
 			get throws {
 				.init(
 					agent: agent.archive,
@@ -105,7 +105,7 @@ extension AnchorHello {
 			}
 		}
 
-		init(archive: Archive) throws {
+		public init(archive: Archive) throws {
 			self.init(
 				agent: try .init(archive: archive.agent),
 				version: try .finalParse(archive.version),
