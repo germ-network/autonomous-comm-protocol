@@ -25,7 +25,7 @@ public enum AnchorTypes: UInt16, Sendable {
 //The body, analogous to CoreIdentity
 //for simplicity of decoding, pulling out the
 //anchor key
-public struct AnchorAttestation {
+public struct AnchorAttestation: Sendable {
 	public let anchorType: AnchorTypes
 	public let anchorTo: AnchorTo
 
