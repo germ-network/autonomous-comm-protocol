@@ -26,7 +26,7 @@ public struct ATProtoDID: Equatable {
 		Constants.prefix + method.rawValue + ":" + identifier
 	}
 
-	public enum Methods: String, CaseIterable {
+	public enum Methods: String, CaseIterable, Sendable {
 		case plc
 		case web
 

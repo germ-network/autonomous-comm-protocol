@@ -8,7 +8,7 @@
 import CryptoKit
 import Foundation
 
-public protocol AnchorTo {
+public protocol AnchorTo: Sendable {
 	static var anchorType: AnchorTypes { get }
 	init(type: AnchorTypes, encoded: Data) throws
 	var stableEncoded: Data { get }
