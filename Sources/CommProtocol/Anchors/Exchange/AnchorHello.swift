@@ -26,11 +26,12 @@ public struct AnchorHello: LinearEncodedPair {
 }
 
 extension AnchorHello {
-	struct Content: LinearEncodedQuad {
+	struct Content: LinearEncodedQuintuple {
 		let first: AnchorAttestation
 		let second: TypedKeyMaterial  //AgentPublicKey
 		let third: SemanticVersion
 		let fourth: [Data]  //mlsKeyPackages
+		let fifth: AnchorPolicy
 
 		func agentSignatureBody() -> AgentSignatureBody {
 			.init(
@@ -78,21 +79,25 @@ extension AnchorHello {
 		public let agent: PublicAnchorAgent
 		public let version: SemanticVersion
 		public let mlsKeyPackages: [Data]
+		public let policy: AnchorPolicy
 
 		init(
 			agent: PublicAnchorAgent,
 			version: SemanticVersion,
-			mlsKeyPackages: [Data]
+			mlsKeyPackages: [Data],
+			policy: AnchorPolicy
 		) {
 			self.agent = agent
 			self.version = version
 			self.mlsKeyPackages = mlsKeyPackages
+			self.policy = policy
 		}
 
 		public struct Archive: Codable {
 			public let agent: PublicAnchorAgent.Archive
 			public let version: Data
 			public let mlsKeyPackages: [Data]
+			public let policy: UInt8
 		}
 
 		public var archive: Archive {
@@ -100,16 +105,22 @@ extension AnchorHello {
 				.init(
 					agent: agent.archive,
 					version: try version.wireFormat,
-					mlsKeyPackages: mlsKeyPackages
+					mlsKeyPackages: mlsKeyPackages,
+					policy: policy.rawValue
 				)
 			}
 		}
 
 		public init(archive: Archive) throws {
+			guard let policy = AnchorPolicy(rawValue: archive.policy) else {
+				throw ProtocolError.archiveIncorrect
+			}
+			
 			self.init(
 				agent: try .init(archive: archive.agent),
 				version: try .finalParse(archive.version),
-				mlsKeyPackages: archive.mlsKeyPackages
+				mlsKeyPackages: archive.mlsKeyPackages,
+				policy: policy
 			)
 		}
 	}

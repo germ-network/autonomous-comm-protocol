@@ -130,7 +130,7 @@ extension LinearEncodingError: LocalizedError {
 public protocol LinearEnum: RawRepresentable<UInt8>, LinearEncodable {}
 
 extension LinearEnum {
-	static func parse(
+	public static func parse(
 		_ input: Data
 	) throws(LinearEncodingError) -> (Self, Int) {
 		guard let prefix = input.first, let value = Self(rawValue: prefix) else {

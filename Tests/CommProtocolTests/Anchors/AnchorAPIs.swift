@@ -32,7 +32,8 @@ struct AnchorAPITests {
 				//parse seems to fail with empty data
 				mlsKeyPackages: ["mock".utf8Data],
 				newAgentKey: .init(),
-				seed: seedKey
+				seed: seedKey,
+				policy: .closed
 			)
 
 		//Blair consumes the hello
@@ -108,7 +109,8 @@ struct AnchorAPITests {
 			agentVersion: .mock(),
 			mlsKeyPackages: ["mock".utf8Data],
 			newAgentKey: .init(),
-			seed: newSeed
+			seed: newSeed,
+			policy: .closed
 		)
 
 		let alexAgentArchive = try alexAgent.archive

@@ -147,7 +147,8 @@ extension AnchorPublicKey {
 				agentKey: newAgentKey
 			),
 			version: content.third,
-			mlsKeyPackages: content.fourth
+			mlsKeyPackages: content.fourth,
+			policy: content.fifth
 		)
 	}
 

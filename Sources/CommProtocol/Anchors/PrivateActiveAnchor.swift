@@ -154,14 +154,16 @@ extension PrivateActiveAnchor {
 		agentVersion: SemanticVersion,
 		mlsKeyPackages: [Data],
 		newAgentKey: AgentPrivateKey,
-		seed: SymmetricKey
+		seed: SymmetricKey,
+		policy: AnchorPolicy,
 	) throws -> (PrivateAnchorAgent, Data) {
 		let derivedKey = publicKey.deriveKey(with: seed)
 
 		let (newAgent, anchorHello) = try createHello(
 			agentVersion: agentVersion,
 			mlsKeyPackages: mlsKeyPackages,
-			newAgentKey: newAgentKey
+			newAgentKey: newAgentKey,
+			policy: policy
 		)
 
 		let encryptedHello = try ChaChaPoly.seal(
@@ -176,13 +178,15 @@ extension PrivateActiveAnchor {
 	func createHello(
 		agentVersion: SemanticVersion,
 		mlsKeyPackages: [Data],
-		newAgentKey: AgentPrivateKey
+		newAgentKey: AgentPrivateKey,
+		policy: AnchorPolicy
 	) throws -> (PrivateAnchorAgent, AnchorHello) {
 		let content = AnchorHello.Content(
 			first: attestation,
 			second: newAgentKey.publicKey.id,
 			third: agentVersion,
-			fourth: mlsKeyPackages
+			fourth: mlsKeyPackages,
+			fifth: policy
 		)
 
 		let package = AnchorHello.Package(
