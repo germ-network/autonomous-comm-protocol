@@ -74,7 +74,7 @@ extension AnchorHello {
 }
 
 extension AnchorHello {
-	public struct Verified {
+	public struct Verified: Sendable {
 		public let agent: PublicAnchorAgent
 		public let version: SemanticVersion
 		public let mlsKeyPackages: [Data]

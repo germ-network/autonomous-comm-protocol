@@ -7,7 +7,7 @@
 
 import Foundation
 
-public struct PublicAnchor {
+public struct PublicAnchor: Sendable {
 	public let publicKey: AnchorPublicKey
 	public let attestation: AnchorAttestation
 }
