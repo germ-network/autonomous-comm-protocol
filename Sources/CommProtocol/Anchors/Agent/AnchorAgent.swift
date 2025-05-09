@@ -141,8 +141,7 @@ extension PublicAnchorAgent {
 
 		return .init(
 			publicKey: newAnchorKey,
-			attestation: content.second,
-			predecessor: self.anchorKey
+			attestation: content.second
 		)
 	}
 

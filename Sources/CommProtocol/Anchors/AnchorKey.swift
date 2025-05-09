@@ -141,18 +141,17 @@ extension AnchorPublicKey {
 		}
 		let content = verifiedPackage.first
 
-		let predecessor = try verifiedPackage.first.second
-			.verify(successor: self)
+		let publicAnchor = PublicAnchor(
+			publicKey: self,
+			attestation: content.first
+		)
 
 		return .init(
 			agent: .init(
-				anchor: .init(
-					publicKey: self,
-					attestation: content.first,
-					predecessor: predecessor
-				),
+				anchor: publicAnchor,
 				agentKey: newAgentKey
 			),
+			succession: try publicAnchor.verify(proofs: content.second),
 			policy: content.third,
 			version: content.fourth.second,
 			mlsKeyPackages: content.fourth.third,
@@ -204,8 +203,7 @@ extension AnchorPublicKey {
 			agent: .init(
 				anchor: .init(
 					publicKey: self,
-					attestation: content.first,
-					predecessor: nil
+					attestation: content.first
 				),
 				agentKey: newAgentKey
 			),
@@ -229,6 +227,50 @@ extension AnchorPublicKey {
 		}
 
 		return try .finalParse(reply.second)
+	}
+}
+
+extension PublicAnchor {
+	//is this a chain of proofs that terminates with me?
+	//return the verified chain and let the caller match with known predecessor
+	func verify(proofs: [AnchorSuccession.Proof]) throws -> [AnchorPublicKey] {
+		//		guard let final = proofs.last else {
+		//			return []
+		//		}
+
+		var tailKey = self.publicKey
+		var result: [AnchorPublicKey] = []
+
+		for proof in proofs.reversed() {
+			let previousKey = try tailKey.verify(
+				successionFrom: proof,
+				attestation: attestation
+			)
+			result = [previousKey] + result
+			tailKey = previousKey
+		}
+		return result
+	}
+}
+
+extension AnchorPublicKey {
+	//returns the previous key
+	func verify(
+		successionFrom: AnchorSuccession.Proof,
+		attestation: AnchorAttestation
+	) throws -> AnchorPublicKey {
+		let predecessor = try AnchorPublicKey(archive: successionFrom.predecessor)
+		let result = verifier(
+			successionFrom.signature,
+			try AnchorSuccession.signatureBody(
+				attestation: attestation,
+				predecessor: predecessor,
+				successor: self,
+
+			)
+		)
+		guard result else { throw ProtocolError.authenticationError }
+		return predecessor
 	}
 }
 

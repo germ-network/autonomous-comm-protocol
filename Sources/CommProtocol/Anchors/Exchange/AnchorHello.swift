@@ -28,7 +28,7 @@ public struct AnchorHello: LinearEncodedPair {
 extension AnchorHello {
 	struct Content: LinearEncodedQuad {
 		let first: AnchorAttestation
-		let second: AnchorSuccession?
+		let second: [AnchorSuccession.Proof]
 		let third: AnchorPolicy
 		let fourth: AgentData
 
@@ -83,17 +83,20 @@ extension AnchorHello {
 extension AnchorHello {
 	public struct Verified: Sendable {
 		public let agent: PublicAnchorAgent
+		public let succession: [AnchorPublicKey]
 		public let policy: AnchorPolicy
 		public let version: SemanticVersion
 		public let mlsKeyPackages: [Data]
 
 		init(
 			agent: PublicAnchorAgent,
+			succession: [AnchorPublicKey],
 			policy: AnchorPolicy,
 			version: SemanticVersion,
 			mlsKeyPackages: [Data],
 		) {
 			self.agent = agent
+			self.succession = succession
 			self.policy = policy
 			self.version = version
 			self.mlsKeyPackages = mlsKeyPackages
@@ -101,6 +104,7 @@ extension AnchorHello {
 
 		public struct Archive: Codable {
 			public let agent: PublicAnchorAgent.Archive
+			public let succession: [Data]
 			public let version: Data
 			public let mlsKeyPackages: [Data]
 			public let policy: UInt8
@@ -110,6 +114,7 @@ extension AnchorHello {
 			get throws {
 				.init(
 					agent: agent.archive,
+					succession: succession.map { $0.wireFormat },
 					version: try version.wireFormat,
 					mlsKeyPackages: mlsKeyPackages,
 					policy: policy.rawValue
@@ -124,6 +129,8 @@ extension AnchorHello {
 
 			self.init(
 				agent: try .init(archive: archive.agent),
+				succession: archive.succession
+					.compactMap { try? .init(wireFormat: $0) },
 				policy: policy,
 				version: try .finalParse(archive.version),
 				mlsKeyPackages: archive.mlsKeyPackages,

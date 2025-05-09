@@ -183,7 +183,7 @@ extension PrivateActiveAnchor {
 	) throws -> (PrivateAnchorAgent, AnchorHello) {
 		let content = AnchorHello.Content(
 			first: attestation,
-			second: nil,
+			second: [],
 			third: policy,
 			fourth: .init(
 				first: newAgentKey.publicKey.id,

@@ -182,4 +182,8 @@ struct AnchorAPITests {
 		//		)
 		//		#expect(verifiedBlairHandoff.newAnchor == true)
 	}
+
+	@Test func testAgentLifecycle() {
+
+	}
 }

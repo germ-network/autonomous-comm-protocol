@@ -7,58 +7,45 @@
 
 import Foundation
 
-//embed this in content signed by the new key
-public struct AnchorSuccession: LinearEncodedPair, Sendable {
+//We start with a signature by the previous over the next, covering the context
+//This has several presentations
+// - with the next key for a handoff
+// - with the previous key, recursive, for a continuity proof
+public enum AnchorSuccession {  //enum for namespace
 	static let discriminator = "AnchorSuccession"
-	public let first: TypedKeyMaterial  //previous key
-	public let second: TypedSignature  //over first + a discriminator
 
-	public init(first: TypedKeyMaterial, second: TypedSignature) {
-		self.first = first
-		self.second = second
+	private struct SignatureBody: LinearEncodedQuad {
+		let first: String  //Self.discriminator
+		let second: AnchorAttestation.Archive
+		let third: TypedKeyMaterial  //predecessor
+		let fourth: TypedKeyMaterial  //successor
 	}
 
 	static func signatureBody(
+		attestation: AnchorAttestation,
 		predecessor: AnchorPublicKey,
-		successor: AnchorPublicKey
-	) -> Data {
-		discriminator.utf8Data + predecessor.wireFormat + successor.wireFormat
+		successor: AnchorPublicKey,
+	) throws -> Data {
+		try SignatureBody(
+			first: Self.discriminator,
+			second: attestation.archive,
+			third: predecessor.archive,
+			fourth: successor.archive
+		).wireFormat
+	}
+
+	//instead of a recursive structure, we store an array of them
+	public struct Proof {
+		let predecessor: TypedKeyMaterial
+		let signature: TypedSignature  //signed proof
 	}
 }
 
-extension AnchorPrivateKey {
-	func succession(to successor: AnchorPublicKey) throws -> AnchorSuccession {
-		.init(
-			first: publicKey.archive,
-			second: try signer(
-				AnchorSuccession.signatureBody(
-					predecessor: publicKey,
-					successor: successor
-				)
-			)
-		)
-	}
-}
+extension AnchorSuccession.Proof: LinearEncodedPair {
+	public var first: TypedKeyMaterial { predecessor }
+	public var second: TypedSignature { signature }
 
-extension AnchorSuccession? {
-	//returns predecessor
-	func verify(successor: AnchorPublicKey) throws -> AnchorPublicKey? {
-		guard let self else { return nil }
-		let presumedPredecessor = try AnchorPublicKey(archive: self.first)
-
-		let signatureBody = AnchorSuccession.signatureBody(
-			predecessor: presumedPredecessor,
-			successor: successor
-		)
-
-		guard
-			presumedPredecessor.verifier(
-				self.second,
-				signatureBody
-			)
-		else {
-			throw ProtocolError.authenticationError
-		}
-		return presumedPredecessor
+	public init(first: TypedKeyMaterial, second: TypedSignature) throws {
+		self.init(predecessor: first, signature: second)
 	}
 }
