@@ -234,10 +234,6 @@ extension PublicAnchor {
 	//is this a chain of proofs that terminates with me?
 	//return the verified chain and let the caller match with known predecessor
 	func verify(proofs: [AnchorSuccession.Proof]) throws -> [AnchorPublicKey] {
-		//		guard let final = proofs.last else {
-		//			return []
-		//		}
-
 		var tailKey = self.publicKey
 		var result: [AnchorPublicKey] = []
 

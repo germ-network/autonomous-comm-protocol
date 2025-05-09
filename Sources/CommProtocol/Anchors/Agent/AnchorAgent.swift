@@ -127,21 +127,25 @@ extension PublicAnchorAgent {
 		newAnchor: AnchorHandoff.NewAnchor?
 	) throws -> PublicAnchor? {
 		guard let newAnchor else { return nil }
-		let content = newAnchor.first
+		let newAnchorKey = try AnchorPublicKey(archive: newAnchor.first)
+
 		guard
 			anchor.publicKey.verifier(
 				newAnchor.second,
-				try content.retiredAnchorBody.wireFormat
+				try AnchorSuccession
+					.signatureBody(
+						attestation: anchor.attestation,
+						predecessor: anchor.publicKey,
+						successor: newAnchorKey
+					)
 			)
 		else {
 			throw ProtocolError.authenticationError
 		}
 
-		let newAnchorKey = try AnchorPublicKey(archive: content.first)
-
 		return .init(
 			publicKey: newAnchorKey,
-			attestation: content.second
+			attestation: anchor.attestation
 		)
 	}
 

@@ -61,33 +61,9 @@ extension AnchorHandoff {
 	}
 
 	struct NewAnchor: LinearEncodedPair {
-		struct Content: LinearEncodedPair {
-			let first: TypedKeyMaterial  //AnchorPublicKey
-			let second: AnchorAttestation
-
-			init(
-				publicKey: AnchorPublicKey,
-				attestation: AnchorAttestation
-			) {
-				self.first = publicKey.archive
-				self.second = attestation
-			}
-
-			init(first: TypedKeyMaterial, second: AnchorAttestation) throws {
-				self.first = first
-				self.second = second
-			}
-
-			var retiredAnchorBody: RetiredAnchorBody {
-				.init(
-					first: RetiredAnchorBody.discriminator,
-					second: self
-				)
-			}
-
-		}
-		let first: Content
+		let first: TypedKeyMaterial
 		//if we introduce a new anchor we need the previous anchor to endorse this
+		//signature from AnchorSuccession.signatureBody
 		let second: TypedSignature
 	}
 
@@ -118,12 +94,6 @@ extension AnchorHandoff {
 
 //signature bodies
 extension AnchorHandoff {
-	struct RetiredAnchorBody: LinearEncodedPair {
-		static let discriminator = "AnchorHandoff.RetiredAnchorBody"
-		let first: String
-		let second: NewAnchor.Content
-	}
-
 	struct ActiveAnchorBody: LinearEncodedPair {
 		static let discriminator = "AnchorHandoff.ActiveAnchorBody"
 		let first: String

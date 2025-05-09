@@ -41,46 +41,27 @@ public struct PrivateActiveAnchor {
 		self.handoff = handoff
 	}
 
-	//	public func produceAnchor() throws -> (
-	//		encrypted: Data,
-	//		publicKey: AnchorPublicKey,
-	//		seed: DataIdentifier
-	//	) {
-	//		//underlying generation is from a CryptoKit symmetric key
-	//		let newSeed = DataIdentifier(width: .bits128)
-	//		let newSeedKey = SymmetricKey(data: newSeed.identifier)
-	//		let derivedKey = publicKey.deriveKey(with: newSeedKey)
-	//
-	//		let encryptedAttestation = try ChaChaPoly.seal(
-	//			try attestation.wireFormat,
-	//			using: derivedKey
-	//		).combined
-	//
-	//		return (encryptedAttestation, publicKey, newSeed)
-	//	}
-
 	public func handOff() throws -> PrivateActiveAnchor {
 		let newAnchor = AnchorPrivateKey()
-		let attestationContents = AnchorAttestation(
-			anchorTo: attestation.anchorTo
-		)
-
-		let content = AnchorHandoff.NewAnchor.Content(
-			publicKey: newAnchor.publicKey,
-			attestation: attestationContents
-		)
 
 		let signature =
 			try privateKey
-			.signer(content.retiredAnchorBody.wireFormat)
+			.signer(
+				AnchorSuccession
+					.signatureBody(
+						attestation: attestation,
+						predecessor: publicKey,
+						successor: newAnchor.publicKey
+					)
+			)
 
 		return .init(
 			privateKey: newAnchor,
-			attestation: attestationContents,
+			attestation: attestation,
 			handoff: .init(
 				previousAnchor: publicKey,
 				handoff: .init(
-					first: content,
+					first: newAnchor.publicKey.archive,
 					second: signature
 				)
 			)

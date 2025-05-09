@@ -30,18 +30,3 @@ extension PublicAnchor {
 		self.attestation = try .init(archive: archive.attestation)
 	}
 }
-
-extension AnchorPublicKey {
-	init?(optionalArchive: Data?) throws {
-		guard let optionalArchive else {
-			return nil
-		}
-		self = try .init(wireFormat: optionalArchive)
-	}
-}
-
-extension AnchorPublicKey? {
-	var optionalEncoded: Data? {
-		if let self { self.wireFormat } else { nil }
-	}
-}
