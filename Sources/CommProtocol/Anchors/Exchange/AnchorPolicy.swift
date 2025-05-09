@@ -9,5 +9,6 @@ import Foundation
 
 public enum AnchorPolicy: UInt8, LinearEnum, Sendable {
 	case closed = 0
-	case follows = 1
+	case follows
+	case open
 }

@@ -183,10 +183,13 @@ extension PrivateActiveAnchor {
 	) throws -> (PrivateAnchorAgent, AnchorHello) {
 		let content = AnchorHello.Content(
 			first: attestation,
-			second: newAgentKey.publicKey.id,
-			third: agentVersion,
-			fourth: mlsKeyPackages,
-			fifth: policy
+			second: nil,
+			third: policy,
+			fourth: .init(
+				first: newAgentKey.publicKey.id,
+				second: agentVersion,
+				third: mlsKeyPackages
+			)
 		)
 
 		let package = AnchorHello.Package(

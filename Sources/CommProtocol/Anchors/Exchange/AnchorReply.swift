@@ -33,8 +33,8 @@ extension AnchorReply {
 		let first: AnchorAttestation
 		let second: TypedKeyMaterial  //AgentPublicKey
 		let third: SemanticVersion
-		let fourth: UInt32
-		let fifth: Date
+		let fourth: UInt32  //seqNo
+		let fifth: Date  //date
 
 		func agentSignatureBody(
 			mlsWelcomeDigest: TypedDigest

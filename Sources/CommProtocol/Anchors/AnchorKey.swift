@@ -128,7 +128,7 @@ extension AnchorPublicKey {
 
 		let verifiedPackage = try verify(hello: .finalParse(decrypted))
 		let newAgentKey = try AgentPublicKey(
-			archive: verifiedPackage.first.second
+			archive: verifiedPackage.first.fourth.first
 		)
 
 		guard
@@ -141,14 +141,21 @@ extension AnchorPublicKey {
 		}
 		let content = verifiedPackage.first
 
+		let predecessor = try verifiedPackage.first.second
+			.verify(successor: self)
+
 		return .init(
 			agent: .init(
-				anchor: .init(publicKey: self, attestation: content.first),
+				anchor: .init(
+					publicKey: self,
+					attestation: content.first,
+					predecessor: predecessor
+				),
 				agentKey: newAgentKey
 			),
-			version: content.third,
-			mlsKeyPackages: content.fourth,
-			policy: content.fifth
+			policy: content.third,
+			version: content.fourth.second,
+			mlsKeyPackages: content.fourth.third,
 		)
 	}
 
@@ -197,7 +204,8 @@ extension AnchorPublicKey {
 			agent: .init(
 				anchor: .init(
 					publicKey: self,
-					attestation: content.first
+					attestation: content.first,
+					predecessor: nil
 				),
 				agentKey: newAgentKey
 			),
