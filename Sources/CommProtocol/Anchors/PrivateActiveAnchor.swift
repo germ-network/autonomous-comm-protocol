@@ -130,33 +130,9 @@ public struct PrivateActiveAnchor {
 }
 
 extension PrivateActiveAnchor {
-	//may want to reuse the seed if we eventually upload multiple keypackages
-	public func createHello(
-		agentVersion: SemanticVersion,
-		mlsKeyPackages: [Data],
-		newAgentKey: AgentPrivateKey,
-		seed: SymmetricKey,
-		policy: AnchorPolicy,
-	) throws -> (PrivateAnchorAgent, Data) {
-		let derivedKey = publicKey.deriveKey(with: seed)
-
-		let (newAgent, anchorHello) = try createHello(
-			agentVersion: agentVersion,
-			mlsKeyPackages: mlsKeyPackages,
-			newAgentKey: newAgentKey,
-			policy: policy
-		)
-
-		let encryptedHello = try ChaChaPoly.seal(
-			try anchorHello.wireFormat,
-			using: derivedKey
-		).combined
-
-		return (newAgent, encryptedHello)
-	}
 
 	//not public, we'll wrap this in a public function that encrypts
-	func createHello(
+	public func createHello(
 		agentVersion: SemanticVersion,
 		mlsKeyPackages: [Data],
 		newAgentKey: AgentPrivateKey,

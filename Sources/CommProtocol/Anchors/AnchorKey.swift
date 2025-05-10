@@ -93,16 +93,6 @@ public struct AnchorPublicKey: Sendable {
 		}
 	}
 
-	func deriveKey(with seed: SymmetricKey) -> SymmetricKey {
-		HKDF<SHA256>
-			.deriveKey(
-				inputKeyMaterial: seed,
-				salt: wireFormat,
-				info: "anchorDerivation".utf8Data,
-				outputByteCount: 32
-			)
-	}
-
 	//signature, data
 	var verifier: @Sendable (TypedSignature, Data) -> Bool {
 		{ signature, body in
@@ -116,17 +106,10 @@ public struct AnchorPublicKey: Sendable {
 
 extension AnchorPublicKey {
 	public func verify(
-		encryptedHello: Data,
-		seed: SymmetricKey
+		hello: AnchorHello,
 	) throws -> AnchorHello.Verified {
-		let derivedKey = deriveKey(with: seed)
 
-		let decrypted = try ChaChaPoly.open(
-			.init(combined: encryptedHello),
-			using: derivedKey
-		)
-
-		let verifiedPackage = try verify(hello: .finalParse(decrypted))
+		let verifiedPackage = try verifyPackage(hello: hello)
 		let newAgentKey = try AgentPublicKey(
 			archive: verifiedPackage.first.fourth.first
 		)
@@ -158,7 +141,7 @@ extension AnchorPublicKey {
 		)
 	}
 
-	private func verify(hello: AnchorHello) throws -> AnchorHello.Package {
+	private func verifyPackage(hello: AnchorHello) throws -> AnchorHello.Package {
 		guard
 			verifier(
 				hello.first,
