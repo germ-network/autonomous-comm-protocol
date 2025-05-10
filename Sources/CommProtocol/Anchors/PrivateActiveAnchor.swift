@@ -12,12 +12,7 @@ public struct PrivateActiveAnchor {
 	public let privateKey: AnchorPrivateKey
 	public let publicKey: AnchorPublicKey
 	public let attestation: AnchorAttestation
-	let handoff: Continuity?
-
-	struct Continuity {
-		let previousAnchor: AnchorPublicKey
-		let handoff: AnchorHandoff.NewAnchor
-	}
+	let handoff: AnchorHandoff.NewAnchor?
 
 	public static func create(for destination: AnchorTo) -> Self {
 		let anchorPrivateKey = AnchorPrivateKey()
@@ -33,7 +28,7 @@ public struct PrivateActiveAnchor {
 	init(
 		privateKey: AnchorPrivateKey,
 		attestation: AnchorAttestation,
-		handoff: Continuity?
+		handoff: AnchorHandoff.NewAnchor?
 	) {
 		self.privateKey = privateKey
 		self.publicKey = privateKey.publicKey
@@ -58,12 +53,9 @@ public struct PrivateActiveAnchor {
 		return .init(
 			privateKey: newAnchor,
 			attestation: attestation,
-			handoff: .init(
-				previousAnchor: publicKey,
-				handoff: .init(
-					first: newAnchor.publicKey.archive,
-					second: signature
-				)
+			handoff:  .init(
+				first: newAnchor.publicKey.archive,
+				second: signature
 			)
 		)
 	}
@@ -78,16 +70,13 @@ public struct PrivateActiveAnchor {
 		guard let handoff else {
 			throw ProtocolError.incorrectAnchorState
 		}
-		guard previousAgent.anchorPublicKey == handoff.previousAnchor else {
-			throw ProtocolError.incorrectAnchorState
-		}
 
 		let handoffContent = AnchorHandoff.Content(
 			first: .init(
 				publicKey: newAgentKey.publicKey,
 				agentUpdate: agentUpdate
 			),
-			second: handoff.handoff
+			second: handoff
 		)
 
 		let activeAnchorSignature = try privateKey.signer(
@@ -283,7 +272,7 @@ extension PrivateActiveAnchor {
 	public struct Archive: Codable {
 		public let privateKey: Data  //TypedKeyMaterial.wireformat
 		public let attestation: AnchorAttestation.Archive
-		let continuity: Continuity.Archive?
+		let handoff: Data?
 	}
 
 	public var archive: Archive {
@@ -291,7 +280,7 @@ extension PrivateActiveAnchor {
 			.init(
 				privateKey: privateKey.archive.wireFormat,
 				attestation: attestation.archive,
-				continuity: try handoff?.archive
+				handoff: try handoff?.wireFormat
 			)
 		}
 	}
@@ -302,38 +291,14 @@ extension PrivateActiveAnchor {
 		self.init(
 			privateKey: privateKey,
 			attestation: try .init(archive: archive.attestation),
-			handoff: try archive.continuity?.restored
+			handoff: try .init(optionalWireformat: archive.handoff)
 		)
 	}
 }
 
-extension PrivateActiveAnchor.Continuity {
-	struct Archive: Codable {
-		let previousAnchorKey: Data  //AnchorPublicKey.wireformat
-		let handoff: Data  //AnchorHandoff.NewAnchor.wireformat
-
-		var restored: PrivateActiveAnchor.Continuity {
-			get throws {
-				try .init(archive: self)
-			}
-		}
-	}
-
-	var archive: Archive {
-		get throws {
-			.init(
-				previousAnchorKey: previousAnchor.wireFormat,
-				handoff: try handoff.wireFormat
-			)
-		}
-	}
-
-	init(archive: Archive) throws {
-		self.previousAnchor = try .init(wireFormat: archive.previousAnchorKey)
-		self.handoff = try .finalParse(archive.handoff)
+extension AnchorHandoff.NewAnchor {
+	init?(optionalWireformat: Data?) throws {
+		guard let optionalWireformat else { return nil }
+		self = try .finalParse(optionalWireformat)
 	}
 }
-
-//public struct RetiredAnchor {
-//	let publicKey: any PublicSigningKey
-//}
