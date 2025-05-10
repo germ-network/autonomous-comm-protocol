@@ -26,7 +26,7 @@ struct AnchorAPITests {
 		let hello =
 			try alexPrivateAnchor
 			.generateHello(
-				agent: alexAgent,
+				helloAgent: alexAgent,
 				agentVersion: .mock(),
 				mlsKeyPackages: ["mock".utf8Data],
 				policy: .closed
@@ -101,7 +101,7 @@ struct AnchorAPITests {
 		let alexHello =
 			try alexPrivateAnchor
 			.generateHello(
-				agent: alexAgent,
+				helloAgent: alexAgent,
 				agentVersion: .mock(),
 				mlsKeyPackages: ["mock".utf8Data],
 				policy: .closed
@@ -180,7 +180,7 @@ struct AnchorAPITests {
 		let firstHello =
 			try alexPrivateAnchor
 			.generateHello(
-				agent: alexAgent,
+				helloAgent: alexAgent,
 				agentVersion: .mock(),
 				mlsKeyPackages: ["mock".utf8Data],
 				policy: .closed
@@ -190,7 +190,7 @@ struct AnchorAPITests {
 		let revisedHello =
 			try alexPrivateAnchor
 			.generateHello(
-				agent: alexAgent,
+				helloAgent: alexAgent,
 				agentVersion: .mock(),
 				mlsKeyPackages: ["mock".utf8Data],
 				policy: .open

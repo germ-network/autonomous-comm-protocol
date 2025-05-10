@@ -142,13 +142,13 @@ extension PrivateActiveAnchor {
 	}
 
 	public func generateHello(
-		agent: PrivateAnchorAgent,
+		helloAgent: PrivateAnchorAgent,
 		agentVersion: SemanticVersion,
 		mlsKeyPackages: [Data],
 		policy: AnchorPolicy,
 		historyFilter: DatedProof.Filter = { _ in true }
 	) throws -> AnchorHello {
-		guard case .hello(let helloInputs) = agent.source else {
+		guard case .hello(let helloInputs) = helloAgent.source else {
 			throw ProtocolError.incorrectAnchorState
 		}
 		guard helloInputs.anchorKey == publicKey else {
@@ -164,7 +164,7 @@ extension PrivateActiveAnchor {
 			second: filteredHistory,
 			third: policy,
 			fourth: .init(
-				first: agent.publicKey.id,
+				first: helloAgent.publicKey.id,
 				second: agentVersion,
 				third: mlsKeyPackages
 			)
@@ -172,7 +172,7 @@ extension PrivateActiveAnchor {
 
 		let package = AnchorHello.Package(
 			first: content,
-			second: try agent.signer(content.agentSignatureBody().wireFormat)
+			second: try helloAgent.signer(content.agentSignatureBody().wireFormat)
 		)
 
 		let outerSignature = try privateKey.signer(
