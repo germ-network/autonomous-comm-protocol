@@ -12,7 +12,7 @@ public struct PrivateActiveAnchor {
 	public let privateKey: AnchorPrivateKey
 	public let publicKey: AnchorPublicKey
 	public let attestation: AnchorAttestation
-	let handoff: AnchorHandoff.NewAnchor?
+	let history: [DatedProof]
 
 	public static func create(for destination: AnchorTo) -> Self {
 		let anchorPrivateKey = AnchorPrivateKey()
@@ -21,19 +21,19 @@ public struct PrivateActiveAnchor {
 		return .init(
 			privateKey: anchorPrivateKey,
 			attestation: attestationContents,
-			handoff: nil
+			history: []
 		)
 	}
 
 	init(
 		privateKey: AnchorPrivateKey,
 		attestation: AnchorAttestation,
-		handoff: AnchorHandoff.NewAnchor?
+		history: [DatedProof]
 	) {
 		self.privateKey = privateKey
 		self.publicKey = privateKey.publicKey
 		self.attestation = attestation
-		self.handoff = handoff
+		self.history = history
 	}
 
 	public func handOff() throws -> PrivateActiveAnchor {
@@ -53,10 +53,15 @@ public struct PrivateActiveAnchor {
 		return .init(
 			privateKey: newAnchor,
 			attestation: attestation,
-			handoff:  .init(
-				first: newAnchor.publicKey.archive,
-				second: signature
-			)
+			history: [
+				.init(
+					first: .init(
+						predecessor: publicKey.archive,
+						signature: signature
+					),
+					second: .now
+				)
+			]
 		)
 	}
 
@@ -67,7 +72,7 @@ public struct PrivateActiveAnchor {
 		agentUpdate: AgentUpdate,
 		mlsUpdateDigest: TypedDigest,
 	) throws -> (PrivateAnchorAgent, AnchorHandoff) {
-		guard let handoff else {
+		guard let handoff = history.last?.first else {
 			throw ProtocolError.incorrectAnchorState
 		}
 
@@ -76,7 +81,10 @@ public struct PrivateActiveAnchor {
 				publicKey: newAgentKey.publicKey,
 				agentUpdate: agentUpdate
 			),
-			second: handoff
+			second: .init(
+				first: publicKey.archive,
+				second: handoff.signature
+			)
 		)
 
 		let activeAnchorSignature = try privateKey.signer(
@@ -110,7 +118,6 @@ public struct PrivateActiveAnchor {
 		return (
 			.init(
 				privateKey: newAgentKey,
-				anchorPublicKey: publicKey,
 				source: .handoff(anchorHandoff)
 			),
 			anchorHandoff
@@ -119,13 +126,12 @@ public struct PrivateActiveAnchor {
 }
 
 extension PrivateActiveAnchor {
-
-	//not public, we'll wrap this in a public function that encrypts
 	public func createHello(
 		agentVersion: SemanticVersion,
 		mlsKeyPackages: [Data],
 		newAgentKey: AgentPrivateKey,
-		policy: AnchorPolicy
+		policy: AnchorPolicy,
+		historyFilter: DatedProof.Filter = { _ in true }
 	) throws -> (PrivateAnchorAgent, AnchorHello) {
 		let content = AnchorHello.Content(
 			first: attestation,
@@ -155,11 +161,21 @@ extension PrivateActiveAnchor {
 			second: try package.wireFormat
 		)
 
+		let filteredHistory =
+			history
+			.filter { historyFilter($0.second) }
+
 		return (
 			.init(
 				privateKey: newAgentKey,
-				anchorPublicKey: publicKey,
-				source: .hello(anchorHello)
+				source:
+					.hello(
+						.init(
+							anchorKey: publicKey,
+							attestation: attestation,
+							proofHistory: filteredHistory
+						)
+					)
 			),
 			anchorHello
 		)
@@ -211,7 +227,6 @@ extension PrivateActiveAnchor {
 		return (
 			.init(
 				privateKey: newAgentKey,
-				anchorPublicKey: publicKey,
 				source: .reply(reply)
 			),
 			reply
@@ -272,7 +287,7 @@ extension PrivateActiveAnchor {
 	public struct Archive: Codable {
 		public let privateKey: Data  //TypedKeyMaterial.wireformat
 		public let attestation: AnchorAttestation.Archive
-		let handoff: Data?
+		let history: [Data]
 	}
 
 	public var archive: Archive {
@@ -280,7 +295,7 @@ extension PrivateActiveAnchor {
 			.init(
 				privateKey: privateKey.archive.wireFormat,
 				attestation: attestation.archive,
-				handoff: try handoff?.wireFormat
+				history: history.compactMap { try? $0.wireFormat }
 			)
 		}
 	}
@@ -291,14 +306,7 @@ extension PrivateActiveAnchor {
 		self.init(
 			privateKey: privateKey,
 			attestation: try .init(archive: archive.attestation),
-			handoff: try .init(optionalWireformat: archive.handoff)
+			history: archive.history.compactMap { try? .finalParse($0) }
 		)
-	}
-}
-
-extension AnchorHandoff.NewAnchor {
-	init?(optionalWireformat: Data?) throws {
-		guard let optionalWireformat else { return nil }
-		self = try .finalParse(optionalWireformat)
 	}
 }

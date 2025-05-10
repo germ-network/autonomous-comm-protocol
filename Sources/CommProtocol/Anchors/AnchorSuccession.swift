@@ -49,3 +49,16 @@ extension AnchorSuccession.Proof: LinearEncodedPair {
 		self.init(predecessor: first, signature: second)
 	}
 }
+
+//save the date alongside the Proof so we can apply policy to prune
+public struct DatedProof: LinearEncodedPair {
+	public var first: AnchorSuccession.Proof
+	public var second: Date
+
+	public init(first: AnchorSuccession.Proof, second: Date) {
+		self.first = first
+		self.second = second
+	}
+
+	public typealias Filter = (Date) -> Bool
+}

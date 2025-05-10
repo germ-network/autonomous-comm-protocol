@@ -15,8 +15,6 @@ public struct PrivateAnchorAgent {
 	public let publicKey: AgentPublicKey
 
 	//immutable creation data
-	public let anchorPublicKey: AnchorPublicKey
-	//anchorPubKey is duplicated in new anchor handoff
 	public let source: Source
 
 	var signer: @Sendable (Data) throws -> TypedSignature {
@@ -25,13 +23,54 @@ public struct PrivateAnchorAgent {
 
 	init(
 		privateKey: AgentPrivateKey,
-		anchorPublicKey: AnchorPublicKey,
 		source: Source
 	) {
 		self.privateKey = privateKey
 		self.publicKey = privateKey.publicKey
-		self.anchorPublicKey = anchorPublicKey
 		self.source = source
+	}
+
+	public func regenerateHello(
+		agentVersion: SemanticVersion,
+		mlsKeyPackages: [Data],
+		policy: AnchorPolicy,
+		historyFilter: DatedProof.Filter = { _ in true }
+	) throws -> AnchorHello {
+		guard case .hello(let helloInputs) = source else {
+			throw ProtocolError.incorrectAnchorState
+		}
+
+		let filteredHistory = helloInputs.proofHistory
+			.filter { historyFilter($0.second) }
+			.map { $0.first }
+
+		let content = AnchorHello.Content(
+			first: helloInputs.attestation,
+			second: filteredHistory,
+			third: policy,
+			fourth: .init(
+				first: publicKey.id,
+				second: agentVersion,
+				third: mlsKeyPackages
+			)
+		)
+
+		let package = AnchorHello.Package(
+			first: content,
+			second: try signer(content.agentSignatureBody().wireFormat)
+		)
+
+		let outerSignature = try privateKey.signer(
+			try AnchorHello.AnchorSignatureBody(
+				encodedPackage: try package.wireFormat,
+				knownAnchor: helloInputs.anchorKey
+			).wireFormat
+		)
+
+		return .init(
+			first: outerSignature,
+			second: try package.wireFormat
+		)
 	}
 }
 
@@ -40,7 +79,6 @@ extension PrivateAnchorAgent {
 		let privateKey: Data  //AgentPrivateKey.typedWireFormat
 
 		//immutable creation data
-		let anchorPublicKey: Data
 		let source: Source.Archive
 	}
 
@@ -49,7 +87,6 @@ extension PrivateAnchorAgent {
 			privateKey: try .init(
 				archive: .init(wireFormat: archive.privateKey)
 			),
-			anchorPublicKey: try .init(wireFormat: archive.anchorPublicKey),
 			source: try .init(archive: archive.source)
 		)
 	}
@@ -58,7 +95,6 @@ extension PrivateAnchorAgent {
 		get throws {
 			.init(
 				privateKey: privateKey.archive.wireFormat,
-				anchorPublicKey: anchorPublicKey.wireFormat,
 				source: try source.archive
 			)
 		}
