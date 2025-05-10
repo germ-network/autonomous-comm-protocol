@@ -29,49 +29,6 @@ public struct PrivateAnchorAgent {
 		self.publicKey = privateKey.publicKey
 		self.source = source
 	}
-
-	public func regenerateHello(
-		agentVersion: SemanticVersion,
-		mlsKeyPackages: [Data],
-		policy: AnchorPolicy,
-		historyFilter: DatedProof.Filter = { _ in true }
-	) throws -> AnchorHello {
-		guard case .hello(let helloInputs) = source else {
-			throw ProtocolError.incorrectAnchorState
-		}
-
-		let filteredHistory = helloInputs.proofHistory
-			.filter { historyFilter($0.second) }
-			.map { $0.first }
-
-		let content = AnchorHello.Content(
-			first: helloInputs.attestation,
-			second: filteredHistory,
-			third: policy,
-			fourth: .init(
-				first: publicKey.id,
-				second: agentVersion,
-				third: mlsKeyPackages
-			)
-		)
-
-		let package = AnchorHello.Package(
-			first: content,
-			second: try signer(content.agentSignatureBody().wireFormat)
-		)
-
-		let outerSignature = try privateKey.signer(
-			try AnchorHello.AnchorSignatureBody(
-				encodedPackage: try package.wireFormat,
-				knownAnchor: helloInputs.anchorKey
-			).wireFormat
-		)
-
-		return .init(
-			first: outerSignature,
-			second: try package.wireFormat
-		)
-	}
 }
 
 extension PrivateAnchorAgent {

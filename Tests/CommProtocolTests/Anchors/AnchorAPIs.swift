@@ -22,13 +22,13 @@ struct AnchorAPITests {
 
 	@Test func testAnchorExchange() throws {
 		//Alex initiates Hello
-		let (alexAgent, hello) =
+		let alexAgent = try alexPrivateAnchor.createHelloAgent()
+		let hello =
 			try alexPrivateAnchor
-			.createHello(
+			.generateHello(
+				agent: alexAgent,
 				agentVersion: .mock(),
-				//parse seems to fail with empty data
 				mlsKeyPackages: ["mock".utf8Data],
-				newAgentKey: .init(),
 				policy: .closed
 			)
 
@@ -97,12 +97,15 @@ struct AnchorAPITests {
 		let restoredAlex = try PrivateActiveAnchor(archive: archivedAlex)
 
 		//Alex initiates Hello
-		let (alexAgent, alexHello) = try restoredAlex.createHello(
-			agentVersion: .mock(),
-			mlsKeyPackages: ["mock".utf8Data],
-			newAgentKey: .init(),
-			policy: .closed
-		)
+		let alexAgent = try alexPrivateAnchor.createHelloAgent()
+		let alexHello =
+			try alexPrivateAnchor
+			.generateHello(
+				agent: alexAgent,
+				agentVersion: .mock(),
+				mlsKeyPackages: ["mock".utf8Data],
+				policy: .closed
+			)
 
 		let alexAgentArchive = try alexAgent.archive
 		let restoredHelloAgent = try PrivateAnchorAgent(archive: alexAgentArchive)
@@ -173,20 +176,21 @@ struct AnchorAPITests {
 
 	@Test func testAgentLifecycle() throws {
 		//Alex creates a hello agent
-		let (alexAgent, alexHello) =
+		let alexAgent = try alexPrivateAnchor.createHelloAgent()
+		let firstHello =
 			try alexPrivateAnchor
-			.createHello(
+			.generateHello(
+				agent: alexAgent,
 				agentVersion: .mock(),
-				//parse seems to fail with empty data
 				mlsKeyPackages: ["mock".utf8Data],
-				newAgentKey: .init(),
 				policy: .closed
 			)
 
 		//Alex changes the hello policy
 		let revisedHello =
-			try alexAgent
-			.regenerateHello(
+			try alexPrivateAnchor
+			.generateHello(
+				agent: alexAgent,
 				agentVersion: .mock(),
 				mlsKeyPackages: ["mock".utf8Data],
 				policy: .open

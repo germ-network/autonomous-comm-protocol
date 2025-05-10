@@ -9,7 +9,7 @@ import CryptoKit
 import Foundation
 
 public struct PrivateActiveAnchor {
-	public let privateKey: AnchorPrivateKey
+	let privateKey: AnchorPrivateKey
 	public let publicKey: AnchorPublicKey
 	public let attestation: AnchorAttestation
 	let history: [DatedProof]
@@ -126,19 +126,44 @@ public struct PrivateActiveAnchor {
 }
 
 extension PrivateActiveAnchor {
-	public func createHello(
+	public func createHelloAgent() throws -> PrivateAnchorAgent {
+		.init(
+			privateKey: .init(),
+			source:
+				.hello(
+					.init(
+						anchorKey: publicKey,
+						attestation: attestation,
+						proofHistory: history
+					)
+				)
+		)
+	}
+
+	public func generateHello(
+		agent: PrivateAnchorAgent,
 		agentVersion: SemanticVersion,
 		mlsKeyPackages: [Data],
-		newAgentKey: AgentPrivateKey,
 		policy: AnchorPolicy,
 		historyFilter: DatedProof.Filter = { _ in true }
-	) throws -> (PrivateAnchorAgent, AnchorHello) {
+	) throws -> AnchorHello {
+		guard case .hello(let helloInputs) = agent.source else {
+			throw ProtocolError.incorrectAnchorState
+		}
+		guard helloInputs.anchorKey == publicKey else {
+			throw ProtocolError.incorrectAnchorState
+		}
+
+		let filteredHistory = helloInputs.proofHistory
+			.filter { historyFilter($0.second) }
+			.map { $0.first }
+
 		let content = AnchorHello.Content(
-			first: attestation,
-			second: [],
+			first: helloInputs.attestation,
+			second: filteredHistory,
 			third: policy,
 			fourth: .init(
-				first: newAgentKey.publicKey.id,
+				first: agent.publicKey.id,
 				second: agentVersion,
 				third: mlsKeyPackages
 			)
@@ -146,38 +171,19 @@ extension PrivateActiveAnchor {
 
 		let package = AnchorHello.Package(
 			first: content,
-			second: try newAgentKey.signer(content.agentSignatureBody().wireFormat)
+			second: try agent.signer(content.agentSignatureBody().wireFormat)
 		)
 
 		let outerSignature = try privateKey.signer(
 			try AnchorHello.AnchorSignatureBody(
 				encodedPackage: try package.wireFormat,
-				knownAnchor: publicKey
+				knownAnchor: helloInputs.anchorKey
 			).wireFormat
 		)
 
-		let anchorHello = AnchorHello(
+		return .init(
 			first: outerSignature,
 			second: try package.wireFormat
-		)
-
-		let filteredHistory =
-			history
-			.filter { historyFilter($0.second) }
-
-		return (
-			.init(
-				privateKey: newAgentKey,
-				source:
-					.hello(
-						.init(
-							anchorKey: publicKey,
-							attestation: attestation,
-							proofHistory: filteredHistory
-						)
-					)
-			),
-			anchorHello
 		)
 	}
 }
