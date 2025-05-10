@@ -9,7 +9,8 @@ import CryptoKit
 import Foundation
 
 public struct PrivateActiveAnchor {
-	let privateKey: AnchorPrivateKey
+	//public as this library doesn't understand the server registration types
+	public let privateKey: AnchorPrivateKey
 	public let publicKey: AnchorPublicKey
 	public let attestation: AnchorAttestation
 	let history: [DatedProof]
