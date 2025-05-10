@@ -15,7 +15,7 @@ import Foundation
 //- Wrap those in one data structure signed with the known key
 //- Mix in additional context as needed when verifying the outer signature
 
-public struct AnchorHello: LinearEncodedPair {
+public struct AnchorHello: LinearEncodedPair, Sendable {
 	public let first: TypedSignature
 	public let second: Data  //Package.wireformat
 
