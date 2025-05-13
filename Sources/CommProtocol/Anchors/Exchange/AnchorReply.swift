@@ -18,7 +18,7 @@ import Foundation
 //AnchorReply is constructed for the return, authenticated path
 //- expect Alex to know Blair's anchor key
 
-public struct AnchorReply: LinearEncodedPair {
+public struct AnchorReply: LinearEncodedPair, Sendable {
 	public let first: TypedSignature
 	public let second: Data  //Package.wireformat
 
