@@ -30,19 +30,21 @@ public struct AnchorReply: LinearEncodedPair {
 
 extension AnchorReply {
 	struct Content: LinearEncodedQuintuple {
-		let first: AnchorAttestation
+		let first: AnchorAttestation  //sender
 		let second: TypedKeyMaterial  //AgentPublicKey
 		let third: SemanticVersion
 		let fourth: UInt32  //seqNo
 		let fifth: Date  //date
 
 		func agentSignatureBody(
-			mlsWelcomeDigest: TypedDigest
+			mlsWelcomeDigest: TypedDigest,
+			recipient: PublicAnchor
 		) -> AgentSignatureBody {
 			.init(
 				first: AnchorReply.AgentSignatureBody.discriminator,
 				second: self,
-				third: mlsWelcomeDigest
+				third: mlsWelcomeDigest,
+				fourth: recipient
 			)
 		}
 	}
@@ -52,30 +54,45 @@ extension AnchorReply {
 		let second: TypedSignature  //delegated agent signature
 	}
 
-	struct AgentSignatureBody: LinearEncodedTriple {
+	struct AgentSignatureBody: LinearEncodedQuad {
 		static let discriminator = "AnchorReply.AgentSignatureBody"
 		let first: String  //discriminator maps 1:1 to the delegation type
 		let second: Content
-		let third: TypedDigest
+		let third: TypedDigest  //mlsWelcomeDigest
+		//injected context for the recipient
+		let fourth: PublicAnchor
 	}
 
-	struct AnchorSignatureBody: LinearEncodedTriple {
+	struct AnchorSignatureBody: LinearEncodedQuad {
 		static let discriminator = "AnchorReply.AnchorSignatureBody"
 		let first: String  //discriminator maps 1:1 to the delegation type
 		let second: Data  //Package.wireformat
-		let third: TypedKeyMaterial  //AnchorPublicKey
+		let third: TypedKeyMaterial  //sender AnchorPublicKey
+		//injected context for the recipient
+		let fourth: PublicAnchor
 
-		init(first: String, second: Data, third: TypedKeyMaterial) {
+		init(
+			first: String,
+			second: Data,
+			third: TypedKeyMaterial,
+			fourth: PublicAnchor
+		) {
 			self.first = first
 			self.second = second
 			self.third = third
+			self.fourth = fourth
 		}
 
-		init(encodedPackage: Data, knownAnchor: AnchorPublicKey) throws {
+		init(
+			encodedPackage: Data,
+			knownAnchor: AnchorPublicKey,
+			recipient: PublicAnchor
+		) {
 			self.init(
 				first: Self.discriminator,
 				second: encodedPackage,
-				third: knownAnchor.archive
+				third: knownAnchor.archive,
+				fourth: recipient
 			)
 		}
 	}

@@ -34,7 +34,8 @@ struct AnchorAPITests {
 
 		//Blair consumes the hello
 		let alexPublicAnchor = alexPrivateAnchor.publicKey
-		let verifiedAnchorHello = try alexPublicAnchor
+		let verifiedAnchorHello =
+			try alexPublicAnchor
 			.verify(hello: hello, for: .init(anchorTo: alexDID))
 		#expect(verifiedAnchorHello.agent.agentKey == alexAgent.publicKey)
 
@@ -45,12 +46,17 @@ struct AnchorAPITests {
 		let (blairReplyAgent, reply) = try blairPrivateAnchor.createReply(
 			agentVersion: .mock(),
 			mlsWelcomeDigest: mockDigest,
-			newAgentKey: blairReplyAgentKey
+			newAgentKey: blairReplyAgentKey,
+			recipient: alexPrivateAnchor.publicAnchor
 		)
 
 		//Alex processes the reply
 		let verifiedReply = try blairPrivateAnchor.publicKey
-			.verify(reply: reply, mlsWelcomeDigest: mockDigest)
+			.verify(
+				reply: reply,
+				mlsWelcomeDigest: mockDigest,
+				recipient: alexPrivateAnchor.publicAnchor
+			)
 		#expect(verifiedReply.agent.agentKey == blairReplyAgent.publicKey)
 
 		//Alex transitions from the hello agent to a steady-state agent
@@ -114,7 +120,8 @@ struct AnchorAPITests {
 
 		//Blair consumes the hello
 		let alexPublicAnchor = alexPrivateAnchor.publicKey
-		let verifiedAnchorHello = try alexPublicAnchor
+		let verifiedAnchorHello =
+			try alexPublicAnchor
 			.verify(hello: alexHello, for: .init(anchorTo: alexDID))
 		let restoredAlexPublicAnchor = try PublicAnchorAgent(
 			archive: verifiedAnchorHello.agent.archive

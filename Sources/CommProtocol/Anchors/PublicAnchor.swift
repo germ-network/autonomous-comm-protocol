@@ -30,3 +30,15 @@ extension PublicAnchor {
 		self.attestation = try .init(archive: archive.attestation)
 	}
 }
+
+extension PublicAnchor: LinearEncodedPair {
+	public var first: TypedKeyMaterial { publicKey.archive }
+	public var second: AnchorAttestation { attestation }
+
+	public init(first: First, second: Second) throws {
+		self.init(
+			publicKey: try .init(archive: first),
+			attestation: second
+		)
+	}
+}

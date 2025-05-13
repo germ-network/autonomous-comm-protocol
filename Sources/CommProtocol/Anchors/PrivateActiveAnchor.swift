@@ -15,6 +15,10 @@ public struct PrivateActiveAnchor {
 	public let attestation: AnchorAttestation
 	let history: [DatedProof]
 
+	public var publicAnchor: PublicAnchor {
+		.init(publicKey: publicKey, attestation: attestation)
+	}
+
 	public static func create(for destination: AnchorTo) -> Self {
 		let anchorPrivateKey = AnchorPrivateKey()
 		let attestationContents = AnchorAttestation(anchorTo: destination)
@@ -197,6 +201,7 @@ extension PrivateActiveAnchor {
 		agentVersion: SemanticVersion,
 		mlsWelcomeDigest: TypedDigest,
 		newAgentKey: AgentPrivateKey,
+		recipient: PublicAnchor
 	) throws -> (PrivateAnchorAgent, AnchorReply) {
 		let content = AnchorReply.Content(
 			first: attestation,
@@ -213,7 +218,8 @@ extension PrivateActiveAnchor {
 				.signer(
 					content
 						.agentSignatureBody(
-							mlsWelcomeDigest: mlsWelcomeDigest
+							mlsWelcomeDigest: mlsWelcomeDigest,
+							recipient: recipient
 						)
 						.wireFormat
 				)
@@ -222,7 +228,8 @@ extension PrivateActiveAnchor {
 		let outerSignature = try privateKey.signer(
 			try AnchorReply.AnchorSignatureBody(
 				encodedPackage: try package.wireFormat,
-				knownAnchor: publicKey
+				knownAnchor: publicKey,
+				recipient: recipient
 			).wireFormat
 		)
 
