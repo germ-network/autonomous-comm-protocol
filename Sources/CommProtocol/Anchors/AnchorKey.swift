@@ -105,8 +105,10 @@ public struct AnchorPublicKey: Sendable {
 }
 
 extension AnchorPublicKey {
+	//did/AnchorTo should be known as we needed it to fetch this
 	public func verify(
 		hello: AnchorHello,
+		for destination: AnchorAttestation
 	) throws -> AnchorHello.Verified {
 
 		let verifiedPackage = try verifyPackage(hello: hello)
@@ -128,6 +130,9 @@ extension AnchorPublicKey {
 			publicKey: self,
 			attestation: content.first
 		)
+		guard content.first.archive == destination.archive else {
+			throw ProtocolError.authenticationError
+		}
 
 		return .init(
 			agent: .init(

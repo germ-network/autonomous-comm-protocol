@@ -34,7 +34,8 @@ struct AnchorAPITests {
 
 		//Blair consumes the hello
 		let alexPublicAnchor = alexPrivateAnchor.publicKey
-		let verifiedAnchorHello = try alexPublicAnchor.verify(hello: hello)
+		let verifiedAnchorHello = try alexPublicAnchor
+			.verify(hello: hello, for: .init(anchorTo: alexDID))
 		#expect(verifiedAnchorHello.agent.agentKey == alexAgent.publicKey)
 
 		//Blair generates a reply
@@ -113,7 +114,8 @@ struct AnchorAPITests {
 
 		//Blair consumes the hello
 		let alexPublicAnchor = alexPrivateAnchor.publicKey
-		let verifiedAnchorHello = try alexPublicAnchor.verify(hello: alexHello)
+		let verifiedAnchorHello = try alexPublicAnchor
+			.verify(hello: alexHello, for: .init(anchorTo: alexDID))
 		let restoredAlexPublicAnchor = try PublicAnchorAgent(
 			archive: verifiedAnchorHello.agent.archive
 		)
