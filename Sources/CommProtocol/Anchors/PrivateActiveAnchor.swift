@@ -198,17 +198,22 @@ extension PrivateActiveAnchor {
 	//so we expect the client to generate a fresh agent (no reuse)
 	//generate an mlsWelcome, and provide them as input here
 	public func createReply(
-		agentVersion: SemanticVersion,
+		agentUpdate: AgentUpdate,
+		keyPackageData: Data,
 		mlsWelcomeDigest: TypedDigest,
+		mlsGroupId: Data,
 		newAgentKey: AgentPrivateKey,
 		recipient: PublicAnchor
 	) throws -> (PrivateAnchorAgent, AnchorReply) {
 		let content = AnchorReply.Content(
 			first: attestation,
 			second: newAgentKey.publicKey.id,
-			third: agentVersion,
-			fourth: .random(in: .min...(.max)),
-			fifth: .now
+			third: .init(
+				first: agentUpdate,
+				second: .random(in: .min...(.max)),
+				third: .now,
+				fourth: keyPackageData
+			)
 		)
 
 		let package = AnchorReply.Package(
@@ -219,7 +224,8 @@ extension PrivateActiveAnchor {
 					content
 						.agentSignatureBody(
 							mlsWelcomeDigest: mlsWelcomeDigest,
-							recipient: recipient
+							recipient: recipient,
+							mlsGroupId: mlsGroupId
 						)
 						.wireFormat
 				)
@@ -229,7 +235,8 @@ extension PrivateActiveAnchor {
 			try AnchorReply.AnchorSignatureBody(
 				encodedPackage: try package.wireFormat,
 				knownAnchor: publicKey,
-				recipient: recipient
+				recipient: recipient,
+				mlsGroupId: mlsGroupId
 			).wireFormat
 		)
 

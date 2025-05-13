@@ -29,22 +29,41 @@ public struct AnchorReply: LinearEncodedPair, Sendable {
 }
 
 extension AnchorReply {
-	struct Content: LinearEncodedQuintuple {
+	public struct Welcome: LinearEncodedQuad {
+		public let first: AgentUpdate
+		public let second: UInt32  //seqNo
+		public let third: Date
+		public let fourth: Data
+
+		public init(
+			first: AgentUpdate,
+			second: UInt32,
+			third: Date,
+			fourth: Data
+		) {
+			self.first = first
+			self.second = second
+			self.third = third
+			self.fourth = fourth
+		}
+	}
+
+	struct Content: LinearEncodedTriple {
 		let first: AnchorAttestation  //sender
 		let second: TypedKeyMaterial  //AgentPublicKey
-		let third: SemanticVersion
-		let fourth: UInt32  //seqNo
-		let fifth: Date  //date
+		let third: Welcome
 
 		func agentSignatureBody(
 			mlsWelcomeDigest: TypedDigest,
-			recipient: PublicAnchor
+			recipient: PublicAnchor,
+			mlsGroupId: Data,
 		) -> AgentSignatureBody {
 			.init(
 				first: AnchorReply.AgentSignatureBody.discriminator,
 				second: self,
 				third: mlsWelcomeDigest,
-				fourth: recipient
+				fourth: recipient,
+				fifth: mlsGroupId
 			)
 		}
 	}
@@ -54,53 +73,57 @@ extension AnchorReply {
 		let second: TypedSignature  //delegated agent signature
 	}
 
-	struct AgentSignatureBody: LinearEncodedQuad {
+	struct AgentSignatureBody: LinearEncodedQuintuple {
 		static let discriminator = "AnchorReply.AgentSignatureBody"
 		let first: String  //discriminator maps 1:1 to the delegation type
 		let second: Content
 		let third: TypedDigest  //mlsWelcomeDigest
 		//injected context for the recipient
 		let fourth: PublicAnchor
+		let fifth: Data  //MLS groupId
 	}
 
-	struct AnchorSignatureBody: LinearEncodedQuad {
+	struct AnchorSignatureBody: LinearEncodedQuintuple {
 		static let discriminator = "AnchorReply.AnchorSignatureBody"
 		let first: String  //discriminator maps 1:1 to the delegation type
 		let second: Data  //Package.wireformat
 		let third: TypedKeyMaterial  //sender AnchorPublicKey
 		//injected context for the recipient
 		let fourth: PublicAnchor
+		let fifth: Data  //MLS groupId
 
 		init(
 			first: String,
 			second: Data,
 			third: TypedKeyMaterial,
-			fourth: PublicAnchor
+			fourth: PublicAnchor,
+			fifth: Data
 		) {
 			self.first = first
 			self.second = second
 			self.third = third
 			self.fourth = fourth
+			self.fifth = fifth
 		}
 
 		init(
 			encodedPackage: Data,
 			knownAnchor: AnchorPublicKey,
-			recipient: PublicAnchor
+			recipient: PublicAnchor,
+			mlsGroupId: Data,
 		) {
 			self.init(
 				first: Self.discriminator,
 				second: encodedPackage,
 				third: knownAnchor.archive,
-				fourth: recipient
+				fourth: recipient,
+				fifth: mlsGroupId
 			)
 		}
 	}
 
 	public struct Verified {
 		public let agent: PublicAnchorAgent
-		public let version: SemanticVersion
-		public let seqNo: UInt32
-		public let sentTime: Date
+		public let welcome: Welcome
 	}
 }
