@@ -197,20 +197,21 @@ extension PrivateActiveAnchor {
 	//agent isn't bound to the anchor until this step
 	//so we expect the client to generate a fresh agent (no reuse)
 	//generate an mlsWelcome, and provide them as input here
-	public func createReply(
+	public func createAnchorWelcome(
 		agentUpdate: AgentUpdate,
 		keyPackageData: Data,
 		mlsWelcomeMessage: Data,
 		mlsGroupId: DataIdentifier,
 		newAgentKey: AgentPrivateKey,
-		recipient: PublicAnchor
+		recipient: PublicAnchor,
+		newSeqNo: UInt32
 	) throws -> (PrivateAnchorAgent, AnchorWelcome) {
 		let content = AnchorWelcome.Content(
 			first: attestation,
 			second: newAgentKey.publicKey.id,
 			third: .init(
 				first: agentUpdate,
-				second: .random(in: .min...(.max)),
+				second: newSeqNo,
 				third: .now,
 				fourth: keyPackageData
 			),

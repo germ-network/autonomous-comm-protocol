@@ -46,13 +46,14 @@ struct AnchorAPITests {
 		let mockWelcome = SymmetricKey(size: .bits256).rawRepresentation
 		let mockGroupId = DataIdentifier(width: .bits256)
 
-		let (blairReplyAgent, reply) = try blairPrivateAnchor.createReply(
+		let (blairReplyAgent, reply) = try blairPrivateAnchor.createAnchorWelcome(
 			agentUpdate: .mock(),
 			keyPackageData: mockKeyPackage,
 			mlsWelcomeMessage: mockWelcome,
 			mlsGroupId: mockGroupId,
 			newAgentKey: blairReplyAgentKey,
-			recipient: alexPrivateAnchor.publicAnchor
+			recipient: alexPrivateAnchor.publicAnchor,
+			newSeqNo: .random(in: .min...(.max))
 		)
 
 		//Alex processes the reply
