@@ -9,7 +9,7 @@ import Foundation
 
 //PrivateAgentAnchor can save the associated proof at creation time
 extension PrivateAnchorAgent {
-	public enum Source {
+	public enum Source: Sendable {
 		//hello, unquely, allows regeneration of the source
 		case hello(HelloInputs)
 		case reply(AnchorWelcome)
@@ -41,7 +41,7 @@ extension PrivateAnchorAgent {
 		}
 
 		//data we cache to regenerate the hello
-		public struct HelloInputs {
+		public struct HelloInputs: Sendable {
 			let anchorKey: AnchorPublicKey
 			let attestation: AnchorAttestation
 			let proofHistory: [DatedProof]

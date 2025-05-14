@@ -24,7 +24,7 @@ import Foundation
 //required new agent signature
 //required new? identity signature
 
-public struct AnchorHandoff: LinearEncodedPair {
+public struct AnchorHandoff: LinearEncodedPair, Sendable {
 	public let first: TypedSignature  //known agent signature
 	public let second: Data  //Package.wireformat
 

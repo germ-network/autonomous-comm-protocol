@@ -35,7 +35,7 @@ public enum AnchorSuccession {  //enum for namespace
 	}
 
 	//instead of a recursive structure, we store an array of them
-	public struct Proof {
+	public struct Proof: Sendable {
 		let predecessor: TypedKeyMaterial
 		let signature: TypedSignature  //signed proof
 	}
@@ -51,7 +51,7 @@ extension AnchorSuccession.Proof: LinearEncodedPair {
 }
 
 //save the date alongside the Proof so we can apply policy to prune
-public struct DatedProof: LinearEncodedPair {
+public struct DatedProof: LinearEncodedPair, Sendable {
 	public var first: AnchorSuccession.Proof
 	public var second: Date
 

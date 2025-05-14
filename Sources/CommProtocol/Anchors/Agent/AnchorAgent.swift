@@ -10,7 +10,7 @@ import Foundation
 //In parallel of PrivateActiveAnchor, a more complex object wrapping
 //the base key that retains the immutable creation state
 
-public struct PrivateAnchorAgent {
+public struct PrivateAnchorAgent: Sendable {
 	private let privateKey: AgentPrivateKey
 	public let publicKey: AgentPublicKey
 
