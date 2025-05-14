@@ -18,7 +18,7 @@ import Foundation
 //AnchorReply is constructed for the return, authenticated path
 //- expect Alex to know Blair's anchor key
 
-public struct AnchorReply: LinearEncodedPair, Sendable {
+public struct AnchorWelcome: LinearEncodedPair, Sendable {
 	public let first: TypedSignature
 	public let second: Data  //Package.wireformat
 
@@ -28,12 +28,12 @@ public struct AnchorReply: LinearEncodedPair, Sendable {
 	}
 }
 
-extension AnchorReply {
+extension AnchorWelcome {
 	public struct Welcome: LinearEncodedQuad {
 		public let first: AgentUpdate
 		public let second: UInt32  //seqNo
 		public let third: Date
-		public let fourth: Data
+		public let fourth: Data  //keyPackage
 
 		public init(
 			first: AgentUpdate,
@@ -48,22 +48,21 @@ extension AnchorReply {
 		}
 	}
 
-	struct Content: LinearEncodedTriple {
+	struct Content: LinearEncodedQuad {
 		let first: AnchorAttestation  //sender
 		let second: TypedKeyMaterial  //AgentPublicKey
 		let third: Welcome
+		let fourth: Data  //MLS Welcome Data
 
 		func agentSignatureBody(
-			mlsWelcomeDigest: TypedDigest,
 			recipient: PublicAnchor,
-			mlsGroupId: Data,
+			mlsGroupId: DataIdentifier,
 		) -> AgentSignatureBody {
 			.init(
-				first: AnchorReply.AgentSignatureBody.discriminator,
+				first: AnchorWelcome.AgentSignatureBody.discriminator,
 				second: self,
-				third: mlsWelcomeDigest,
-				fourth: recipient,
-				fifth: mlsGroupId
+				third: recipient,
+				fourth: mlsGroupId
 			)
 		}
 	}
@@ -73,14 +72,13 @@ extension AnchorReply {
 		let second: TypedSignature  //delegated agent signature
 	}
 
-	struct AgentSignatureBody: LinearEncodedQuintuple {
+	struct AgentSignatureBody: LinearEncodedQuad {
 		static let discriminator = "AnchorReply.AgentSignatureBody"
 		let first: String  //discriminator maps 1:1 to the delegation type
 		let second: Content
-		let third: TypedDigest  //mlsWelcomeDigest
 		//injected context for the recipient
-		let fourth: PublicAnchor
-		let fifth: Data  //MLS groupId
+		let third: PublicAnchor
+		let fourth: DataIdentifier  //MLS groupId
 	}
 
 	struct AnchorSignatureBody: LinearEncodedQuintuple {
@@ -90,14 +88,14 @@ extension AnchorReply {
 		let third: TypedKeyMaterial  //sender AnchorPublicKey
 		//injected context for the recipient
 		let fourth: PublicAnchor
-		let fifth: Data  //MLS groupId
+		let fifth: DataIdentifier  //MLS groupId
 
 		init(
 			first: String,
 			second: Data,
 			third: TypedKeyMaterial,
 			fourth: PublicAnchor,
-			fifth: Data
+			fifth: DataIdentifier
 		) {
 			self.first = first
 			self.second = second
@@ -110,7 +108,7 @@ extension AnchorReply {
 			encodedPackage: Data,
 			knownAnchor: AnchorPublicKey,
 			recipient: PublicAnchor,
-			mlsGroupId: Data,
+			mlsGroupId: DataIdentifier,
 		) {
 			self.init(
 				first: Self.discriminator,

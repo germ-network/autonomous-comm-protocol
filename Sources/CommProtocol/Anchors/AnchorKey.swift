@@ -165,12 +165,11 @@ extension AnchorPublicKey {
 
 extension AnchorPublicKey {
 	public func verify(
-		reply: AnchorReply,
-		mlsWelcomeDigest: TypedDigest,
+		reply: AnchorWelcome,
 		recipient: PublicAnchor,
-		mlsGroupId: Data,
-	) throws -> AnchorReply.Verified {
-		let verifiedPackage = try verify(
+		mlsGroupId: DataIdentifier,
+	) throws -> AnchorWelcome.Verified {
+		let verifiedPackage = try verifyPackage(
 			reply: reply,
 			recipient: recipient,
 			mlsGroupId: mlsGroupId
@@ -181,7 +180,6 @@ extension AnchorPublicKey {
 
 		let agentSignatureBody = try verifiedPackage.first
 			.agentSignatureBody(
-				mlsWelcomeDigest: mlsWelcomeDigest,
 				recipient: recipient,
 				mlsGroupId: mlsGroupId
 			)
@@ -209,15 +207,15 @@ extension AnchorPublicKey {
 		)
 	}
 
-	private func verify(
-		reply: AnchorReply,
+	private func verifyPackage(
+		reply: AnchorWelcome,
 		recipient: PublicAnchor,
-		mlsGroupId: Data,
-	) throws -> AnchorReply.Package {
+		mlsGroupId: DataIdentifier,
+	) throws -> AnchorWelcome.Package {
 		guard
 			verifier(
 				reply.first,
-				try AnchorReply.AnchorSignatureBody(
+				try AnchorWelcome.AnchorSignatureBody(
 					encodedPackage: reply.second,
 					knownAnchor: self,
 					recipient: recipient,

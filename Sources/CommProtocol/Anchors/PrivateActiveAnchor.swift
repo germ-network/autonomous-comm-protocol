@@ -200,12 +200,12 @@ extension PrivateActiveAnchor {
 	public func createReply(
 		agentUpdate: AgentUpdate,
 		keyPackageData: Data,
-		mlsWelcomeDigest: TypedDigest,
-		mlsGroupId: Data,
+		mlsWelcomeMessage: Data,
+		mlsGroupId: DataIdentifier,
 		newAgentKey: AgentPrivateKey,
 		recipient: PublicAnchor
-	) throws -> (PrivateAnchorAgent, AnchorReply) {
-		let content = AnchorReply.Content(
+	) throws -> (PrivateAnchorAgent, AnchorWelcome) {
+		let content = AnchorWelcome.Content(
 			first: attestation,
 			second: newAgentKey.publicKey.id,
 			third: .init(
@@ -213,17 +213,17 @@ extension PrivateActiveAnchor {
 				second: .random(in: .min...(.max)),
 				third: .now,
 				fourth: keyPackageData
-			)
+			),
+			fourth: mlsWelcomeMessage
 		)
 
-		let package = AnchorReply.Package(
+		let package = AnchorWelcome.Package(
 			first: content,
 			second:
 				try newAgentKey
 				.signer(
 					content
 						.agentSignatureBody(
-							mlsWelcomeDigest: mlsWelcomeDigest,
 							recipient: recipient,
 							mlsGroupId: mlsGroupId
 						)
@@ -232,7 +232,7 @@ extension PrivateActiveAnchor {
 		)
 
 		let outerSignature = try privateKey.signer(
-			try AnchorReply.AnchorSignatureBody(
+			try AnchorWelcome.AnchorSignatureBody(
 				encodedPackage: try package.wireFormat,
 				knownAnchor: publicKey,
 				recipient: recipient,
@@ -240,7 +240,7 @@ extension PrivateActiveAnchor {
 			).wireFormat
 		)
 
-		let reply = AnchorReply(
+		let reply = AnchorWelcome(
 			first: outerSignature,
 			second: try package.wireFormat
 		)

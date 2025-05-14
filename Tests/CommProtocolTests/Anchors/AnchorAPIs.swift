@@ -43,13 +43,13 @@ struct AnchorAPITests {
 		let blairReplyAgentKey = AgentPrivateKey()
 		//client creates an MLS welcome with the blairAgent
 		let mockKeyPackage = SymmetricKey(size: .bits256).rawRepresentation
-		let mockDigest = try TypedDigest.mock()
-		let mockGroupId = SymmetricKey(size: .bits256).rawRepresentation
+		let mockWelcome = SymmetricKey(size: .bits256).rawRepresentation
+		let mockGroupId = DataIdentifier(width: .bits256)
 
 		let (blairReplyAgent, reply) = try blairPrivateAnchor.createReply(
 			agentUpdate: .mock(),
 			keyPackageData: mockKeyPackage,
-			mlsWelcomeDigest: mockDigest,
+			mlsWelcomeMessage: mockWelcome,
 			mlsGroupId: mockGroupId,
 			newAgentKey: blairReplyAgentKey,
 			recipient: alexPrivateAnchor.publicAnchor
@@ -59,7 +59,6 @@ struct AnchorAPITests {
 		let verifiedReply = try blairPrivateAnchor.publicKey
 			.verify(
 				reply: reply,
-				mlsWelcomeDigest: mockDigest,
 				recipient: alexPrivateAnchor.publicAnchor,
 				mlsGroupId: mockGroupId
 			)

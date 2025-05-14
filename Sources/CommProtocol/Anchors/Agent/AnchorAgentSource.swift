@@ -12,7 +12,7 @@ extension PrivateAnchorAgent {
 	public enum Source {
 		//hello, unquely, allows regeneration of the source
 		case hello(HelloInputs)
-		case reply(AnchorReply)
+		case reply(AnchorWelcome)
 		case handoff(AnchorHandoff)
 
 		public enum Archive: Codable {
