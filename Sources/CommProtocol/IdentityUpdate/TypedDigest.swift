@@ -8,7 +8,7 @@
 import CryptoKit
 import Foundation
 
-public struct TypedDigest: DefinedWidthBinary, Sendable, Equatable {
+public struct TypedDigest: DefinedWidthBinary, Sendable, Hashable, Equatable {
 	public typealias Prefix = DigestTypes
 	public let type: DigestTypes
 	public let digest: Data
