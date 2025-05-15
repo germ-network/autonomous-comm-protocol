@@ -12,7 +12,7 @@ public struct PrivateActiveAnchor {
 	//public as this library doesn't understand the server registration types
 	public let privateKey: AnchorPrivateKey
 	public let publicKey: AnchorPublicKey
-	public let attestation: AnchorAttestation
+	public let attestation: DependentIdentity
 	let history: [DatedProof]
 
 	public var publicAnchor: PublicAnchor {
@@ -21,7 +21,7 @@ public struct PrivateActiveAnchor {
 
 	public static func create(for destination: AnchorTo) -> Self {
 		let anchorPrivateKey = AnchorPrivateKey()
-		let attestationContents = AnchorAttestation(anchorTo: destination)
+		let attestationContents = DependentIdentity(anchorTo: destination)
 
 		return .init(
 			privateKey: anchorPrivateKey,
@@ -32,7 +32,7 @@ public struct PrivateActiveAnchor {
 
 	init(
 		privateKey: AnchorPrivateKey,
-		attestation: AnchorAttestation,
+		attestation: DependentIdentity,
 		history: [DatedProof]
 	) {
 		self.privateKey = privateKey
@@ -308,7 +308,7 @@ extension PrivateActiveAnchor {
 extension PrivateActiveAnchor {
 	public struct Archive: Codable {
 		public let privateKey: Data  //TypedKeyMaterial.wireformat
-		public let attestation: AnchorAttestation.Archive
+		public let attestation: DependentIdentity.Archive
 		let history: [Data]
 	}
 

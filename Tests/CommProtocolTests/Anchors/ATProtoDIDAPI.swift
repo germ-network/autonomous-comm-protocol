@@ -15,7 +15,7 @@ struct ATProtoDIDAPITests {
 		let restored = try ATProtoDID(fullId: mock.fullId)
 		#expect(mock == restored)
 
-		let attestation = AnchorAttestation(anchorTo: restored)
+		let attestation = DependentIdentity(anchorTo: restored)
 		#expect(try attestation.wireFormat == attestation.archive.wireFormat)
 	}
 }

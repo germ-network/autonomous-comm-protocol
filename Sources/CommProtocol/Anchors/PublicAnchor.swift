@@ -9,13 +9,13 @@ import Foundation
 
 public struct PublicAnchor: Sendable {
 	public let publicKey: AnchorPublicKey
-	public let attestation: AnchorAttestation
+	public let attestation: DependentIdentity
 }
 
 extension PublicAnchor {
 	public struct Archive: Codable {
 		let publicKey: Data
-		let attestation: AnchorAttestation.Archive
+		let attestation: DependentIdentity.Archive
 	}
 
 	public var archive: Archive {
@@ -33,7 +33,7 @@ extension PublicAnchor {
 
 extension PublicAnchor: LinearEncodedPair {
 	public var first: TypedKeyMaterial { publicKey.archive }
-	public var second: AnchorAttestation { attestation }
+	public var second: DependentIdentity { attestation }
 
 	public init(first: First, second: Second) throws {
 		self.init(

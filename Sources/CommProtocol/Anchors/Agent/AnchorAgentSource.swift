@@ -43,12 +43,12 @@ extension PrivateAnchorAgent {
 		//data we cache to regenerate the hello
 		public struct HelloInputs: Sendable {
 			let anchorKey: AnchorPublicKey
-			let attestation: AnchorAttestation
+			let attestation: DependentIdentity
 			let proofHistory: [DatedProof]
 
 			init(
 				anchorKey: AnchorPublicKey,
-				attestation: AnchorAttestation,
+				attestation: DependentIdentity,
 				proofHistory: [DatedProof]
 			) {
 				self.anchorKey = anchorKey

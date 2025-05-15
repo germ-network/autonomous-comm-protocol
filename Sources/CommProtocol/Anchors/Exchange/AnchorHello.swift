@@ -27,7 +27,7 @@ public struct AnchorHello: LinearEncodedPair, Sendable {
 
 extension AnchorHello {
 	struct Content: LinearEncodedQuad {
-		let first: AnchorAttestation
+		let first: DependentIdentity
 		let second: [AnchorSuccession.Proof]
 		let third: AnchorPolicy
 		let fourth: AgentData

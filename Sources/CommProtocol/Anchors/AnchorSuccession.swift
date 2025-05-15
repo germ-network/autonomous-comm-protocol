@@ -16,13 +16,13 @@ public enum AnchorSuccession {  //enum for namespace
 
 	private struct SignatureBody: LinearEncodedQuad {
 		let first: String  //Self.discriminator
-		let second: AnchorAttestation.Archive
+		let second: DependentIdentity.Archive
 		let third: TypedKeyMaterial  //predecessor
 		let fourth: TypedKeyMaterial  //successor
 	}
 
 	static func signatureBody(
-		attestation: AnchorAttestation,
+		attestation: DependentIdentity,
 		predecessor: AnchorPublicKey,
 		successor: AnchorPublicKey,
 	) throws -> Data {

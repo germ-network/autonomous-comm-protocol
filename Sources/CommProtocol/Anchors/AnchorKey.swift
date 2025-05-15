@@ -108,7 +108,7 @@ extension AnchorPublicKey {
 	//did/AnchorTo should be known as we needed it to fetch this
 	public func verify(
 		hello: AnchorHello,
-		for destination: AnchorAttestation
+		for destination: DependentIdentity
 	) throws -> AnchorHello.Verified {
 
 		let verifiedPackage = try verifyPackage(hello: hello)
@@ -253,7 +253,7 @@ extension AnchorPublicKey {
 	//returns the previous key
 	func verify(
 		successionFrom: AnchorSuccession.Proof,
-		attestation: AnchorAttestation
+		attestation: DependentIdentity
 	) throws -> AnchorPublicKey {
 		let predecessor = try AnchorPublicKey(archive: successionFrom.predecessor)
 		let result = verifier(

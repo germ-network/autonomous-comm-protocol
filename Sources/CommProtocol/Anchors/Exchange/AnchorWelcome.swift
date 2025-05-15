@@ -49,7 +49,7 @@ extension AnchorWelcome {
 	}
 
 	struct Content: LinearEncodedQuad {
-		let first: AnchorAttestation  //sender
+		let first: DependentIdentity  //sender
 		let second: TypedKeyMaterial  //AgentPublicKey
 		let third: Welcome
 		let fourth: Data  //MLS Welcome Data

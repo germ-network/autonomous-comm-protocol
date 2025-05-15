@@ -25,7 +25,7 @@ public enum AnchorTypes: UInt16, Sendable {
 //The body, analogous to CoreIdentity
 //for simplicity of decoding, pulling out the
 //anchor key
-public struct AnchorAttestation: Sendable {
+public struct DependentIdentity: Sendable {
 	public let anchorType: AnchorTypes
 	public let anchorTo: AnchorTo
 
@@ -35,7 +35,7 @@ public struct AnchorAttestation: Sendable {
 	}
 }
 
-extension AnchorAttestation {
+extension DependentIdentity {
 	public struct Archive: Codable, Hashable, Sendable {
 		public let anchorType: UInt16
 		public let anchorTo: Data
@@ -51,14 +51,14 @@ extension AnchorAttestation {
 	}
 
 	public init(archive: Archive) throws {
-		(anchorType, anchorTo) = try AnchorAttestation.anchorToFactory(
+		(anchorType, anchorTo) = try DependentIdentity.anchorToFactory(
 			type: archive.anchorType,
 			encoded: archive.anchorTo
 		)
 	}
 }
 
-extension AnchorAttestation: LinearEncodedPair {
+extension DependentIdentity: LinearEncodedPair {
 	public var first: UInt16 { anchorTo.type.rawValue }
 	public var second: Data { anchorTo.stableEncoded }
 
@@ -82,7 +82,7 @@ extension AnchorAttestation: LinearEncodedPair {
 	}
 }
 
-extension AnchorAttestation.Archive: LinearEncodedPair {
+extension DependentIdentity.Archive: LinearEncodedPair {
 	public var first: UInt16 { anchorType }
 	public var second: Data { anchorTo }
 
