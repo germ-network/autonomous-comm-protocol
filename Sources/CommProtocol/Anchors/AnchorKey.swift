@@ -57,10 +57,12 @@ public struct AnchorPrivateKey: Sendable {
 		}
 	}
 
-	public func sign(over body: Data) throws -> TypedSignature {
+	public func sign(
+		mutableData: IdentityMutableData
+	) throws -> SignedObject<IdentityMutableData> {
 		.init(
-			signingAlgorithm: type,
-			signature: try privateKey.signature(for: body)
+			content: mutableData,
+			signature: try signer(mutableData.wireFormat)
 		)
 	}
 }
@@ -101,6 +103,16 @@ public struct AnchorPublicKey: Sendable {
 			}
 			return publicKey.isValidSignature(signature.signature, for: body)
 		}
+	}
+	
+	func verify(signedMutable: SignedObject<IdentityMutableData>) throws -> IdentityMutableData {
+		guard verifier(
+			signedMutable.signature,
+			try signedMutable.content.wireFormat
+		) else {
+			throw ProtocolError.authenticationError
+		}
+		return signedMutable.content
 	}
 }
 

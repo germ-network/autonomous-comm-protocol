@@ -252,3 +252,47 @@ public enum CommProposal: LinearEncodable, Equatable, Sendable {
 		)
 	}
 }
+
+extension CommProposal {
+	public enum ValidatedForAnchor: Sendable {
+		case sameAgent(AgentUpdate, IdentityMutableData?)
+		case agentHandoff(AnchorHandoff.Verified)
+	}
+	
+	public func validate(
+		knownAnchor: PublicAnchorAgent,
+		context: TypedDigest,
+		mlsUpdateMessage: Data,
+	) throws -> ValidatedForAnchor {
+		switch self {
+		case .sameAgent(let agentUpdate, let signedMutable):
+			let verifiedMutable: IdentityMutableData? = try {
+				guard let signedMutable else { return nil }
+				return try knownAnchor.anchor.publicKey
+				   .verify(signedMutable: signedMutable)
+			}()
+			
+			return .sameAgent(
+				try knownAnchor.agentKey
+					.validate(
+						signedAgentUpdate: agentUpdate,
+						for: mlsUpdateMessage,
+						context: context
+					),
+				verifiedMutable
+			)
+		case .anchorHandOff(let anchorHandoff):
+			return .agentHandoff(
+				try knownAnchor.verify(
+					anchorHandoff: anchorHandoff,
+					mlsUpdateDigest: .init(
+						prefix: .sha256,
+						over: mlsUpdateMessage
+					)
+				)
+			)
+		default:
+			throw ProtocolError.unsupported
+		}
+	}
+}

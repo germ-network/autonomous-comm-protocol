@@ -85,7 +85,7 @@ extension AnchorHandoff {
 		}
 	}
 
-	public struct Verified {
+	public struct Verified: Sendable {
 		public let newAnchor: Bool
 		public let agent: PublicAnchorAgent
 		public let newAgentUpdate: AgentUpdate
