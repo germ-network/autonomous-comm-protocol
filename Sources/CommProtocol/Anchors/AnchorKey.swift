@@ -104,12 +104,15 @@ public struct AnchorPublicKey: Sendable {
 			return publicKey.isValidSignature(signature.signature, for: body)
 		}
 	}
-	
-	func verify(signedMutable: SignedObject<IdentityMutableData>) throws -> IdentityMutableData {
-		guard verifier(
-			signedMutable.signature,
-			try signedMutable.content.wireFormat
-		) else {
+
+	func verify(signedMutable: SignedObject<IdentityMutableData>) throws -> IdentityMutableData
+	{
+		guard
+			verifier(
+				signedMutable.signature,
+				try signedMutable.content.wireFormat
+			)
+		else {
 			throw ProtocolError.authenticationError
 		}
 		return signedMutable.content

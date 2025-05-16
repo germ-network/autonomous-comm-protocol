@@ -137,3 +137,29 @@ extension AnchorHandoff {
 		}
 	}
 }
+
+extension AnchorHandoff.Verified {
+	struct Archive: Codable {
+		public let newAnchor: Bool
+		public let agent: PublicAnchorAgent.Archive
+		public let newAgentUpdate: Data  //AgentUpdate.wireformat
+	}
+
+	var archive: Archive {
+		get throws {
+			.init(
+				newAnchor: newAnchor,
+				agent: agent.archive,
+				newAgentUpdate: try newAgentUpdate.wireFormat
+			)
+		}
+	}
+
+	init(archive: Archive) throws {
+		self.init(
+			newAnchor: archive.newAnchor,
+			agent: try .init(archive: archive.agent),
+			newAgentUpdate: try .finalParse(archive.newAgentUpdate)
+		)
+	}
+}

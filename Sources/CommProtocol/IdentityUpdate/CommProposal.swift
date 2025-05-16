@@ -258,7 +258,7 @@ extension CommProposal {
 		case sameAgent(AgentUpdate, IdentityMutableData?)
 		case agentHandoff(AnchorHandoff.Verified)
 	}
-	
+
 	public func validate(
 		knownAnchor: PublicAnchorAgent,
 		context: TypedDigest,
@@ -269,9 +269,9 @@ extension CommProposal {
 			let verifiedMutable: IdentityMutableData? = try {
 				guard let signedMutable else { return nil }
 				return try knownAnchor.anchor.publicKey
-				   .verify(signedMutable: signedMutable)
+					.verify(signedMutable: signedMutable)
 			}()
-			
+
 			return .sameAgent(
 				try knownAnchor.agentKey
 					.validate(
