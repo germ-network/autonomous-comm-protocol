@@ -35,6 +35,12 @@ public struct DependentIdentity: Sendable {
 	}
 }
 
+extension DependentIdentity: Equatable {
+	public static func == (lhs: DependentIdentity, rhs: DependentIdentity) -> Bool {
+		lhs.archive == rhs.archive
+	}
+}
+
 extension DependentIdentity {
 	public struct Archive: Codable, Hashable, Sendable {
 		public let anchorType: UInt16

@@ -58,7 +58,7 @@ extension PrivateAnchorAgent {
 	}
 }
 
-public struct PublicAnchorAgent: Sendable {
+public struct PublicAnchorAgent: Sendable, Equatable {
 	public let anchor: PublicAnchor
 	public let agentKey: AgentPublicKey
 

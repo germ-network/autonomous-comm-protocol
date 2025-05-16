@@ -7,7 +7,7 @@
 
 import Foundation
 
-public struct PublicAnchor: Sendable {
+public struct PublicAnchor: Sendable, Equatable {
 	public let publicKey: AnchorPublicKey
 	public let attestation: DependentIdentity
 }
