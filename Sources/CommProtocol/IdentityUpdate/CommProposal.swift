@@ -262,7 +262,7 @@ extension CommProposal {
 	public func validate(
 		knownAnchor: PublicAnchorAgent,
 		context: TypedDigest,
-		mlsUpdateMessage: Data,
+		mlsUpdateDigest: TypedDigest,
 	) throws -> ValidatedForAnchor {
 		switch self {
 		case .sameAgent(let agentUpdate, let signedMutable):
@@ -276,7 +276,7 @@ extension CommProposal {
 				try knownAnchor.agentKey
 					.validate(
 						signedAgentUpdate: agentUpdate,
-						for: mlsUpdateMessage,
+						for: mlsUpdateDigest.wireFormat,
 						context: context
 					),
 				verifiedMutable
@@ -285,10 +285,7 @@ extension CommProposal {
 			return .agentHandoff(
 				try knownAnchor.verify(
 					anchorHandoff: anchorHandoff,
-					mlsUpdateDigest: .init(
-						prefix: .sha256,
-						over: mlsUpdateMessage
-					)
+					mlsUpdateDigest: mlsUpdateDigest
 				)
 			)
 		default:
