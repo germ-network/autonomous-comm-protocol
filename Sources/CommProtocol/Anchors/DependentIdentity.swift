@@ -41,6 +41,12 @@ extension DependentIdentity: Equatable {
 	}
 }
 
+extension DependentIdentity: Hashable {
+	public func hash(into hasher: inout Hasher) {
+		hasher.combine(archive)
+	}
+}
+
 extension DependentIdentity {
 	public struct Archive: Codable, Hashable, Sendable {
 		public let anchorType: UInt16
