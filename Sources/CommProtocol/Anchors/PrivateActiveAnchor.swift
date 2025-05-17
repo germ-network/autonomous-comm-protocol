@@ -73,7 +73,7 @@ public struct PrivateActiveAnchor: Sendable {
 	//handing off anchor cross-agent
 	public func handOffAgent(
 		previousAgent: PrivateAnchorAgent,
-		newAgentKey: AgentPrivateKey,
+		newAgentKey: PrivateAnchorAgent,
 		agentUpdate: AgentUpdate,
 		groupContext: TypedDigest,
 		mlsUpdateDigest: TypedDigest,
@@ -253,7 +253,7 @@ extension PrivateActiveAnchor {
 		return (
 			.init(
 				privateKey: newAgentKey,
-				source: .reply(reply)
+				source: .reply
 			),
 			reply
 		)
