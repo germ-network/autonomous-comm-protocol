@@ -35,9 +35,14 @@ public struct AnchorHandoff: LinearEncodedPair, Equatable, Sendable {
 }
 
 extension AnchorHandoff {
-	struct Content: LinearEncodedPair {
-		let first: NewAgent
-		let second: NewAnchor?
+	public struct Content: LinearEncodedPair {
+		public let first: NewAgent
+		public let second: NewAnchor?
+
+		public init(first: NewAgent, second: NewAnchor?) {
+			self.first = first
+			self.second = second
+		}
 
 		func activeAnchorBody(
 			groupContext: TypedDigest,
@@ -67,22 +72,37 @@ extension AnchorHandoff {
 		}
 	}
 
-	struct Package: LinearEncodedTriple {
-		let first: Content
-		let second: TypedSignature  //active anchor signature
-		let third: TypedSignature  //new agent signature
+	public struct Package: LinearEncodedTriple {
+		public let first: Content
+		public let second: TypedSignature  //active anchor signature
+		public let third: TypedSignature  //new agent signature
+
+		public init(
+			first: Content,
+			second: TypedSignature,
+			third: TypedSignature
+		) {
+			self.first = first
+			self.second = second
+			self.third = third
+		}
 	}
 
-	struct NewAnchor: LinearEncodedPair {
-		let first: TypedKeyMaterial
+	public struct NewAnchor: LinearEncodedPair {
+		public let first: TypedKeyMaterial
 		//if we introduce a new anchor we need the previous anchor to endorse this
 		//signature from AnchorSuccession.signatureBody
-		let second: TypedSignature
+		public let second: TypedSignature
+
+		public init(first: TypedKeyMaterial, second: TypedSignature) {
+			swself.first = first
+			self.second = second
+		}
 	}
 
-	struct NewAgent: LinearEncodedPair {
-		let first: TypedKeyMaterial
-		let second: AgentUpdate
+	public struct NewAgent: LinearEncodedPair {
+		public let first: TypedKeyMaterial
+		public let second: AgentUpdate
 
 		init(
 			publicKey: AgentPublicKey,
@@ -92,7 +112,7 @@ extension AnchorHandoff {
 			self.second = agentUpdate
 		}
 
-		init(first: TypedKeyMaterial, second: AgentUpdate) throws {
+		public init(first: TypedKeyMaterial, second: AgentUpdate) throws {
 			self.first = first
 			self.second = second
 		}
