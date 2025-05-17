@@ -35,7 +35,7 @@ public struct AnchorHandoff: LinearEncodedPair, Equatable, Sendable {
 }
 
 extension AnchorHandoff {
-	public struct Content: LinearEncodedPair {
+	public struct Content: LinearEncodedPair, Sendable {
 		public let first: NewAgent
 		public let second: NewAnchor?
 
@@ -88,19 +88,19 @@ extension AnchorHandoff {
 		}
 	}
 
-	public struct NewAnchor: LinearEncodedPair {
+	public struct NewAnchor: LinearEncodedPair, Sendable {
 		public let first: TypedKeyMaterial
 		//if we introduce a new anchor we need the previous anchor to endorse this
 		//signature from AnchorSuccession.signatureBody
 		public let second: TypedSignature
 
 		public init(first: TypedKeyMaterial, second: TypedSignature) {
-			swself.first = first
+			self.first = first
 			self.second = second
 		}
 	}
 
-	public struct NewAgent: LinearEncodedPair {
+	public struct NewAgent: LinearEncodedPair, Sendable {
 		public let first: TypedKeyMaterial
 		public let second: AgentUpdate
 
