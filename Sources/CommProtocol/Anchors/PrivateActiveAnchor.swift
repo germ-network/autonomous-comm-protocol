@@ -8,7 +8,7 @@
 import CryptoKit
 import Foundation
 
-public struct PrivateActiveAnchor {
+public struct PrivateActiveAnchor: Sendable {
 	//public as this library doesn't understand the server registration types
 	public let privateKey: AnchorPrivateKey
 	public let publicKey: AnchorPublicKey
