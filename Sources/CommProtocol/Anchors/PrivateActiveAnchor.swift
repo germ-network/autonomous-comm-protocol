@@ -75,6 +75,7 @@ public struct PrivateActiveAnchor {
 		previousAgent: PrivateAnchorAgent,
 		newAgentKey: AgentPrivateKey,
 		agentUpdate: AgentUpdate,
+		groupContext: TypedDigest,
 		mlsUpdateDigest: TypedDigest,
 	) throws -> (PrivateAnchorAgent, AnchorHandoff) {
 		guard let handoff = history.last?.first else {
@@ -93,12 +94,23 @@ public struct PrivateActiveAnchor {
 		)
 
 		let activeAnchorSignature = try privateKey.signer(
-			try handoffContent.activeAnchorBody.wireFormat
+			try handoffContent
+				.activeAnchorBody(
+					groupContext: groupContext,
+					knownAgent: previousAgent.publicKey
+				).wireFormat
 		)
 
 		let newAgentSignature =
 			try newAgentKey
-			.signer(try handoffContent.activeAgentBody.wireFormat)
+			.signer(
+				try handoffContent
+					.activeAgentBody(
+						groupContext: groupContext,
+						mlsUpdateDigest: mlsUpdateDigest,
+						knownAgent: previousAgent.publicKey
+					).wireFormat
+			)
 
 		let package = AnchorHandoff.Package(
 			first: handoffContent,
@@ -265,6 +277,7 @@ extension PrivateActiveAnchor {
 		agentUpdate: AgentUpdate,
 		newAgent: AgentPrivateKey,
 		from retiredAgent: PrivateAnchorAgent,
+		groupContext: TypedDigest,
 		mlsUpdateDigest: TypedDigest,
 	) throws -> AnchorHandoff {
 		let handoffContent = AnchorHandoff.Content(
@@ -276,11 +289,20 @@ extension PrivateActiveAnchor {
 		)
 
 		let activeAnchorSignature = try privateKey.signer(
-			try handoffContent.activeAnchorBody.wireFormat
+			try handoffContent
+				.activeAnchorBody(
+					groupContext: groupContext,
+					knownAgent: retiredAgent.publicKey
+				).wireFormat
 		)
 
 		let newAgentSignature = try newAgent.signer(
-			try handoffContent.activeAgentBody.wireFormat
+			try handoffContent
+				.activeAgentBody(
+					groupContext: groupContext,
+					mlsUpdateDigest: mlsUpdateDigest,
+					knownAgent: retiredAgent.publicKey
+				).wireFormat
 		)
 
 		let package = AnchorHandoff.Package(

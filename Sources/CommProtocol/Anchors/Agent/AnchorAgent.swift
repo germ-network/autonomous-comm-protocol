@@ -73,6 +73,7 @@ public struct PublicAnchorAgent: Sendable, Equatable, Hashable {
 extension PublicAnchorAgent {
 	public func verify(
 		anchorHandoff: AnchorHandoff,
+		context: TypedDigest,
 		mlsUpdateDigest: TypedDigest
 	) throws -> AnchorHandoff.Verified {
 		let verifiedPackage = try verifyPackage(
@@ -88,7 +89,10 @@ extension PublicAnchorAgent {
 			activeAnchor
 				.verifier(
 					verifiedPackage.second,
-					try content.activeAnchorBody.wireFormat
+					try content.activeAnchorBody(
+						groupContext: context,
+						knownAgent: agentKey
+					).wireFormat
 				)
 		else {
 			throw ProtocolError.authenticationError
@@ -100,7 +104,12 @@ extension PublicAnchorAgent {
 		guard
 			newAgentKey.verifier(
 				verifiedPackage.third,
-				try content.activeAgentBody.wireFormat
+				try content
+					.activeAgentBody(
+						groupContext: context,
+						mlsUpdateDigest: mlsUpdateDigest,
+						knownAgent: agentKey
+					).wireFormat
 			)
 		else {
 			throw ProtocolError.authenticationError

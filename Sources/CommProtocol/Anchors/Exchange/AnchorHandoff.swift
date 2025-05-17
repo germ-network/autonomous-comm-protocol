@@ -39,17 +39,30 @@ extension AnchorHandoff {
 		let first: NewAgent
 		let second: NewAnchor?
 
-		var activeAnchorBody: ActiveAnchorBody {
+		func activeAnchorBody(
+			groupContext: TypedDigest,
+			knownAgent: AgentPublicKey,
+		) throws -> ActiveAnchorBody {
 			.init(
 				first: ActiveAnchorBody.discriminator,
-				second: self
+				second: self,
+				third: groupContext,
+				fourth: knownAgent.id
+
 			)
 		}
 
-		var activeAgentBody: ActiveAgentBody {
+		func activeAgentBody(
+			groupContext: TypedDigest,
+			mlsUpdateDigest: TypedDigest,
+			knownAgent: AgentPublicKey,
+		) throws -> ActiveAgentBody {
 			.init(
 				first: ActiveAgentBody.discriminator,
-				second: self
+				second: self,
+				third: groupContext,
+				fourth: mlsUpdateDigest,
+				fifth: knownAgent.id
 			)
 		}
 	}
@@ -94,24 +107,29 @@ extension AnchorHandoff {
 
 //signature bodies
 extension AnchorHandoff {
-	struct ActiveAnchorBody: LinearEncodedPair {
+	struct ActiveAnchorBody: LinearEncodedQuad {
 		static let discriminator = "AnchorHandoff.ActiveAnchorBody"
 		let first: String
 		let second: Content
+		let third: TypedDigest  //group context, usually the groupId
+		let fourth: TypedKeyMaterial  //knownAgent
 	}
 
-	struct ActiveAgentBody: LinearEncodedPair {
+	struct ActiveAgentBody: LinearEncodedQuintuple {
 		static let discriminator = "AnchorHandoff.RetiredAgentBody"
 		let first: String
 		let second: Content
+		let third: TypedDigest  //group context, usually the groupId
+		let fourth: TypedDigest  //mls update digest
+		let fifth: TypedKeyMaterial  //knownAgent
 	}
 
 	struct RetiredAgentBody: LinearEncodedQuad {
 		static let discriminator = "AnchorHandoff.ActiveAgentBody"
 		let first: String
 		let second: Data  //Package.wireformat
-		let third: TypedDigest  //mls update mdigest
-		let fourth: TypedKeyMaterial
+		let third: TypedDigest  //mls update digest
+		let fourth: TypedKeyMaterial  //knownAgent
 
 		init(
 			first: String,

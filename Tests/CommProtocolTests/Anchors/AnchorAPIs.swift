@@ -69,17 +69,20 @@ struct AnchorAPITests {
 		//with an agent handoff
 
 		let alexHandoffAgent = AgentPrivateKey()
+		let mockHandoffGroupContext = try TypedDigest.mock()
 		let mockUpdateDigest = try TypedDigest.mock()
 		let handoff = try alexPrivateAnchor.createNewAgentHandoff(
 			agentUpdate: .mock(),
 			newAgent: alexHandoffAgent,
 			from: alexAgent,
+			groupContext: mockHandoffGroupContext,
 			mlsUpdateDigest: mockUpdateDigest
 		)
 
 		//Blair receives this
 		let verifiedHandoff = try verifiedAnchorHello.agent.verify(
 			anchorHandoff: handoff,
+			context: mockHandoffGroupContext,
 			mlsUpdateDigest: mockUpdateDigest
 		)
 		#expect(verifiedHandoff.newAnchor == false)
@@ -89,16 +92,19 @@ struct AnchorAPITests {
 		let blairNewAnchor = try blairPrivateAnchor.handOff()
 		let blairNewAgentKey = AgentPrivateKey()
 
+		let mockBlairContext = try TypedDigest.mock()
 		let mockBlairUpdateDigest = try TypedDigest.mock()
 		let (blairNewAgent, blairHandoff) = try blairNewAnchor.handOffAgent(
 			previousAgent: blairReplyAgent,
 			newAgentKey: blairNewAgentKey,
 			agentUpdate: .mock(),
+			groupContext: mockBlairContext,
 			mlsUpdateDigest: mockBlairUpdateDigest
 		)
 
 		let verifiedBlairHandoff = try verifiedReply.agent.verify(
 			anchorHandoff: blairHandoff,
+			context: mockBlairContext,
 			mlsUpdateDigest: mockBlairUpdateDigest
 		)
 		#expect(verifiedBlairHandoff.newAnchor == true)

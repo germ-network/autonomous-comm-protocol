@@ -285,6 +285,7 @@ extension CommProposal {
 			return .agentHandoff(
 				try knownAnchor.verify(
 					anchorHandoff: anchorHandoff,
+					context: context,
 					mlsUpdateDigest: mlsUpdateDigest
 				)
 			)
