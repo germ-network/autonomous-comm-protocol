@@ -23,7 +23,7 @@ public struct AnchorPrivateKey: Sendable {
 	//for local storage
 	public var archive: TypedKeyMaterial { .init(typedKey: privateKey) }
 
-	init(archive: TypedKeyMaterial) throws {
+	public init(archive: TypedKeyMaterial) throws {
 		switch archive.algorithm {
 		case .curve25519Signing:
 			self.init(
