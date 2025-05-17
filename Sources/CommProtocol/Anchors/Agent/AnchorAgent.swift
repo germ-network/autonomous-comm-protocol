@@ -21,7 +21,7 @@ public struct PrivateAnchorAgent: Sendable {
 		privateKey.signer
 	}
 
-	init(
+	public init(
 		privateKey: AgentPrivateKey,
 		source: Source
 	) {
