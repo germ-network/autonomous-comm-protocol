@@ -139,7 +139,7 @@ extension AnchorHandoff {
 }
 
 extension AnchorHandoff.Verified {
-	public struct Archive: Codable, Hashable {
+	public struct Archive: Codable, Hashable, Sendable {
 		public let newAnchor: Bool
 		public let agent: PublicAnchorAgent.Archive
 		public let newAgentUpdate: Data  //AgentUpdate.wireformat
