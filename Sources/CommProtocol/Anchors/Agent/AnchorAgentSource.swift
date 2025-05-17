@@ -13,12 +13,13 @@ extension PrivateAnchorAgent {
 		//hello, unquely, allows regeneration of the source
 		case hello(HelloInputs)
 		case reply(AnchorWelcome)
-		case handoff(AnchorHandoff)
+		//handoff is not necessarily pre-generated
+		case handoff
 
 		public enum Archive: Codable {
 			case hello(HelloInputs.Archive)
 			case reply(Data)
-			case handoff(Data)
+			case handoff
 		}
 
 		public var archive: Archive {
@@ -26,7 +27,7 @@ extension PrivateAnchorAgent {
 				switch self {
 				case .hello(let hello): .hello(try hello.archive)
 				case .reply(let value): .reply(try value.wireFormat)
-				case .handoff(let value): .handoff(try value.wireFormat)
+				case .handoff: .handoff
 				}
 			}
 		}
@@ -36,7 +37,7 @@ extension PrivateAnchorAgent {
 			case .hello(let archive):
 				self = .hello(try .init(archive: archive))
 			case .reply(let data): self = .reply(try .finalParse(data))
-			case .handoff(let data): self = .handoff(try .finalParse(data))
+			case .handoff: self = .handoff
 			}
 		}
 

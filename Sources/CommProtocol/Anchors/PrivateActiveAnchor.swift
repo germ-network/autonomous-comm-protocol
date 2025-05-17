@@ -77,7 +77,7 @@ public struct PrivateActiveAnchor {
 		agentUpdate: AgentUpdate,
 		groupContext: TypedDigest,
 		mlsUpdateDigest: TypedDigest,
-	) throws -> (PrivateAnchorAgent, AnchorHandoff) {
+	) throws -> AnchorHandoff {
 		guard let handoff = history.last?.first else {
 			throw ProtocolError.incorrectAnchorState
 		}
@@ -127,17 +127,9 @@ public struct PrivateActiveAnchor {
 			).wireFormat
 		)
 
-		let anchorHandoff = AnchorHandoff(
+		return AnchorHandoff(
 			first: retiredAgentSignature,
 			second: encodedPackage
-		)
-
-		return (
-			.init(
-				privateKey: newAgentKey,
-				source: .handoff(anchorHandoff)
-			),
-			anchorHandoff
 		)
 	}
 }

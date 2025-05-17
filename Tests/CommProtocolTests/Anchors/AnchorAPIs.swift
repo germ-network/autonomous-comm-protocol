@@ -94,7 +94,7 @@ struct AnchorAPITests {
 
 		let mockBlairContext = try TypedDigest.mock()
 		let mockBlairUpdateDigest = try TypedDigest.mock()
-		let (blairNewAgent, blairHandoff) = try blairNewAnchor.handOffAgent(
+		let blairHandoff = try blairNewAnchor.handOffAgent(
 			previousAgent: blairReplyAgent,
 			newAgentKey: blairNewAgentKey,
 			agentUpdate: .mock(),
