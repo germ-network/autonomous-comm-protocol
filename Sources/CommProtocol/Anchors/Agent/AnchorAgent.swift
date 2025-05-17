@@ -166,7 +166,7 @@ extension PublicAnchorAgent {
 }
 
 extension PublicAnchorAgent {
-	public struct Archive: Codable {
+	public struct Archive: Codable, Hashable {
 		let anchor: PublicAnchor.Archive
 		let agent: Data
 	}

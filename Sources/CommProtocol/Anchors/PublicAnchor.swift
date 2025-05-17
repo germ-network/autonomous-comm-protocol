@@ -13,7 +13,7 @@ public struct PublicAnchor: Sendable, Equatable, Hashable {
 }
 
 extension PublicAnchor {
-	public struct Archive: Codable {
+	public struct Archive: Codable, Hashable {
 		let publicKey: Data
 		let attestation: DependentIdentity.Archive
 	}
