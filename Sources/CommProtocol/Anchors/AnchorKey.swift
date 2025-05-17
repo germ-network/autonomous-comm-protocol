@@ -47,7 +47,7 @@ public struct AnchorPrivateKey: Sendable {
 		}
 	}
 
-	var signer: @Sendable (Data) throws -> TypedSignature {
+	public var signer: @Sendable (Data) throws -> TypedSignature {
 		{ body in
 			try .init(
 				signingAlgorithm: type,
