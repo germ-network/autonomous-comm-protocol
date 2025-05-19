@@ -48,11 +48,23 @@ extension AnchorWelcome {
 		}
 	}
 
-	struct Content: LinearEncodedQuad {
-		let first: DependentIdentity  //sender
-		let second: TypedKeyMaterial  //AgentPublicKey
-		let third: Welcome
-		let fourth: Data  //MLS Welcome Data
+	public struct Content: LinearEncodedQuad {
+		public let first: DependentIdentity  //sender
+		public let second: TypedKeyMaterial  //AgentPublicKey
+		public let third: Welcome
+		public let fourth: Data  //MLS Welcome Data
+		
+		public init(
+			first: DependentIdentity,
+			second: TypedKeyMaterial,
+			third: Welcome,
+			fourth: Data
+		) {
+			self.first = first
+			self.second = second
+			self.third = third
+			self.fourth = fourth
+		}
 
 		func agentSignatureBody(
 			recipient: PublicAnchor,
