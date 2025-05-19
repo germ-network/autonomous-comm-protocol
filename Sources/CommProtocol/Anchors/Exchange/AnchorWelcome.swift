@@ -29,7 +29,7 @@ public struct AnchorWelcome: LinearEncodedPair, Sendable {
 }
 
 extension AnchorWelcome {
-	public struct Welcome: LinearEncodedQuad {
+	public struct Welcome: LinearEncodedQuad, Sendable {
 		public let first: AgentUpdate
 		public let second: UInt32  //seqNo
 		public let third: Date
@@ -48,7 +48,7 @@ extension AnchorWelcome {
 		}
 	}
 
-	public struct Content: LinearEncodedQuad {
+	public struct Content: LinearEncodedQuad, Sendable {
 		public let first: DependentIdentity  //sender
 		public let second: TypedKeyMaterial  //AgentPublicKey
 		public let third: Welcome
