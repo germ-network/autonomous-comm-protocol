@@ -53,7 +53,7 @@ extension AnchorWelcome {
 		public let second: TypedKeyMaterial  //AgentPublicKey
 		public let third: Welcome
 		public let fourth: Data  //MLS Welcome Data
-		
+
 		public init(
 			first: DependentIdentity,
 			second: TypedKeyMaterial,

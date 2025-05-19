@@ -46,7 +46,7 @@ struct AnchorAPITests {
 		let mockWelcome = SymmetricKey(size: .bits256).rawRepresentation
 		let mockGroupId = DataIdentifier(width: .bits256)
 
-		let (blairReplyAgent, reply) = try blairPrivateAnchor.createAnchorWelcome(
+		let (blairReplyAgent, reply, _) = try blairPrivateAnchor.createAnchorWelcome(
 			agentUpdate: .mock(),
 			keyPackageData: mockKeyPackage,
 			mlsWelcomeMessage: mockWelcome,
@@ -96,7 +96,10 @@ struct AnchorAPITests {
 		let mockBlairUpdateDigest = try TypedDigest.mock()
 		let blairHandoff = try blairNewAnchor.handOffAgent(
 			previousAgent: blairReplyAgent,
-			newAgentKey: blairNewAgentKey,
+			newAgentKey: .init(
+				privateKey: blairNewAgentKey,
+				source: .handoff
+			),
 			agentUpdate: .mock(),
 			groupContext: mockBlairContext,
 			mlsUpdateDigest: mockBlairUpdateDigest

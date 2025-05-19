@@ -209,7 +209,7 @@ extension PrivateActiveAnchor {
 		newAgentKey: AgentPrivateKey,
 		recipient: PublicAnchor,
 		newSeqNo: UInt32
-	) throws -> (PrivateAnchorAgent, AnchorWelcome) {
+	) throws -> (PrivateAnchorAgent, AnchorWelcome, AnchorWelcome.Content) {
 		let content = AnchorWelcome.Content(
 			first: attestation,
 			second: newAgentKey.publicKey.id,
@@ -255,7 +255,8 @@ extension PrivateActiveAnchor {
 				privateKey: newAgentKey,
 				source: .reply
 			),
-			reply
+			reply,
+			content
 		)
 	}
 }
