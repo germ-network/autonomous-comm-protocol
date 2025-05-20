@@ -67,14 +67,12 @@ extension AnchorWelcome {
 		}
 
 		func agentSignatureBody(
-			recipient: PublicAnchor,
-			mlsGroupId: DataIdentifier,
+			recipient: PublicAnchor
 		) -> AgentSignatureBody {
 			.init(
 				first: AnchorWelcome.AgentSignatureBody.discriminator,
 				second: self,
-				third: recipient,
-				fourth: mlsGroupId
+				third: recipient
 			)
 		}
 	}
@@ -84,50 +82,44 @@ extension AnchorWelcome {
 		let second: TypedSignature  //delegated agent signature
 	}
 
-	struct AgentSignatureBody: LinearEncodedQuad {
+	struct AgentSignatureBody: LinearEncodedTriple {
 		static let discriminator = "AnchorReply.AgentSignatureBody"
 		let first: String  //discriminator maps 1:1 to the delegation type
 		let second: Content
 		//injected context for the recipient
 		let third: PublicAnchor
-		let fourth: DataIdentifier  //MLS groupId
 	}
 
-	struct AnchorSignatureBody: LinearEncodedQuintuple {
+	struct AnchorSignatureBody: LinearEncodedQuad {
 		static let discriminator = "AnchorReply.AnchorSignatureBody"
 		let first: String  //discriminator maps 1:1 to the delegation type
 		let second: Data  //Package.wireformat
 		let third: TypedKeyMaterial  //sender AnchorPublicKey
 		//injected context for the recipient
 		let fourth: PublicAnchor
-		let fifth: DataIdentifier  //MLS groupId
 
 		init(
 			first: String,
 			second: Data,
 			third: TypedKeyMaterial,
 			fourth: PublicAnchor,
-			fifth: DataIdentifier
 		) {
 			self.first = first
 			self.second = second
 			self.third = third
 			self.fourth = fourth
-			self.fifth = fifth
 		}
 
 		init(
 			encodedPackage: Data,
 			knownAnchor: AnchorPublicKey,
 			recipient: PublicAnchor,
-			mlsGroupId: DataIdentifier,
 		) {
 			self.init(
 				first: Self.discriminator,
 				second: encodedPackage,
 				third: knownAnchor.archive,
 				fourth: recipient,
-				fifth: mlsGroupId
 			)
 		}
 	}

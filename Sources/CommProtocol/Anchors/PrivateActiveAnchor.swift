@@ -205,7 +205,6 @@ extension PrivateActiveAnchor {
 		agentUpdate: AgentUpdate,
 		keyPackageData: Data,
 		mlsWelcomeMessage: Data,
-		mlsGroupId: DataIdentifier,
 		newAgentKey: AgentPrivateKey,
 		recipient: PublicAnchor,
 		newSeqNo: UInt32
@@ -228,10 +227,7 @@ extension PrivateActiveAnchor {
 				try newAgentKey
 				.signer(
 					content
-						.agentSignatureBody(
-							recipient: recipient,
-							mlsGroupId: mlsGroupId
-						)
+						.agentSignatureBody(recipient: recipient)
 						.wireFormat
 				)
 		)
@@ -241,7 +237,6 @@ extension PrivateActiveAnchor {
 				encodedPackage: try package.wireFormat,
 				knownAnchor: publicKey,
 				recipient: recipient,
-				mlsGroupId: mlsGroupId
 			).wireFormat
 		)
 
