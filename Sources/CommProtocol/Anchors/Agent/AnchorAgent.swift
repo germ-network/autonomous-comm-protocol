@@ -33,7 +33,7 @@ public struct PrivateAnchorAgent: Sendable {
 
 extension PrivateAnchorAgent {
 	public struct Archive: Codable {
-		let privateKey: Data  //AgentPrivateKey.typedWireFormat
+		public let privateKey: Data  //AgentPrivateKey.typedWireFormat
 
 		//immutable creation data
 		let source: Source.Archive
