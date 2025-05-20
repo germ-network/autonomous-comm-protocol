@@ -69,7 +69,7 @@ public struct AnchorPrivateKey: Sendable {
 
 public struct AnchorPublicKey: Sendable {
 	let publicKey: any PublicSigningKey
-	let archive: TypedKeyMaterial
+	public let archive: TypedKeyMaterial
 
 	var type: SigningKeyAlgorithm { Swift.type(of: publicKey).signingAlgorithm }
 	public var wireFormat: Data { archive.wireFormat }
