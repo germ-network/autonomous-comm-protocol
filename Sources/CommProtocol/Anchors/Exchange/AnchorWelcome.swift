@@ -127,5 +127,6 @@ extension AnchorWelcome {
 	public struct Verified: Sendable {
 		public let agent: PublicAnchorAgent
 		public let welcome: Welcome
+		public let mlsWelcomeData: Data
 	}
 }

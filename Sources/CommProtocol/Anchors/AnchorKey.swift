@@ -213,7 +213,8 @@ extension AnchorPublicKey {
 				),
 				agentKey: newAgentKey
 			),
-			welcome: content.third
+			welcome: content.third,
+			mlsWelcomeData: content.fourth
 		)
 	}
 
