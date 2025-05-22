@@ -120,7 +120,7 @@ public enum CommProposal: LinearEncodable, Equatable, Sendable {
 		case .newIdentity:
 			return try parseNewIdentity(remainder)
 		case .anchorHandOff:
-			let (anchorHandoff, consumed) = try AnchorHandoff.parse(input)
+			let (anchorHandoff, consumed) = try AnchorHandoff.parse(remainder)
 			return (anchorHandOff(anchorHandoff), consumed + 1)
 		}
 
