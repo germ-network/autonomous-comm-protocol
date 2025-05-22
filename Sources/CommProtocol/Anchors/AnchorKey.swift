@@ -274,7 +274,9 @@ extension AnchorPublicKey {
 
 			)
 		)
-		guard result else { throw ProtocolError.authenticationError }
+		guard result else {
+			throw ProtocolError.authenticationError
+		}
 		return predecessor
 	}
 }
