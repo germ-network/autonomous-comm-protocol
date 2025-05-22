@@ -11,7 +11,7 @@ import Foundation
 //the base key that retains the immutable creation state
 
 public struct PrivateAnchorAgent: Sendable {
-	private let privateKey: AgentPrivateKey
+	public let privateKey: AgentPrivateKey
 	public let publicKey: AgentPublicKey
 
 	//immutable creation data
