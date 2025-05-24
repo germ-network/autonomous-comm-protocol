@@ -102,7 +102,7 @@ extension AnchorHello {
 			self.mlsKeyPackages = mlsKeyPackages
 		}
 
-		public struct Archive: Codable {
+		public struct Archive: Codable, Sendable {
 			public let agent: PublicAnchorAgent.Archive
 			public let succession: [Data]
 			public let version: Data
