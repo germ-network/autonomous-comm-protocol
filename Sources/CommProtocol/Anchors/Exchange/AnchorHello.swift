@@ -26,16 +26,18 @@ public struct AnchorHello: LinearEncodedPair, Sendable {
 }
 
 extension AnchorHello {
-	struct Content: LinearEncodedQuad {
-		let first: DependentIdentity
-		let second: [AnchorSuccession.Proof]
-		let third: AnchorPolicy
-		let fourth: AgentData
+	struct Content: LinearEncodedTriple {
+		let first: [AnchorSuccession.Proof]
+		let second: AnchorPolicy
+		let third: AgentData
 
-		func agentSignatureBody() -> AgentSignatureBody {
+		func agentSignatureBody(
+			dependentId: DependentIdentity
+		) -> AgentSignatureBody {
 			.init(
 				first: AnchorHello.AgentSignatureBody.discriminator,
-				second: self
+				second: dependentId,
+				third: self
 			)
 		}
 
@@ -52,29 +54,40 @@ extension AnchorHello {
 		let second: TypedSignature  //delegated agent signature
 	}
 
-	struct AgentSignatureBody: LinearEncodedPair {
+	struct AgentSignatureBody: LinearEncodedTriple {
 		static let discriminator = "AnchorHello.AgentSignatureBody"
 		let first: String  //discriminator maps 1:1 to the delegation type
-		let second: Content
+		let second: DependentIdentity
+		let third: Content
 	}
 
-	struct AnchorSignatureBody: LinearEncodedTriple {
+	struct AnchorSignatureBody: LinearEncodedQuad {
 		static let discriminator = "AnchorHello.AnchorSignatureBody"
 		let first: String  //discriminator maps 1:1 to the delegation type
-		let second: Data  //Package.wireformat
-		let third: TypedKeyMaterial  //AnchorPublicKey
+		let second: DependentIdentity
+		let third: Data  //Package.wireformat
+		let fourth: TypedKeyMaterial  //AnchorPublicKey
 
-		init(first: String, second: Data, third: TypedKeyMaterial) {
+		init(
+			first: String, second: DependentIdentity, third: Data,
+			fourth: TypedKeyMaterial
+		) {
 			self.first = first
 			self.second = second
 			self.third = third
+			self.fourth = fourth
 		}
 
-		init(encodedPackage: Data, knownAnchor: AnchorPublicKey) throws {
+		init(
+			dependentId: DependentIdentity,
+			encodedPackage: Data,
+			knownAnchor: AnchorPublicKey
+		) throws {
 			self.init(
 				first: Self.discriminator,
-				second: encodedPackage,
-				third: knownAnchor.archive
+				second: dependentId,
+				third: encodedPackage,
+				fourth: knownAnchor.archive
 			)
 		}
 	}

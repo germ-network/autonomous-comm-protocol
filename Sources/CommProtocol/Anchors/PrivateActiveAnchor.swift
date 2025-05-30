@@ -168,10 +168,9 @@ extension PrivateActiveAnchor {
 			.map { $0.first }
 
 		let content = AnchorHello.Content(
-			first: helloInputs.attestation,
-			second: filteredHistory,
-			third: policy,
-			fourth: .init(
+			first: filteredHistory,
+			second: policy,
+			third: .init(
 				first: helloAgent.publicKey.id,
 				second: agentVersion,
 				third: mlsKeyPackages
@@ -180,11 +179,14 @@ extension PrivateActiveAnchor {
 
 		let package = AnchorHello.Package(
 			first: content,
-			second: try helloAgent.signer(content.agentSignatureBody().wireFormat)
+			second: try helloAgent.signer(
+				content.agentSignatureBody(dependentId: attestation).wireFormat
+			)
 		)
 
 		let outerSignature = try privateKey.signer(
 			try AnchorHello.AnchorSignatureBody(
+				dependentId: attestation,
 				encodedPackage: try package.wireFormat,
 				knownAnchor: helloInputs.anchorKey
 			).wireFormat

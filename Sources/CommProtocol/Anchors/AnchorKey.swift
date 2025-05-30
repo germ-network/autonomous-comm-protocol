@@ -126,15 +126,16 @@ extension AnchorPublicKey {
 		for destination: DependentIdentity
 	) throws -> AnchorHello.Verified {
 
-		let verifiedPackage = try verifyPackage(hello: hello)
+		let verifiedPackage = try verifyPackage(hello: hello, dependendentId: destination)
 		let newAgentKey = try AgentPublicKey(
-			archive: verifiedPackage.first.fourth.first
+			archive: verifiedPackage.first.third.first
 		)
 
 		guard
 			newAgentKey.verifier(
 				verifiedPackage.second,
-				try verifiedPackage.first.agentSignatureBody().wireFormat
+				try verifiedPackage.first
+					.agentSignatureBody(dependentId: destination).wireFormat
 			)
 		else {
 			throw ProtocolError.authenticationError
@@ -143,29 +144,30 @@ extension AnchorPublicKey {
 
 		let publicAnchor = PublicAnchor(
 			publicKey: self,
-			attestation: content.first
+			attestation: destination
 		)
-		guard content.first.archive == destination.archive else {
-			throw ProtocolError.authenticationError
-		}
 
 		return .init(
 			agent: .init(
 				anchor: publicAnchor,
 				agentKey: newAgentKey
 			),
-			succession: try publicAnchor.verify(proofs: content.second),
-			policy: content.third,
-			version: content.fourth.second,
-			mlsKeyPackages: content.fourth.third,
+			succession: try publicAnchor.verify(proofs: content.first),
+			policy: content.second,
+			version: content.third.second,
+			mlsKeyPackages: content.third.third,
 		)
 	}
 
-	private func verifyPackage(hello: AnchorHello) throws -> AnchorHello.Package {
+	private func verifyPackage(
+		hello: AnchorHello,
+		dependendentId: DependentIdentity
+	) throws -> AnchorHello.Package {
 		guard
 			verifier(
 				hello.first,
 				try AnchorHello.AnchorSignatureBody(
+					dependentId: dependendentId,
 					encodedPackage: hello.second,
 					knownAnchor: self
 				).wireFormat
