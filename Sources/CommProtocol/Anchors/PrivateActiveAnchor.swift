@@ -135,7 +135,7 @@ public struct PrivateActiveAnchor: Sendable {
 }
 
 extension PrivateActiveAnchor {
-	public func createHelloAgent() throws -> PrivateAnchorAgent {
+	public func createHelloAgent() -> PrivateAnchorAgent {
 		.init(
 			privateKey: .init(),
 			source:
