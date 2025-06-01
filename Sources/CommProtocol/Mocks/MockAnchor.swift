@@ -10,6 +10,6 @@ import Foundation
 
 extension ATProtoDID {
 	public static func mock() -> ATProtoDID {
-		.init(method: .plc, identifier: "example")
+		.init(method: .plc, identifier: UUID().uuidString)
 	}
 }
