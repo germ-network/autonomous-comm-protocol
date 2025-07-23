@@ -12,7 +12,7 @@ import Testing
 
 struct ResourceTests {
 
-	@Test func testDateLinearEncoding() async throws {
+	@Test func testDateLinearEncoding() throws {
 		let date = Date.now
 		let encoded = date.wireFormat
 		print("Encoded date width: \(encoded.count)")
@@ -23,7 +23,7 @@ struct ResourceTests {
 		#expect(difference < 1)
 	}
 
-	@Test func testRoundedDateLinearEncoding() async throws {
+	@Test func testRoundedDateLinearEncoding() throws {
 		let roundedDate = RoundedDate(date: .now)
 		let encoded = roundedDate.wireFormat
 

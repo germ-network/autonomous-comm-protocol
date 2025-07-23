@@ -34,5 +34,4 @@ extension Optional: LinearEncodable where Wrapped: LinearEncodable {
 			}
 		}
 	}
-
 }

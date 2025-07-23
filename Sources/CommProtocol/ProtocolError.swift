@@ -18,6 +18,10 @@ public enum ProtocolError: Error {
 	case incorrectAssertionType
 	case incorrectSigner
 	case archiveIncorrect
+	case incorrectAnchorType
+	case incorrectAnchorState
+	case unsupported
+	case missingOptional(String)
 	case unexpected(String)
 }
 
@@ -37,6 +41,10 @@ extension ProtocolError: LocalizedError {
 		case .incorrectAssertionType: "Incorrect identity relationship type"
 		case .incorrectSigner: "Incorrect signing key type"
 		case .archiveIncorrect: "unexpected archive"
+		case .incorrectAnchorType: "Incorrect anchor type"
+		case .incorrectAnchorState: "Incorrect anchor state"
+		case .unsupported: "Unsupported operation"
+		case .missingOptional(let string): "Missing optional \(string)"
 		case .unexpected(let string): "Unexpected \(string)"
 		}
 	}

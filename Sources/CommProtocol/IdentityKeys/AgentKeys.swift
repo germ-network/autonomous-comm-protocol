@@ -22,7 +22,7 @@ public struct AgentPrivateKey: Sendable {
 		Swift.type(of: privateKey).signingAlgorithm
 	}
 
-	public init(algorithm: SigningKeyAlgorithm) {
+	public init(algorithm: SigningKeyAlgorithm = .curve25519) {
 		switch algorithm {
 		case .curve25519:
 			self.privateKey = Curve25519.Signing.PrivateKey()
@@ -227,6 +227,19 @@ public struct AgentPrivateKey: Sendable {
 	}
 }
 
+//for new SigningContent generic
+extension AgentPrivateKey {
+	var signer: @Sendable (Data) throws -> TypedSignature {
+		{ body in
+			.init(
+				signingAlgorithm: type,
+				signature: try privateKey.signature(for: body)
+			)
+
+		}
+	}
+}
+
 extension AgentPrivateKey: Equatable {
 	static public func == (lhs: Self, rhs: Self) -> Bool {
 		lhs.id == rhs.id
@@ -319,6 +332,18 @@ public struct AgentPublicKey: Sendable {
 			throw ProtocolError.authenticationError
 		}
 		return signedAgentUpdate.content
+	}
+}
+
+extension AgentPublicKey {
+	//signature, data
+	var verifier: @Sendable (TypedSignature, Data) -> Bool {
+		{ signature, body in
+			guard signature.signingAlgorithm == keyType else {
+				return false
+			}
+			return publicKey.isValidSignature(signature.signature, for: body)
+		}
 	}
 }
 

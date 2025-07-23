@@ -23,7 +23,7 @@ struct TestAgentHelloReply {
 			try Mocks
 			.mockIdentity()
 
-		let remoteAgentKey = AgentPrivateKey(algorithm: .curve25519)
+		let remoteAgentKey = AgentPrivateKey()
 
 		(agentKey, introduction) =
 			try identityKey
@@ -44,7 +44,7 @@ struct TestAgentHelloReply {
 		)
 	}
 
-	@Test func testAgentHelloReply() async throws {
+	@Test func testAgentHelloReply() throws {
 		// Write your test here and use APIs like `#expect(...)` to check expected conditions.
 
 	}

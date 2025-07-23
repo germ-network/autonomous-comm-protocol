@@ -114,9 +114,9 @@ extension AppWelcome {
 			throw ProtocolError.unexpected("mismatched context")
 		}
 
-		let (coreIdentity, introContents, imageResource) = try introduction.validated(
-			context: context
-		)
+		let (coreIdentity, introContents, imageResource) =
+			try introduction
+			.validated(context: context)
 
 		return .init(
 			coreIdentity: coreIdentity,

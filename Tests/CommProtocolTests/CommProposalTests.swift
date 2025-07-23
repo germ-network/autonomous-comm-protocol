@@ -21,7 +21,7 @@ struct CommProposalTests {
 			try Mocks
 			.mockIdentity()
 
-		knownAgent = .init(algorithm: .curve25519)
+		knownAgent = .init()
 	}
 
 	@Test func testSameAgent() throws {
@@ -65,7 +65,7 @@ struct CommProposalTests {
 		)
 		let wireProposal = try proposal.wireFormat
 
-		let wrongKey = AgentPrivateKey(algorithm: .curve25519)
+		let wrongKey = AgentPrivateKey()
 
 		#expect(throws: ProtocolError.authenticationError) {
 			let _ = try CommProposal.finalParse(wireProposal)
@@ -88,7 +88,7 @@ struct CommProposalTests {
 		}
 	}
 
-	@Test func testSameIdentity() async throws {
+	@Test func testSameIdentity() throws {
 		let mockContext = try TypedDigest.mock()
 
 		let (newAgent, identityDelegate) =
@@ -133,7 +133,7 @@ struct CommProposalTests {
 		#expect(validatedAgent.agentData == newAgentData)
 	}
 
-	@Test func testSameIdentityErrors() async throws {
+	@Test func testSameIdentityErrors() throws {
 		let mockContext = try TypedDigest.mock()
 
 		let (newAgent, identityDelegate) =
@@ -178,7 +178,7 @@ struct CommProposalTests {
 			context: mockContext
 		)
 
-		let newAgent = AgentPrivateKey(algorithm: .curve25519)
+		let newAgent = AgentPrivateKey()
 
 		let identityHandoff = try nextIdentityKey.createHandoff(
 			newAgent: newAgent.publicKey,

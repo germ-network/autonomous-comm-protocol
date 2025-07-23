@@ -13,7 +13,7 @@ import Testing
 
 struct TypedKeyTests {
 
-	@Test func testSigning() async throws {
+	@Test func testSigning() throws {
 		let privateSigningKey = Curve25519.Signing.PrivateKey()
 
 		let publicKey = privateSigningKey.publicKey
@@ -28,7 +28,7 @@ struct TypedKeyTests {
 		}
 	}
 
-	@Test func testKeyAgreement() async throws {
+	@Test func testKeyAgreement() throws {
 		let privateSigningKey = Curve25519.KeyAgreement.PrivateKey()
 
 		let publicKey = privateSigningKey.publicKey
@@ -42,7 +42,7 @@ struct TypedKeyTests {
 		}
 	}
 
-	@Test func testSymmetric() async throws {
+	@Test func testSymmetric() throws {
 		let untyped256key = SymmetricKey(size: .bits256)
 		let shortKey = SymmetricKey(size: .bits128)
 
@@ -79,7 +79,7 @@ struct TypedKeyTests {
 		}
 	}
 
-	@Test func testEncapsulated() async throws {
+	@Test func testEncapsulated() throws {
 		let senderPrivateKey = Curve25519.KeyAgreement.PrivateKey()
 		let recipientPrivateKey = Curve25519.KeyAgreement.PrivateKey()
 

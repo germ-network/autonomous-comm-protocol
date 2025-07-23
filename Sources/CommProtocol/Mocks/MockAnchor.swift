@@ -8,24 +8,21 @@
 import CryptoKit
 import Foundation
 
-extension ATProtoAnchor {
-	static public func signedMock() throws -> (AnchorPrivateKey, SignedObject<ATProtoAnchor>) {
-		let anchorPrivateKey = AnchorPrivateKey(algorithm: .curve25519)
-
-		let signedObject = try anchorPrivateKey.sign(anchor: .mock())
-
-		return (anchorPrivateKey, signedObject)
-	}
-}
-
-extension ATProtoAnchor {
-	static public func mock() -> ATProtoAnchor {
-		//ATProto did is hash-bashed, so likely is a digest encoding
+extension ATProtoDID {
+	public static func mock() -> ATProtoDID {
 		.init(
-			did: SymmetricKey(size: .bits256).rawRepresentation
-				.base64URLEncodedString(),
-			handle: UUID().uuidString,
-			previousDigest: nil
+			method: .plc,
+			identifier: .init(
+				(0..<24).compactMap { _ in base32Set.randomElement() }
+			)
 		)
 	}
+
+	//generate test did per the spec https://github.com/did-method-plc/did-method-plc
+	static let lowercaseAlpha = (UInt8(ascii: "a")...UInt8(ascii: "z"))
+		.map { Character(UnicodeScalar($0)) }
+
+	static let numeric = (UInt8(ascii: "2")...UInt8(ascii: "7"))
+		.map { Character(UnicodeScalar($0)) }
+	static let base32Set: [Character] = lowercaseAlpha + numeric
 }

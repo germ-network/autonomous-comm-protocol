@@ -46,14 +46,16 @@ public enum CommProposal: LinearEncodable, Equatable, Sendable {
 	case sameIdentity(IdentityDelegate, AgentHandoff, SignedObject<IdentityMutableData>?)
 	//Identity Handoff includes an IdentityMutable data
 	case newIdentity(IdentityHandoff, AgentHandoff)
+	case anchorHandOff(AnchorHandoff)
 
 	enum ProposalType: UInt8, LinearEnum {
 		case sameAgent = 1
 		case sameIdentity
 		case newIdentity
+		case anchorHandOff
 	}
 
-	public enum Validated: Sendable {
+	public enum ValidatedForCard: Sendable {
 		case sameAgent(AgentUpdate, IdentityMutableData?)
 		case sameIdentity(AgentHandoff.Validated, IdentityMutableData?)
 		case newIdentity(
@@ -65,7 +67,7 @@ public enum CommProposal: LinearEncodable, Equatable, Sendable {
 		knownAgent: AgentPublicKey,
 		context: TypedDigest,
 		updateMessage: Data
-	) throws -> Validated {
+	) throws -> ValidatedForCard {
 		switch self {
 		case .sameAgent(let signedAgentUpdate, let signedIdentityMutable):
 			.sameAgent(
@@ -96,7 +98,8 @@ public enum CommProposal: LinearEncodable, Equatable, Sendable {
 				identityHandoff: identityHandoff,
 				agentHandoff: agentHandoff
 			)
-
+		case .anchorHandOff:
+			throw ProtocolError.unsupported
 		}
 	}
 
@@ -116,6 +119,9 @@ public enum CommProposal: LinearEncodable, Equatable, Sendable {
 			return try parseSameIdentity(remainder)
 		case .newIdentity:
 			return try parseNewIdentity(remainder)
+		case .anchorHandOff:
+			let (anchorHandoff, consumed) = try AnchorHandoff.parse(remainder)
+			return (anchorHandOff(anchorHandoff), consumed + 1)
 		}
 
 	}
@@ -137,6 +143,9 @@ public enum CommProposal: LinearEncodable, Equatable, Sendable {
 				try [ProposalType.newIdentity.rawValue]
 					+ identityHandoff.wireFormat
 					+ agentHandoff.wireFormat
+			case .anchorHandOff(let anchorHandoff):
+				try [ProposalType.anchorHandOff.rawValue]
+					+ anchorHandoff.wireFormat
 			}
 		}
 	}
@@ -187,7 +196,7 @@ public enum CommProposal: LinearEncodable, Equatable, Sendable {
 		identityDelegate: IdentityDelegate,
 		agentHandoff: AgentHandoff,
 		signedIdentityMutable: SignedObject<IdentityMutableData>?
-	) throws -> Validated {
+	) throws -> ValidatedForCard {
 		let newAgent = try identityDelegate.validate(
 			knownIdentity: knownIdentity,
 			context: context
@@ -219,7 +228,7 @@ public enum CommProposal: LinearEncodable, Equatable, Sendable {
 		updateMessage: Data,
 		identityHandoff: IdentityHandoff,
 		agentHandoff: AgentHandoff
-	) throws -> Validated {
+	) throws -> ValidatedForCard {
 		let validatedIdentity = try identityHandoff.validate(
 			knownIdentity: knownIdentity,
 			context: context
@@ -241,5 +250,47 @@ public enum CommProposal: LinearEncodable, Equatable, Sendable {
 				agentData: agentUpdate
 			)
 		)
+	}
+}
+
+extension CommProposal {
+	public enum ValidatedForAnchor: Sendable {
+		case sameAgent(AgentUpdate, IdentityMutableData?)
+		case agentHandoff(AnchorHandoff.Verified)
+	}
+
+	public func validate(
+		knownAnchor: PublicAnchorAgent,
+		context: TypedDigest,
+		mlsUpdateDigest: TypedDigest,
+	) throws -> ValidatedForAnchor {
+		switch self {
+		case .sameAgent(let agentUpdate, let signedMutable):
+			let verifiedMutable: IdentityMutableData? = try {
+				guard let signedMutable else { return nil }
+				return try knownAnchor.anchor.publicKey
+					.verify(signedMutable: signedMutable)
+			}()
+
+			return .sameAgent(
+				try knownAnchor.agentKey
+					.validate(
+						signedAgentUpdate: agentUpdate,
+						for: mlsUpdateDigest.wireFormat,
+						context: context
+					),
+				verifiedMutable
+			)
+		case .anchorHandOff(let anchorHandoff):
+			return .agentHandoff(
+				try knownAnchor.verify(
+					anchorHandoff: anchorHandoff,
+					context: context,
+					mlsUpdateDigest: mlsUpdateDigest
+				)
+			)
+		default:
+			throw ProtocolError.unsupported
+		}
 	}
 }

@@ -12,7 +12,7 @@ import Testing
 @testable import CommProtocol
 
 struct AgentKeyTests {
-	let privateKey = AgentPrivateKey(algorithm: .curve25519)
+	let privateKey = AgentPrivateKey()
 
 	@Test func testCoding() throws {
 		let rehydrated: AgentPrivateKey = try .init(archive: privateKey.archive)
@@ -45,7 +45,7 @@ struct AgentKeyTests {
 
 	@Test func testHash() throws {
 		let firstKey = privateKey.publicKey
-		let secondKey = AgentPrivateKey(algorithm: .curve25519).publicKey
+		let secondKey = AgentPrivateKey().publicKey
 
 		#expect(firstKey.hashValue == firstKey.hashValue)
 		#expect(firstKey.hashValue != secondKey.hashValue)
