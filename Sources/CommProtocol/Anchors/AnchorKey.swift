@@ -119,6 +119,23 @@ public struct AnchorPublicKey: Sendable {
 	}
 }
 
+extension AnchorPublicKey: Codable {
+	public init(from decoder: any Decoder) throws {
+		let container = try decoder.container(keyedBy: CodingKeys.self)
+		let archive = try container.decode(TypedKeyMaterial.self, forKey: .archive)
+		try self.init(archive: archive)
+	}
+	
+	public func encode(to encoder: any Encoder) throws {
+		var container = encoder.container(keyedBy: CodingKeys.self)
+		try container.encode(self.archive, forKey: .archive)
+	}
+	
+	enum CodingKeys: String, CodingKey {
+		case archive
+	}
+}
+
 extension AnchorPublicKey {
 	//did/AnchorTo should be known as we needed it to fetch this
 	public func verify(
