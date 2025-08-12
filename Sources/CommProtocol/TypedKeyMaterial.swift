@@ -16,9 +16,9 @@ import Foundation
 ///
 ///The key's role and public/private is expected to be type-constrained in context,
 ///or could be specified with additional prefixes if differentiation is required in the wire/persisted format
-public struct TypedKeyMaterial: DefinedWidthBinary, Equatable, Hashable, Sendable, Codable {
+public struct TypedKeyMaterial: DefinedWidthBinary, Equatable, Hashable, Sendable {
 	public typealias Prefix = Algorithms
-	public enum Algorithms: UInt8, DefinedWidthPrefix, Sendable, Codable {
+	public enum Algorithms: UInt8, DefinedWidthPrefix, Sendable {
 		//using cryptokit naming conventions
 		case aesGCM256  //RFC 7714 (used for webCrypto compatibility )
 		case chaCha20Poly1305  //RFC 8439
