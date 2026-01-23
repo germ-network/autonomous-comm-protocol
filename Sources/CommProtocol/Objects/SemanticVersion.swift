@@ -52,6 +52,33 @@ public struct SemanticVersion: Equatable, Hashable, Sendable, Comparable {
 	}
 }
 
+///Failable init from string, does not include preReleaseSuffix
+///TODO: Add preReleaseSuffix handling if we ever end up needing it
+extension SemanticVersion {
+	public init?(string: String) {
+		// Parse the version
+		let versionFragments = string.split(separator: ".")
+		var version: [UInt32] = []
+
+		// Ignore everything after the third fragment (major.minor.patch)
+		for num in 0...2 {
+			if versionFragments.count > num {
+				guard let verNum = UInt32(versionFragments[num]) else {
+					return nil
+				}
+				version.append(verNum)
+			} else {
+				version.append(0)
+			}
+		}
+		self.init(
+			major: version[0],
+			minor: version[1],
+			patch: version[2]
+		)
+	}
+}
+
 ///Compactly represent this as 3 UInt8 bytes and a 4th enum indicating if there is a suffix
 ///Overflow the UInt8 to Uint32
 extension SemanticVersion: LinearEncodedQuad {

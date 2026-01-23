@@ -31,7 +31,7 @@ extension LinearEncodable {
 		return result
 	}
 
-	public static func finalParse(_ input: Data?) throws -> Self? {
+	public static func finalParseOptional(_ input: Data?) throws -> Self? {
 		guard let input else { return nil }
 		return try finalParse(input)
 	}
