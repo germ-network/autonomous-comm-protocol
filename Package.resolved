@@ -1,0 +1,24 @@
+{
+  "originHash" : "7ab8f19255e87487278f04f7813a57ef7655b54ec27c0d6a8b171e8ac77b43c1",
+  "pins" : [
+    {
+      "identity" : "atprototypes",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/germ-network/AtprotoTypes.git",
+      "state" : {
+        "revision" : "72dfa9d88392ce470c6e546c4f2df8142e62032a",
+        "version" : "0.0.1"
+      }
+    },
+    {
+      "identity" : "base32",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/Jarema/Base32.git",
+      "state" : {
+        "revision" : "7f723a2e55f1c76e7c79263aebf89dbfcd58e77d",
+        "version" : "0.10.2"
+      }
+    }
+  ],
+  "version" : 3
+}

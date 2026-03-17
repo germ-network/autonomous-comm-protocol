@@ -5,6 +5,7 @@
 //  Created by Mark @ Germ on 3/6/25.
 //
 
+import AtprotoTypes
 import CryptoKit
 import Foundation
 
@@ -89,7 +90,10 @@ extension DependentIdentity: LinearEncodedPair {
 		}
 		switch anchorType {
 		case .atProto:
-			return (anchorType, try ATProtoDID(type: .atProto, encoded: encoded))
+			return (
+				anchorType,
+				try Atproto.DID(type: .atProto, encoded: encoded)
+			)
 		}
 	}
 }
