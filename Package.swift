@@ -15,7 +15,7 @@ let package = Package(
 	dependencies: [
 		.package(
 			url: "https://github.com/germ-network/AtprotoTypes.git",
-			exact: "0.0.1"
+			exact: "0.0.2"
 		),
 	],
 	targets: [
