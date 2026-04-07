@@ -25,3 +25,12 @@ extension Atproto.DID: AnchorTo {
 		stringRepresentation.utf8Data
 	}
 }
+
+extension AnchorTo {
+	public var asDid: Atproto.DID? {
+		guard let did = self as? Atproto.DID else {
+			return nil
+		}
+		return did
+	}
+}
