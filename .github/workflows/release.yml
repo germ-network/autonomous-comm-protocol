@@ -1,0 +1,48 @@
+name: Release
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  release:
+    if: ${{ github.ref == 'refs/heads/main' && github.repository_owner == 'germ-network' }}
+    name: Release
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      pull-requests: write
+      contents: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v5
+        with:
+          run_install: true
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version-file: ".node-version"
+          check-latest: true
+          cache: pnpm
+
+      - name: Create Pull Request for next release or Publish a new github release
+        id: changesets
+        uses: changesets/action@v1
+
+        with:
+          title: Prepare next release
+          createGithubReleases: true
+          publish: pnpm release
+          version: pnpm version-package
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
