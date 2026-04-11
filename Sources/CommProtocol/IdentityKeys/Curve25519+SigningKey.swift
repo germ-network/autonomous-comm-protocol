@@ -8,14 +8,12 @@
 import CryptoKit
 import Foundation
 
-extension Curve25519.Signing.PrivateKey: @retroactive @unchecked Sendable {}
 extension Curve25519.Signing.PrivateKey: PrivateSigningKey {
 	public static let encodeAlgorithm: TypedKeyMaterial.Algorithms = .curve25519Signing
 
 	static let signingAlgorithm: SigningKeyAlgorithm = .curve25519
 }
 
-extension Curve25519.Signing.PublicKey: @retroactive @unchecked Sendable {}
 extension Curve25519.Signing.PublicKey: PublicSigningKey {
 	public static let signingAlgorithm: SigningKeyAlgorithm = .curve25519
 }

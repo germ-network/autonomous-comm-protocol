@@ -5,14 +5,15 @@
 //  Created by Mark @ Germ on 4/23/25.
 //
 
+import AtprotoTypes
 import CommProtocol
 import CryptoKit
 import Testing
 
 struct AnchorAPITests {
-	let alexDID = ATProtoDID.mock()
+	let alexDID = Atproto.DID.mock()
 	let alexPrivateAnchor: PrivateActiveAnchor
-	let blairDID = ATProtoDID.mock()
+	let blairDID = Atproto.DID.mock()
 	let blairPrivateAnchor: PrivateActiveAnchor
 
 	init() throws {
@@ -22,7 +23,7 @@ struct AnchorAPITests {
 
 	@Test func testAnchorExchange() throws {
 		//Alex initiates Hello
-		let alexAgent = try alexPrivateAnchor.createHelloAgent()
+		let alexAgent = alexPrivateAnchor.createHelloAgent()
 		let hello =
 			try alexPrivateAnchor
 			.generateHello(
@@ -116,7 +117,7 @@ struct AnchorAPITests {
 		let restoredAlex = try PrivateActiveAnchor(archive: archivedAlex)
 
 		//Alex initiates Hello
-		let alexAgent = try alexPrivateAnchor.createHelloAgent()
+		let alexAgent = alexPrivateAnchor.createHelloAgent()
 		let alexHello =
 			try alexPrivateAnchor
 			.generateHello(
@@ -197,7 +198,7 @@ struct AnchorAPITests {
 
 	@Test func testAgentLifecycle() throws {
 		//Alex creates a hello agent
-		let alexAgent = try alexPrivateAnchor.createHelloAgent()
+		let alexAgent = alexPrivateAnchor.createHelloAgent()
 		let firstHello =
 			try alexPrivateAnchor
 			.generateHello(
