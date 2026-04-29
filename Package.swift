@@ -16,14 +16,22 @@ let package = Package(
 		.package(
 			url: "https://github.com/germ-network/AtprotoTypes.git",
 			from: "0.0.2"
-		)
+		),
+		.package(
+			url: "https://github.com/germ-network/GermConvenience.git",
+			//			from: "0.1.1"
+			branch: "reorg/rename+mocks"
+		),
 	],
 	targets: [
 		// Targets are the basic building blocks of a package, defining a module or a test suite.
 		// Targets can depend on other targets in this package and products from dependencies.
 		.target(
 			name: "CommProtocol",
-			dependencies: ["AtprotoTypes"]
+			dependencies: [
+				"AtprotoTypes",
+				"GermConvenience"
+			]
 		),
 		.testTarget(
 			name: "CommProtocolTests",

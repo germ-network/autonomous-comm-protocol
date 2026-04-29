@@ -7,6 +7,7 @@
 
 @preconcurrency import CryptoKit
 import Foundation
+import GermConvenience
 
 //local representation of the resource
 //signed to prevent wire injection of a malicious URI
