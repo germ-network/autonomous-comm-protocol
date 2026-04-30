@@ -1,5 +1,11 @@
 # @germ-network/autonomous-comm-protocol
 
+## 1.2.1
+
+### Patch Changes
+
+- [#15](https://github.com/germ-network/autonomous-comm-protocol/pull/15) [`bf3eec4`](https://github.com/germ-network/autonomous-comm-protocol/commit/bf3eec442a01b1a1707374ad2bbeaf8db22c62b5) Thanks [@germ-mark](https://github.com/germ-mark)! - adopt changes in atprotoTypes, and moving convenience methods such as utf8Data into GermConvenience
+
 ## 1.2.0
 
 ### Minor Changes
