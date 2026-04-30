@@ -22,7 +22,7 @@ extension Atproto.DID: AnchorTo {
 	}
 
 	public var stableEncoded: Data {
-		stringRepresentation.utf8Data
+		rawValue.utf8Data
 	}
 }
 

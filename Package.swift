@@ -15,12 +15,11 @@ let package = Package(
 	dependencies: [
 		.package(
 			url: "https://github.com/germ-network/AtprotoTypes.git",
-			from: "0.0.2"
+			from: "0.4.0"
 		),
 		.package(
 			url: "https://github.com/germ-network/GermConvenience.git",
-			//			from: "0.1.1"
-			branch: "reorg/rename+mocks"
+			from: "0.1.5"
 		),
 	],
 	targets: [
@@ -29,8 +28,9 @@ let package = Package(
 		.target(
 			name: "CommProtocol",
 			dependencies: [
-				"AtprotoTypes",
-				"GermConvenience"
+				.product(name: "AtprotoTypes", package: "AtprotoTypes"),
+				.product(name: "AtprotoTypesMocks", package: "AtprotoTypes"),
+				"GermConvenience",
 			]
 		),
 		.testTarget(
