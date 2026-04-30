@@ -6,6 +6,7 @@
 //
 
 import AtprotoTypes
+import AtprotoTypesMocks
 import CommProtocol
 import CryptoKit
 import Testing

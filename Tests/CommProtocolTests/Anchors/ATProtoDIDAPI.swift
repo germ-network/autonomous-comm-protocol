@@ -13,7 +13,7 @@ struct ATProtoDIDAPITests {
 	@Test func testArchive() throws {
 		let mock = Atproto.DID.mock()
 
-		let restored = try Atproto.DID(string: mock.stringRepresentation)
+		let restored = try Atproto.DID(string: mock.rawValue)
 		#expect(mock == restored)
 
 		let attestation = DependentIdentity(anchorTo: restored)

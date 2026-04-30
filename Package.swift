@@ -29,7 +29,8 @@ let package = Package(
 		.target(
 			name: "CommProtocol",
 			dependencies: [
-				"AtprotoTypes",
+				.product(name: "AtprotoTypes", package: "AtprotoTypes"),
+				.product(name: "AtprotoTypesMocks", package: "AtprotoTypes"),
 				"GermConvenience"
 			]
 		),
