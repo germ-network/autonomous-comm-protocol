@@ -20,8 +20,7 @@ let package = Package(
 		),
 		.package(
 			url: "https://github.com/germ-network/GermConvenience.git",
-			//			from: "0.1.1"
-			branch: "reorg/rename+mocks"
+			from: "0.1.4"
 		),
 	],
 	targets: [
