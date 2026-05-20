@@ -5,6 +5,7 @@
 //  Created by Mark @ Germ on 6/18/24.
 //
 
+import Base64
 @preconcurrency import CryptoKit
 import Foundation
 import GermConvenience
@@ -50,7 +51,8 @@ public struct Resource: Sendable {
 		urlComponents.host = host
 		urlComponents.scheme = "https"
 		urlComponents.path = "/api/card/fetch/" + identifier
-		urlComponents.fragment = symmetricKey.rawRepresentation.base64URLEncodedString()
+		urlComponents.fragment = symmetricKey.rawRepresentation
+			.base64URLEncoded(padded: false)
 		return urlComponents.url
 	}
 }

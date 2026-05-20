@@ -19,8 +19,9 @@ let package = Package(
 		),
 		.package(
 			url: "https://github.com/germ-network/GermConvenience.git",
-			from: "0.1.5"
+			from: "0.2.2"
 		),
+		.package(url: "https://github.com/swift-libp2p/swift-bases.git", from: "0.2.0"),
 	],
 	targets: [
 		// Targets are the basic building blocks of a package, defining a module or a test suite.
@@ -30,6 +31,7 @@ let package = Package(
 			dependencies: [
 				.product(name: "AtprotoTypes", package: "AtprotoTypes"),
 				.product(name: "AtprotoTypesMocks", package: "AtprotoTypes"),
+				.product(name: "Base64", package: "swift-bases"),
 				"GermConvenience",
 			]
 		),
