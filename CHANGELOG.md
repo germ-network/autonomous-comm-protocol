@@ -1,5 +1,11 @@
 # @germ-network/autonomous-comm-protocol
 
+## 1.2.2
+
+### Patch Changes
+
+- [#17](https://github.com/germ-network/autonomous-comm-protocol/pull/17) [`a18f62d`](https://github.com/germ-network/autonomous-comm-protocol/commit/a18f62d9778427550c9b5be42daea5a810d044b7) Thanks [@germ-mark](https://github.com/germ-mark)! - use independent base64 dependency
+
 ## 1.2.1
 
 ### Patch Changes
