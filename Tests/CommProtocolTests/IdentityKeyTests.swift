@@ -5,6 +5,7 @@
 //  Created by Mark @ Germ on 6/15/24.
 //
 
+import CommProtocolMocks
 import CryptoKit
 import Foundation
 import Testing
