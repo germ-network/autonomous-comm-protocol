@@ -12,13 +12,13 @@ public enum SessionEncryptionSuites: UInt8, Equatable, Sendable, CaseIterable, C
 
 	//notice: unused
 	//match the RFC 9420 cipher suite
-	var fixedWidth: Data {
+	package var fixedWidth: Data {
 		switch self {
 		case .mlsCurve25519ChaChaPoly: Data([0x0, 0x03])
 		}
 	}
 
-	init(fixedWidth: Data) throws {
+	package init(fixedWidth: Data) throws {
 		guard fixedWidth.count == 2,
 			let first = fixedWidth.first,
 			let second = fixedWidth.last

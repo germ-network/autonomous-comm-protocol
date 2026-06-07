@@ -11,8 +11,8 @@ import Foundation
 ///Format for a card that gets symmetrically encrypted and exchanged
 ///No covering signature (just AEAD to a key directly exchanged), so all contents need to be covered by a signature
 public struct AgentHello: Sendable {
-	let introduction: IdentityIntroduction
-	let signedAgentData: SignedObject<NewAgentData>
+	package let introduction: IdentityIntroduction
+	package let signedAgentData: SignedObject<NewAgentData>
 
 	//what the agent signs
 	public struct NewAgentData: Sendable {

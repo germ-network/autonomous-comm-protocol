@@ -54,9 +54,9 @@ struct OptionalData: LinearEncodable {
 }
 
 public struct OptionalString: LinearEncodable {
-	let string: String?
+	package let string: String?
 
-	init(_ string: String?) {
+	package init(_ string: String?) {
 		self.string = string
 	}
 

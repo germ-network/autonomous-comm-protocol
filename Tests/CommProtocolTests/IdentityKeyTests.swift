@@ -5,12 +5,11 @@
 //  Created by Mark @ Germ on 6/15/24.
 //
 
+import CommProtocol
 import CommProtocolMocks
 import CryptoKit
 import Foundation
 import Testing
-
-@testable import CommProtocol
 
 struct IdentityKeyTests {
 	let privateKey: IdentityPrivateKey

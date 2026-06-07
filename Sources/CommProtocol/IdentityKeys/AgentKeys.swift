@@ -262,7 +262,7 @@ public struct AgentPublicKey: Sendable {
 		Swift.type(of: publicKey).signingAlgorithm
 	}
 
-	init(concrete: any PublicSigningKey) {
+	package init(concrete: any PublicSigningKey) {
 		publicKey = concrete
 		id = .init(typedKey: publicKey)
 	}

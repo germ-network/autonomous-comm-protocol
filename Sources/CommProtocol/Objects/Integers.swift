@@ -41,12 +41,12 @@ extension UInt32: LinearEncodable {
 }
 
 extension UInt32 {
-	var dataRepresentation: Data {
+	package var dataRepresentation: Data {
 		var endian = bigEndian
 		return Data(bytes: &endian, count: MemoryLayout<UInt32>.size)
 	}
 
-	init(dataRepresentation: Data) throws(LinearEncodingError) {
+	package init(dataRepresentation: Data) throws(LinearEncodingError) {
 		let copy = Data(dataRepresentation)  //in case a slice is passed in
 		guard copy.count == MemoryLayout<UInt32>.size else {
 			throw .incorrectDataLength

@@ -5,11 +5,10 @@
 //  Created by Mark @ Germ on 6/21/24.
 //
 
+import CommProtocol
 import CryptoKit
 import Foundation
 import Testing
-
-@testable import CommProtocol
 
 struct TypedKeyTests {
 

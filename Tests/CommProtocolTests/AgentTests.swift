@@ -5,11 +5,10 @@
 //  Created by Mark Xue on 6/13/24.
 //
 
+import CommProtocol
 import CryptoKit
 import Foundation
 import Testing
-
-@testable import CommProtocol
 
 struct AgentKeyTests {
 	let privateKey = AgentPrivateKey()

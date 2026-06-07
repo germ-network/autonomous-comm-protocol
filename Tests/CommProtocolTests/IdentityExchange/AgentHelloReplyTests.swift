@@ -5,11 +5,10 @@
 //  Created by Mark Xue on 8/2/24.
 //
 
+import CommProtocol
 import CommProtocolMocks
 import CryptoKit
 import Testing
-
-@testable import CommProtocol
 
 struct TestAgentHelloReply {
 	let identityKey: IdentityPrivateKey

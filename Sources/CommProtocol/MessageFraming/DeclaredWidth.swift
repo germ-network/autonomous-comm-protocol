@@ -8,12 +8,12 @@
 import Foundation
 
 extension UInt16 {
-	var dataRepresentation: Data {
+	package var dataRepresentation: Data {
 		var endian = bigEndian
 		return Data(bytes: &endian, count: MemoryLayout<UInt16>.size)
 	}
 
-	init(dataRepresentation: Data) throws(LinearEncodingError) {
+	package init(dataRepresentation: Data) throws(LinearEncodingError) {
 		guard dataRepresentation.count == MemoryLayout<UInt16>.size else {
 			throw .incorrectDataLength
 		}
@@ -41,11 +41,11 @@ extension UInt16: LinearEncodable {
 	}
 }
 
-struct DeclaredWidthData: Sendable, Equatable {
-	let width: UInt16
-	let body: Data
+package struct DeclaredWidthData: Sendable, Equatable {
+	package let width: UInt16
+	package let body: Data
 
-	init(body: Data) throws(LinearEncodingError) {
+	package init(body: Data) throws(LinearEncodingError) {
 		guard !body.isEmpty else {
 			throw .incorrectDataLength
 		}
@@ -56,13 +56,13 @@ struct DeclaredWidthData: Sendable, Equatable {
 		self.body = body
 	}
 
-	var wireFormat: Data {
+	package var wireFormat: Data {
 		width.dataRepresentation + body
 	}
 }
 
 extension DeclaredWidthData: LinearEncodable {
-	static func parse(_ input: Data)
+	package static func parse(_ input: Data)
 		throws(LinearEncodingError) -> (DeclaredWidthData, Int)
 	{
 		let prefix = input.prefix(MemoryLayout<UInt16>.size)

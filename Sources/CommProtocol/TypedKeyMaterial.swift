@@ -116,7 +116,7 @@ public protocol TypedKeyMaterialInput: RawRepresentableKey {
 }
 
 extension TypedKeyMaterialInput {
-	init(wireFormat: Data) throws {
+	package init(wireFormat: Data) throws {
 		let typedWireFormat = try TypedKeyMaterial(wireFormat: wireFormat)
 		guard typedWireFormat.algorithm == Self.encodeAlgorithm else {
 			throw

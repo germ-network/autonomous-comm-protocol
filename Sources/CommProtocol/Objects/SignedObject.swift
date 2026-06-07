@@ -10,7 +10,12 @@ import Foundation
 
 public struct SignedObject<Content: LinearEncodable> {
 	public let content: Content
-	let signature: TypedSignature
+	package let signature: TypedSignature
+
+	package init(content: Content, signature: TypedSignature) {
+		self.content = content
+		self.signature = signature
+	}
 }
 
 extension SignedObject: Sendable where Content: Sendable {}

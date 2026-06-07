@@ -226,7 +226,7 @@ public struct IdentityPublicKey: Sendable {
 		type(of: publicKey).signingAlgorithm
 	}
 
-	init(concrete: any PublicSigningKey) {
+	package init(concrete: any PublicSigningKey) {
 		publicKey = concrete
 		id = .init(typedKey: concrete)
 	}

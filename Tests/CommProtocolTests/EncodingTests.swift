@@ -5,11 +5,10 @@
 //  Created by Mark @ Germ on 7/31/24.
 //
 
+import CommProtocol
 import CommProtocolMocks
 import Foundation
 import Testing
-
-@testable import CommProtocol
 
 struct EncodingTests {
 

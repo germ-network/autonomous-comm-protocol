@@ -5,11 +5,10 @@
 //  Created by Mark Xue on 7/27/24.
 //
 
+import CommProtocol
 import CryptoKit
 import Foundation
 import Testing
-
-@testable import CommProtocol
 
 struct DeclaredWidthTests {
 	@Test func testUIntConversion() throws {
