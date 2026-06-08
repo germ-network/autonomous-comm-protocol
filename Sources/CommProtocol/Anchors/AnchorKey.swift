@@ -39,7 +39,7 @@ public struct AnchorPrivateKey: Sendable {
 		publicKey = .init(concrete: concrete.publicKey)
 	}
 
-	init(algorithm: SigningKeyAlgorithm = .curve25519) {
+	package init(algorithm: SigningKeyAlgorithm = .curve25519) {
 		switch algorithm {
 		case .curve25519:
 			self.privateKey = Curve25519.Signing.PrivateKey()
