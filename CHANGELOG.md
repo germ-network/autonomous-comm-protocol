@@ -1,5 +1,11 @@
 # @germ-network/autonomous-comm-protocol
 
+## 1.3.0
+
+### Minor Changes
+
+- [#19](https://github.com/germ-network/autonomous-comm-protocol/pull/19) [`d0fe312`](https://github.com/germ-network/autonomous-comm-protocol/commit/d0fe312e1456d3edccc5e848fdfb37488b2d4cee) Thanks [@germ-mark](https://github.com/germ-mark)! - fix key type error
+
 ## 1.2.2
 
 ### Patch Changes
