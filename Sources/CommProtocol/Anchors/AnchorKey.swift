@@ -267,7 +267,9 @@ extension AnchorPublicKey {
 		attestation: DependentIdentity
 	) throws -> AnchorPublicKey {
 		let predecessor = try AnchorPublicKey(archive: successionFrom.predecessor)
-		let result = verifier(
+		//the proof is signed by the predecessor endorsing this (successor) key,
+		//so it must verify under the predecessor's key, not our own
+		let result = predecessor.verifier(
 			successionFrom.signature,
 			try AnchorSuccession.signatureBody(
 				attestation: attestation,
