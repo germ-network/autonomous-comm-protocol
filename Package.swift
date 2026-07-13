@@ -10,7 +10,10 @@ let package = Package(
 		// Products define the executables and libraries a package produces, making them visible to other packages.
 		.library(
 			name: "CommProtocol",
-			targets: ["CommProtocol"])
+			targets: ["CommProtocol"]),
+		.library(
+			name: "CommProtocolMocks",
+			targets: ["CommProtocolMocks"]),
 	],
 	dependencies: [
 		.package(
@@ -35,9 +38,13 @@ let package = Package(
 				"GermConvenience",
 			]
 		),
+		.target(
+			name: "CommProtocolMocks",
+			dependencies: ["CommProtocol"]
+		),
 		.testTarget(
 			name: "CommProtocolTests",
-			dependencies: ["CommProtocol"]
+			dependencies: ["CommProtocol", "CommProtocolMocks"]
 		),
 	]
 )

@@ -21,6 +21,7 @@ public enum ProtocolError: Error {
 	case incorrectAnchorType
 	case incorrectAnchorState
 	case unsupported
+	case staleUpdate
 	case missingOptional(String)
 	case unexpected(String)
 }
@@ -44,6 +45,8 @@ extension ProtocolError: LocalizedError {
 		case .incorrectAnchorType: "Incorrect anchor type"
 		case .incorrectAnchorState: "Incorrect anchor state"
 		case .unsupported: "Unsupported operation"
+		case .staleUpdate:
+			"Mutable data counter did not advance (possible replay or rollback)"
 		case .missingOptional(let string): "Missing optional \(string)"
 		case .unexpected(let string): "Unexpected \(string)"
 		}
