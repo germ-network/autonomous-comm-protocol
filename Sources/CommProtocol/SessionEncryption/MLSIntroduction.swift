@@ -15,8 +15,10 @@ import Foundation
 ///`postQuantumShim`), so it is indistinguishable on the wire from a classical entry.
 ///That is deliberate: already-deployed parsers accept a card that offers both, because
 ///every entry is a well-formed legacy entry. PQ-capable consumers detect the PQ entry by
-///parsing its `encodedKeyPackage`; the wrapper `suite`/`kemPublicKeyData` carry no PQ
-///signal. An honest, suite-typed card format is left for a future replacement.
+///parsing its `encodedKeyPackage`. For a PQ entry the wrapper carries no PQ signal and
+///`kemPublicKeyData` is unused — the self-contained key package supplies its own transport
+///keys; the field persists only because the legacy wire shape encodes a fixed-width value
+///there. An honest, suite-typed card format is left for a future replacement.
 ///
 ///Publishers order key choices most-compatible first: the classical entry stays at
 ///index 0. Existing consumers select the first entry whose wrapper `suite` they
@@ -45,6 +47,10 @@ extension MLSIntroduction {
 	///classical values, and the self-contained PQ key package rides in `encodedKeyPackage`
 	///— so pre-upgrade parsers accept a card that offers it. This is the single migration
 	///point when a PQ-native card format replaces this one.
+	///
+	///`kemPublicKeyData` is unused by PQ consumers (the key package carries its own
+	///transport keys); it is present only to satisfy the fixed-width wire shape, so it must
+	///still be a valid 32-byte value.
 	public static func postQuantumShim(
 		kemPublicKeyData: Data,
 		encodedKeyPackage: Data
