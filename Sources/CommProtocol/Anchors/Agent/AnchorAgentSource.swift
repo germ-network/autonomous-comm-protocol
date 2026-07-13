@@ -68,8 +68,8 @@ extension PrivateAnchorAgent {
 					.init(
 						anchorKey: anchorKey.wireFormat,
 						attestation: try attestation.wireFormat,
-						proofHistory: proofHistory.compactMap {
-							try? $0.wireFormat
+						proofHistory: try proofHistory.map {
+							try $0.wireFormat
 						}
 					)
 				}
@@ -78,8 +78,8 @@ extension PrivateAnchorAgent {
 			init(archive: Archive) throws {
 				anchorKey = try .init(wireFormat: archive.anchorKey)
 				attestation = try .finalParse(archive.attestation)
-				proofHistory = archive.proofHistory
-					.compactMap { try? .finalParse($0) }
+				proofHistory = try archive.proofHistory
+					.map { try .finalParse($0) }
 			}
 		}
 	}

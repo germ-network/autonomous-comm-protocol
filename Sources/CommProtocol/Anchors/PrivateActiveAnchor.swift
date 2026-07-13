@@ -332,7 +332,7 @@ extension PrivateActiveAnchor {
 			.init(
 				privateKey: privateKey.archive.wireFormat,
 				attestation: attestation.archive,
-				history: history.compactMap { try? $0.wireFormat }
+				history: try history.map { try $0.wireFormat }
 			)
 		}
 	}
@@ -343,7 +343,7 @@ extension PrivateActiveAnchor {
 		self.init(
 			privateKey: privateKey,
 			attestation: try .init(archive: archive.attestation),
-			history: archive.history.compactMap { try? .finalParse($0) }
+			history: try archive.history.map { try .finalParse($0) }
 		)
 	}
 }

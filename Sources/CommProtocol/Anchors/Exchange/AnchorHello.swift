@@ -142,8 +142,8 @@ extension AnchorHello {
 
 			self.init(
 				agent: try .init(archive: archive.agent),
-				succession: archive.succession
-					.compactMap { try? .init(wireFormat: $0) },
+				succession: try archive.succession
+					.map { try .init(wireFormat: $0) },
 				policy: policy,
 				version: try .finalParse(archive.version),
 				mlsKeyPackages: archive.mlsKeyPackages,
