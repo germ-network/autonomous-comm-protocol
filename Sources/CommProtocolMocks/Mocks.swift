@@ -5,6 +5,7 @@
 //  Created by Mark @ Germ on 7/30/24.
 //
 
+import CommProtocol
 import CryptoKit
 import Foundation
 

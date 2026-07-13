@@ -6,6 +6,7 @@
 //
 
 import CommProtocol
+import CommProtocolMocks
 import CryptoKit
 import Testing
 

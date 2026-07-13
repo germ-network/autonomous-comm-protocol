@@ -5,6 +5,7 @@
 //  Created by Anna Mistele on 10/8/24.
 //
 
+import CommProtocol
 import CryptoKit
 
 extension IdentityPrivateKey {

@@ -5,6 +5,7 @@
 //  Created by Mark Xue on 8/2/24.
 //
 
+import CommProtocolMocks
 import CryptoKit
 import Testing
 
