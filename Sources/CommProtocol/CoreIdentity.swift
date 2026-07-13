@@ -158,6 +158,27 @@ public struct IdentityMutableData: Sendable, Equatable {
 	}
 }
 
+extension IdentityMutableData {
+	//Precedence is defined by `counter`. The signature only proves the signer
+	//authored this update, not that it is newer than one already applied, so a
+	//replayed or rolled-back update verifies fine. Callers hold the prior state
+	//and MUST gate application on this check to reject stale mutable data.
+
+	///Whether this update should replace `previous` (strictly newer counter).
+	public func supersedes(_ previous: IdentityMutableData) -> Bool {
+		counter > previous.counter
+	}
+
+	///Throwing form of ``supersedes(_:)``. A `nil` predecessor (no prior state)
+	///is always accepted; an equal or lower counter throws `.staleUpdate`.
+	public func validateSupersedes(_ previous: IdentityMutableData?) throws {
+		guard let previous else { return }
+		guard supersedes(previous) else {
+			throw ProtocolError.staleUpdate
+		}
+	}
+}
+
 extension IdentityMutableData: LinearEncodedQuad {
 	public var first: UInt16 { counter }
 	public var second: [String] { pronouns }
