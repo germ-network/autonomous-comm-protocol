@@ -102,6 +102,35 @@ struct AgentHandoffDomainSeparationTests {
 		#expect(try f.validate(f.signedHandoff()) == f.agentData)
 	}
 
+	// The capability tier sits strictly between today's classical agent version
+	// (2.2.0) and the domain-separation threshold, so advertising PQ capability
+	// does not by itself flip the handoff format.
+	@Test func testCapabilityVersionOrdering() throws {
+		#expect(
+			AgentUpdate.pqCapableVersion
+				== SemanticVersion(major: 2, minor: 3, patch: 0)
+		)
+		#expect(
+			SemanticVersion(major: 2, minor: 2, patch: 0) < AgentUpdate.pqCapableVersion
+		)
+		#expect(AgentUpdate.pqCapableVersion < AgentUpdate.pqDomainSeparationVersion)
+	}
+
+	// At exactly the capability tier (2.3.0): the agent is PQ-capable, but the
+	// handoff body is still undiscriminated (== the plain concatenation) and the
+	// handoff round-trips. The capability tier must not trip the format switch.
+	@Test func testCapabilityTierOmitsDiscriminator() throws {
+		let f = fixture(version: AgentUpdate.pqCapableVersion)
+		#expect(f.agentData.isPQCapable)
+		#expect(!f.agentData.domainSeparatesHandoff)
+
+		let body = try f.tbs.formatForSigning
+		#expect(!body.starts(with: AgentHandoff.NewAgentTBS.discriminator))
+		#expect(try body == f.plainBody)
+
+		#expect(try f.validate(f.signedHandoff()) == f.agentData)
+	}
+
 	// A signature over neither body is rejected (guards against a no-op verifier).
 	@Test func testUnrelatedSignatureRejected() throws {
 		let f = fixture(version: AgentUpdate.pqDomainSeparationVersion)

@@ -30,6 +30,28 @@ public struct AgentUpdate: Sendable, Equatable, Hashable {
 }
 
 extension AgentUpdate {
+	///The agent version at (and above) which an agent advertises post-quantum
+	///*capability* — "I can speak PQ, come negotiate" — while its handoff signing
+	///bodies still parse WITHOUT the domain-separation discriminator.
+	///
+	///This is the "version >= T ⇒ PQ parse-capable" signal from the app's
+	///`pq-card-in-session-negotiation.md`, deliberately kept BELOW
+	///``pqDomainSeparationVersion`` so a capability-tier agent advertises PQ while
+	///its handoff bodies stay byte-for-byte legacy (see ``domainSeparatesHandoff``).
+	///`public` so the app imports the same constant as the single source of truth.
+	public static let pqCapableVersion = SemanticVersion(
+		major: 2,
+		minor: 3,
+		patch: 0
+	)
+
+	///Whether this agent advertises PQ capability, per ``pqCapableVersion``. This
+	///does not by itself domain-separate the handoff body — see
+	///``domainSeparatesHandoff``.
+	var isPQCapable: Bool {
+		version >= Self.pqCapableVersion
+	}
+
 	///The agent version at (and above) which handoff signing bodies become
 	///domain-separated (see `AgentHandoff.NewAgentTBS`).
 	///
