@@ -48,7 +48,7 @@ extension AgentUpdate {
 	///Whether this agent advertises PQ capability, per ``pqCapableVersion``. This
 	///does not by itself domain-separate the handoff body — see
 	///``domainSeparatesHandoff``.
-	var isPQCapable: Bool {
+	public var isPQCapable: Bool {
 		version >= Self.pqCapableVersion
 	}
 
