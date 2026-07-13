@@ -130,6 +130,15 @@ extension MLSIntroduction {
 			encodedKeyPackage: Mocks.mockMessage()
 		)
 	}
+
+	//legacy-shaped entry whose opaque key package stands in for a TwoMLSPQ package,
+	//prefixed with the 0xFDEA suite id such a package advertises internally
+	public static func mockPostQuantumShim() -> Self {
+		.postQuantumShim(
+			kemPublicKeyData: SymmetricKey(size: .bits256).rawRepresentation,
+			encodedKeyPackage: Data([0xFD, 0xEA]) + Mocks.mockMessage()
+		)
+	}
 }
 
 extension AgentHello.NewAgentData {
@@ -137,6 +146,15 @@ extension AgentHello.NewAgentData {
 		.init(
 			agentUpdate: .mock(),
 			keyChoices: [.mock()],
+			expiration: .distantFuture
+		)
+	}
+
+	//classical first: most-compatible entry stays at index 0
+	public static func mockDualOffer() -> Self {
+		.init(
+			agentUpdate: .mock(),
+			keyChoices: [.mock(), .mockPostQuantumShim()],
 			expiration: .distantFuture
 		)
 	}
