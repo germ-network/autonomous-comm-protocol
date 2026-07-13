@@ -55,10 +55,13 @@ public struct PrivateActiveAnchor: Sendable {
 					)
 			)
 
+		//accumulate the new proof onto the existing chain so continuity back to
+		//the original key survives repeated rotations (verify(proofs:) walks the
+		//full history predecessor-first)
 		return .init(
 			privateKey: newAnchor,
 			attestation: attestation,
-			history: [
+			history: history + [
 				.init(
 					first: .init(
 						predecessor: publicKey.archive,
