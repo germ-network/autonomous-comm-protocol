@@ -53,7 +53,7 @@ extension UInt32 {
 		}
 
 		let bigEndian = copy.withUnsafeBytes { rawBuffer in
-			rawBuffer.load(as: UInt32.self)
+			rawBuffer.loadUnaligned(as: UInt32.self)
 		}
 
 		self = .init(bigEndian: bigEndian)
@@ -89,7 +89,7 @@ extension UInt64 {
 		}
 
 		let bigEndian = copy.withUnsafeBytes { rawBuffer in
-			rawBuffer.load(as: UInt64.self)
+			rawBuffer.loadUnaligned(as: UInt64.self)
 		}
 
 		self = .init(bigEndian: bigEndian)

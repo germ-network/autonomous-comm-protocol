@@ -21,7 +21,7 @@ extension UInt16 {
 		let copy = Data(dataRepresentation)
 
 		let bigEndian = copy.withUnsafeBytes { rawBuffer in
-			rawBuffer.load(as: UInt16.self)
+			rawBuffer.loadUnaligned(as: UInt16.self)
 		}
 
 		self = .init(bigEndian: bigEndian)
