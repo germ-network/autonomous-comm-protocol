@@ -37,4 +37,4 @@ jobs:
     steps:
       - uses: actions/checkout@v5
       - name: Test platform ${{ matrix.destination }}
-        run: set -o pipefail && xcodebuild -scheme CommProtocol -destination "${{ matrix.destination }}" test | xcbeautify
+        run: set -o pipefail && xcodebuild -skipMacroValidation -scheme CommProtocol -destination "${{ matrix.destination }}" test | xcbeautify
