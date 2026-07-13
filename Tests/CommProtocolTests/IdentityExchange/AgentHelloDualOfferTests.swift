@@ -98,9 +98,6 @@ struct AgentHelloDualOfferTests {
 	///release produces for the same content (v1.3.0, d2106a8).
 	@Test func testClassicalOnlyGolden() throws {
 		let encoded = try classicalOnlyData.wireFormat
-		print(
-			"classicalOnly golden: \(encoded.map { String(format: "%02x", $0) }.joined())"
-		)
 		#expect(encoded == Data(hexString: Self.classicalOnlyGoldenHex))
 	}
 

@@ -58,4 +58,15 @@ struct MLSIntroductionTests {
 			try overLimit.wireFormat
 		}
 	}
+
+	//the shim inherits the classical 32-byte header-key width at encode time
+	@Test func testShimKemKeyWidthEnforced() throws {
+		let malformed = MLSIntroduction.postQuantumShim(
+			kemPublicKeyData: Data(repeating: 0x33, count: 31),
+			encodedKeyPackage: Data([0xFD, 0xEA]) + Data(repeating: 0x44, count: 100)
+		)
+		#expect(throws: LinearEncodingError.invalidTypedKey) {
+			try malformed.wireFormat
+		}
+	}
 }

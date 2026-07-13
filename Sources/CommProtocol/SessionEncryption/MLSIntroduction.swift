@@ -19,7 +19,9 @@ import Foundation
 ///signal. An honest, suite-typed card format is left for a future replacement.
 ///
 ///Publishers order key choices most-compatible first: the classical entry stays at
-///index 0.
+///index 0. Existing consumers select the first entry whose wrapper `suite` they
+///recognize, and the shim reuses the classical suite, so a mis-ordered card would be
+///mis-selected by already-deployed clients. Ordering is load-bearing, not cosmetic.
 public struct MLSIntroduction: Sendable, Equatable {
 	public let suite: SessionEncryptionSuites
 	//header encryption for the welcome stream
