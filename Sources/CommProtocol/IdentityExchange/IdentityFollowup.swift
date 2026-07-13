@@ -29,6 +29,32 @@ public struct AgentUpdate: Sendable, Equatable, Hashable {
 	}
 }
 
+extension AgentUpdate {
+	///The agent version at (and above) which handoff signing bodies become
+	///domain-separated (see `AgentHandoff.NewAgentTBS`).
+	///
+	///This shadows the post-quantum rollout: PQ capability is advertised by an
+	///agent version at or above a threshold (the field legacy peers already
+	///parse — see the app's `pq-card-in-session-negotiation.md`), so domain
+	///separation rides that same version bump rather than a flag day of its own.
+	///Classical (sub-threshold) agents keep the pre-separation body byte-for-byte.
+	///
+	///Placeholder above the current agent version so it is inert today; the value
+	///is the single coordination point and must match the app's PQ-capability
+	///threshold when PQ ships.
+	public static let pqDomainSeparationVersion = SemanticVersion(
+		major: 3,
+		minor: 0,
+		patch: 0
+	)
+
+	///Whether this agent's handoff signing body carries the domain-separation
+	///discriminator, per ``pqDomainSeparationVersion``.
+	var domainSeparatesHandoff: Bool {
+		version >= Self.pqDomainSeparationVersion
+	}
+}
+
 extension AgentUpdate: LinearEncodedTriple {
 	public var first: SemanticVersion { version }
 	public var second: Bool { isAppClip }

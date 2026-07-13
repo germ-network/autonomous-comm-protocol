@@ -9,7 +9,7 @@ import Foundation
 
 public struct AgentHandoff: Equatable, Sendable {
 	struct NewAgentTBS {
-		//		static let discriminator = Data("successorAgent".utf8)
+		static let discriminator = Data("successorAgent".utf8)
 		//All of these are injected and already known
 		let knownAgentKey: AgentPublicKey
 		let newAgentIdentity: IdentityPublicKey
@@ -19,14 +19,23 @@ public struct AgentHandoff: Equatable, Sendable {
 		//transmitted in this object
 		let agentData: AgentUpdate
 
+		//The discriminator is prepended only for agent versions at/above the PQ
+		//domain-separation threshold (AgentUpdate.pqDomainSeparationVersion).
+		//Classical agents omit it and stay byte-compatible with already-deployed
+		//verifiers. Signer and verifier both build this from the same agentData,
+		//and agentData.version is inside the signed body, so the choice is
+		//deterministic and tamper-evident.
 		var formatForSigning: Data {
 			get throws {
-				try knownAgentKey.wireFormat
+				let body =
+					try knownAgentKey.wireFormat
 					+ newAgentIdentity.id.wireFormat
 					+ context.wireFormat
 					+ updateMessage
 					+ agentData.wireFormat
-
+				return agentData.domainSeparatesHandoff
+					? Self.discriminator + body
+					: body
 			}
 		}
 	}
