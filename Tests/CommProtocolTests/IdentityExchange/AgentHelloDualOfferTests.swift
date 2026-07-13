@@ -3,6 +3,7 @@
 //  CommProtocol
 //
 
+import CommProtocolMocks
 import CryptoKit
 import Foundation
 import Testing
