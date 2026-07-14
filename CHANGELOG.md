@@ -1,5 +1,21 @@
 # @germ-network/autonomous-comm-protocol
 
+## 1.5.0
+
+### Minor Changes
+
+- [#27](https://github.com/germ-network/autonomous-comm-protocol/pull/27) [`482a619`](https://github.com/germ-network/autonomous-comm-protocol/commit/482a619ee821a660938b57436ede328471070364) Thanks [@germ-mark](https://github.com/germ-mark)! - Add `IdentityPrivateKey.createAgentDelegate(for:context:)` — delegate this
+  identity to an agent key the caller already holds, rather than minting one. The
+  delegate binds only the agent's public key, so the caller keeps the private half.
+
+  Needed when the agent key must be chosen before the delegation context is known:
+  a post-quantum card session's receiver picks its new agent key up front (the
+  session's `newClientId`), then learns the session proposal context only after the
+  establishment handshake — the same-identity mirror of how an anchor's
+  `createNewAgentHandoff` already accepts a pre-minted agent. The existing
+  `createAgentDelegate(context:)` now routes through the new variant; behavior
+  unchanged.
+
 ## 1.4.0
 
 ### Minor Changes
