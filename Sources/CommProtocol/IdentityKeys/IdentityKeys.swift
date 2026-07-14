@@ -83,19 +83,35 @@ public struct IdentityPrivateKey: Sendable {
 		IdentityDelegate
 	) {
 		let newAgent = AgentPrivateKey()
-		let newAgentPubKey = newAgent.publicKey
+		return (
+			newAgent,
+			try createAgentDelegate(for: newAgent.publicKey, context: context)
+		)
+	}
+
+	///Delegate this identity to an agent key the caller already holds, rather than
+	///minting one. The delegate binds only the agent's PUBLIC key (`agentID`) and
+	///`context`, so the private half is never needed here — the caller keeps it.
+	///
+	///Needed when the agent key must be chosen BEFORE the delegation context is
+	///known: e.g. a post-quantum card session's receiver picks its new agent key
+	///up front (the session's `newClientId`), then learns the session proposal
+	///context only after the establishment handshake — the mirror, for the
+	///same-identity delegate path, of how an anchor's `createNewAgentHandoff`
+	///already accepts a pre-minted `newAgent`.
+	public func createAgentDelegate(
+		for newAgentId: AgentPublicKey,
+		context: TypedDigest
+	) throws -> IdentityDelegate {
 		let signature = try sign(
 			input: IdentityDelegate.TBS(
-				agentID: newAgentPubKey.id,
+				agentID: newAgentId.id,
 				context: context
 			).formatForSigning
 		)
-		return (
-			newAgent,
-			.init(
-				newAgentId: newAgentPubKey,
-				knownIdentitySignature: signature
-			)
+		return .init(
+			newAgentId: newAgentId,
+			knownIdentitySignature: signature
 		)
 	}
 
