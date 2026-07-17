@@ -56,12 +56,13 @@ struct PQAnchorWelcomeTests {
 			)
 		#expect(verifiedReply.agent.agentKey == blairReplyAgent.publicKey)
 		//pin every Verified field against the created content (Data fields are
-		//interchangeable by type — a wrong-field regression would type-check),
-		//except sentTime, whose epoch conversion does not round-trip bit-exactly
+		//interchangeable by type — a wrong-field regression would type-check);
+		//sentTime equality holds because create stamps it `.now.wireNormalized`
 		#expect(verifiedReply.welcome.keyMaterial == keyMaterial)
 		#expect(verifiedReply.mlsWelcomeData == content.mlsWelcomeData)
 		#expect(verifiedReply.welcome.seqNo == content.welcome.seqNo)
 		#expect(verifiedReply.welcome.agentUpdate == content.welcome.agentUpdate)
+		#expect(verifiedReply.welcome.sentTime == content.welcome.sentTime)
 	}
 
 	@Test func testWrongRecipientFailsVerification() throws {

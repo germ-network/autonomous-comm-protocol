@@ -141,7 +141,7 @@ extension AgentPrivateKey {
 			groupId: groupId,
 			agentData: agentData,
 			seqNo: .random(in: .min...(.max)),
-			sentTime: .now,
+			sentTime: .now.wireNormalized,
 			keyMaterial: keyMaterial
 		)
 

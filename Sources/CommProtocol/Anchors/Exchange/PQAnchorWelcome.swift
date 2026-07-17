@@ -199,7 +199,7 @@ extension PrivateActiveAnchor {
 			welcome: .init(
 				agentUpdate: agentUpdate,
 				seqNo: newSeqNo,
-				sentTime: .now,
+				sentTime: .now.wireNormalized,
 				keyMaterial: keyMaterial
 			),
 			mlsWelcomeData: mlsWelcomeMessage
