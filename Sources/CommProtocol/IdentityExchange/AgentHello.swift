@@ -28,7 +28,9 @@ public struct AgentHello: Sendable {
 		) {
 			self.agentUpdate = agentUpdate
 			self.keyChoices = keyChoices
-			self.expiration = expiration
+			//pre-round to the wire grid so a wire round trip preserves ==
+			//(see the note on `Date: LinearEncodable`)
+			self.expiration = expiration.wireNormalized
 		}
 
 		//fold in the identity key when we sign it

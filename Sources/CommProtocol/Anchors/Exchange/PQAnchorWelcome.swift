@@ -40,6 +40,9 @@ extension PQAnchorWelcome {
 	public struct Welcome: Sendable {
 		public let agentUpdate: AgentUpdate
 		public let seqNo: UInt32
+		//deliberately kept for template parity with AnchorWelcome (ruling
+		//2026-07-17): an unauthenticated sender assertion no consumer reads
+		//today — do not trust it for anything without adding validation
 		public let sentTime: Date
 		public let keyMaterial: PQEstablishmentKeyMaterial
 

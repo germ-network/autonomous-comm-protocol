@@ -27,7 +27,10 @@ public struct PQAppWelcome: Equatable, Sendable {
 		public let groupId: DataIdentifier
 		public let agentData: AgentUpdate
 		public let seqNo: UInt32  //sets the initial seqNo
-		public let sentTime: Date  //just as messages assert local send time
+		//just as messages assert local send time; kept for template parity
+		//with AppWelcome (ruling 2026-07-17) — an unauthenticated sender
+		//assertion no consumer reads today
+		public let sentTime: Date
 		public let keyMaterial: PQEstablishmentKeyMaterial
 	}
 

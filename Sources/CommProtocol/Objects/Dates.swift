@@ -11,18 +11,27 @@ import Foundation
 
 ///The wire format stores `timeIntervalSince1970.bitPattern`, but `Date` equates on
 ///`timeIntervalSinceReferenceDate`, and converting between the two epochs in Double
-///rounds away the low mantissa bit for about half of current-era clock values.
-///So for an arbitrary in-memory Date (e.g. `.now`), `parse(wireFormat) == original`
-///is a coin flip — never compare un-normalized Dates (or structs containing them)
-///bit-exactly across a wire round trip.
+///can round away low mantissa bits (it does for about half of current-era clock
+///values). So for an arbitrary in-memory Date (e.g. `.now`),
+///`parse(wireFormat) == original` is a coin flip — never compare un-normalized
+///Dates (or structs containing them) bit-exactly across a wire round trip.
 ///
-///One round trip is a fixed point: the parsed Date re-encodes to identical bytes
-///and stays `==` through further round trips. `wireNormalized` applies that
-///rounding up front (identical wire bytes, adjusts the value by < 1 ulp, ~120 ns
-///today), so a Date stamped `.now.wireNormalized` round-trips to exact equality.
-///Library constructors stamp their wire-bound Dates this way; do the same with
-///any Date you supply to a wire-encoded struct (e.g. expirations) if you need
-///`==` across an encode/parse cycle. DateEncodingTests sweeps these properties.
+///For the timestamps this library stamps, one round trip is a fixed point: the
+///parsed Date re-encodes to identical bytes and stays `==` through further round
+///trips. `wireNormalized` applies that rounding up front — identical wire bytes,
+///moving the instant by at most 2⁻²³ s (~120 ns for current-era dates) — so a
+///Date stamped `.now.wireNormalized` round-trips to exact equality. Library
+///constructors stamp their wire-bound Dates this way (`NewAgentData`'s init
+///normalizes its caller-supplied expiration); normalize likewise if you feed a
+///Date-typed wire field directly. `RoundedDate` fields, like the
+///Resource/ProtocolAddress expirations, quantize to whole hours instead —
+///`wireNormalized` is inert there.
+///
+///Caveats at the edges: bytes from a foreign encoder can need a second parse to
+///reach the fixed point, `parse` does no finiteness check (NaN/±inf bit patterns
+///parse into Dates that poison comparisons), and Dates within 2⁻²⁴ s of the
+///reference epoch collapse onto it. DateEncodingTests sweeps these properties
+///across the distinct float-grid regimes.
 extension Date: LinearEncodable {
 	public static func parse(_ input: Data) throws -> (Date, Int) {
 		let (bitPattern, consumed) = try UInt64.parse(input)
@@ -43,7 +52,8 @@ extension Date: LinearEncodable {
 
 extension Date {
 	///Self, pre-rounded to what the wire format can represent, so that a wire
-	///round trip reproduces it exactly (see the note on `Date: LinearEncodable`)
+	///round trip reproduces a finite Date exactly (see the note on
+	///`Date: LinearEncodable`)
 	public var wireNormalized: Date {
 		.init(timeIntervalSince1970: timeIntervalSince1970)
 	}
