@@ -167,7 +167,7 @@ extension PrivateActiveAnchor {
 		}
 
 		let filteredHistory = helloInputs.proofHistory
-			.filter { historyFilter($0.second) }
+			.filter { historyFilter($0.second.date) }
 			.map { $0.first }
 
 		let content = AnchorHello.Content(

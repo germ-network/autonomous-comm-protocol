@@ -52,10 +52,10 @@ extension AnchorSuccession.Proof: LinearEncodedPair {
 
 //save the date alongside the Proof so we can apply policy to prune
 public struct DatedProof: LinearEncodedPair, Sendable {
-	public var first: AnchorSuccession.Proof
-	public var second: Date
+	public let first: AnchorSuccession.Proof
+	public let second: WireDate
 
-	public init(first: AnchorSuccession.Proof, second: Date) {
+	public init(first: AnchorSuccession.Proof, second: WireDate) {
 		self.first = first
 		self.second = second
 	}

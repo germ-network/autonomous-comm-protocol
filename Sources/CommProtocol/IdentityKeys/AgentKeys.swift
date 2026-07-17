@@ -97,7 +97,7 @@ public struct AgentPrivateKey: Sendable {
 				groupIdSeed: groupIdSeed,
 				agentSignatureWelcome: signature,
 				seqNo: .random(in: .min...(.max)),
-				sentTime: .init()
+				sentTime: .now
 			)
 		)
 	}
@@ -140,7 +140,7 @@ public struct AgentPrivateKey: Sendable {
 				groupIdSeed: groupIdSeed,
 				agentSignatureWelcome: signature,
 				seqNo: .random(in: .min...(.max)),
-				sentTime: .init()
+				sentTime: .now
 			)
 		)
 	}

@@ -68,7 +68,7 @@ struct AgentHelloTests {
 		let modifiedTBS = AgentHello.NewAgentData(
 			agentUpdate: modifedData,
 			keyChoices: agentData.keyChoices,
-			expiration: agentData.expiration
+			expiration: agentData.expiration.date
 		)
 
 		let modifiedSignedAgentData = SignedObject<AgentHello.NewAgentData>(

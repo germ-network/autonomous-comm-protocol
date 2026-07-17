@@ -26,9 +26,10 @@ private struct LegacyMLSIntroduction: LinearEncodedPair {
 private struct LegacyNewAgentData: LinearEncodedTriple {
 	let first: AgentUpdate
 	let second: [LegacyMLSIntroduction]
-	let third: Date
+	//the shipped decoder read a raw Date here; WireDate parses the same bytes
+	let third: WireDate
 
-	init(first: AgentUpdate, second: [LegacyMLSIntroduction], third: Date) throws {
+	init(first: AgentUpdate, second: [LegacyMLSIntroduction], third: WireDate) throws {
 		self.first = first
 		self.second = second
 		self.third = third
@@ -112,7 +113,7 @@ struct AgentHelloDualOfferTests {
 		#expect(decoded.second.first?.second == classicalIntroduction.encodedKeyPackage)
 		//the PQ package survives as opaque bytes an old decoder simply won't interpret
 		#expect(decoded.second.last?.second == pqShimIntroduction.encodedKeyPackage)
-		#expect(decoded.third == expiration)
+		#expect(decoded.third.date == expiration)
 	}
 
 	///Consumers detect the PQ entry by inspecting the key package (here: the suite id it
