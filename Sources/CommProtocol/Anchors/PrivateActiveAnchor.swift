@@ -67,7 +67,7 @@ public struct PrivateActiveAnchor: Sendable {
 						predecessor: publicKey.archive,
 						signature: signature
 					),
-					second: .now
+					second: .now.wireNormalized
 				)
 			]
 		)
@@ -220,7 +220,7 @@ extension PrivateActiveAnchor {
 			third: .init(
 				first: agentUpdate,
 				second: newSeqNo,
-				third: .now,
+				third: .now.wireNormalized,
 				fourth: keyPackageData
 			),
 			fourth: mlsWelcomeMessage
