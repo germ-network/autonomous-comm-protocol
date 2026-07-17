@@ -5,7 +5,6 @@
 //  Created by Mark @ Germ on 7/17/26.
 //
 
-import CryptoKit
 import Foundation
 
 ///The PQ (TwoMLSPQ) card establishment reply: a separate, parallel structure to
@@ -20,7 +19,7 @@ import Foundation
 ///a bare key-package blob. The layouts also diverge structurally at the fifth
 ///content element (nested pair vs Data), so the signed wire bytes of one never
 ///parse as the other.
-public struct PQAppWelcome: Equatable {
+public struct PQAppWelcome: Equatable, Sendable {
 	public let introduction: IdentityIntroduction
 	public let signedContent: SignedObject<Content>
 
@@ -33,7 +32,7 @@ public struct PQAppWelcome: Equatable {
 	}
 
 	//This gets transmitted, encrypted to the HPKE init key
-	public struct Combined: Equatable {
+	public struct Combined: Equatable, Sendable {
 		public let appWelcome: PQAppWelcome
 		public let mlsWelcomeData: Data
 
@@ -96,7 +95,7 @@ extension PQAppWelcome.Combined: LinearEncodedPair {
 //over the remainder of the data in the PQAppWelcome
 //some indirectly through the delegate AgentKey
 extension PQAppWelcome {
-	public struct Validated {
+	public struct Validated: Sendable {
 		public let coreIdentity: CoreIdentity
 		public let introContents: IdentityIntroduction.Contents
 		public let imageResource: Resource

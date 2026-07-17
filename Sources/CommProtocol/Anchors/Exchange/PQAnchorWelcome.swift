@@ -88,11 +88,6 @@ extension PQAnchorWelcome {
 	struct Package: LinearEncodedPair {
 		let first: Content  //Content.wireformat
 		let second: TypedSignature  //delegated agent signature
-
-		init(first: Content, second: TypedSignature) {
-			self.first = first
-			self.second = second
-		}
 	}
 
 	struct AgentSignatureBody: LinearEncodedTriple {
@@ -101,12 +96,6 @@ extension PQAnchorWelcome {
 		let second: Content
 		//injected context for the recipient
 		let third: PublicAnchor
-
-		init(first: String, second: Content, third: PublicAnchor) {
-			self.first = first
-			self.second = second
-			self.third = third
-		}
 	}
 
 	struct AnchorSignatureBody: LinearEncodedQuad {

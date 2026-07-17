@@ -65,6 +65,17 @@ extension TypedDigest {
 	}
 }
 
+//consumed by both welcome arms (PQAnchorWelcome + PQAppWelcome tests), so it
+//lives here rather than in either arm's Type+Mock file
+extension PQEstablishmentKeyMaterial {
+	public static func mock() throws -> Self {
+		try .init(
+			keyPackageData: Mocks.mockMessage(),
+			bootstrapKpCommitment: TypedDigest.mock().digest
+		)
+	}
+}
+
 extension DescribedImage {
 	public static func mock() throws -> Self {
 		.init(

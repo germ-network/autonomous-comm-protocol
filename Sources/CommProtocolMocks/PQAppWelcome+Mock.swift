@@ -6,7 +6,6 @@
 //
 
 import CommProtocol
-import CryptoKit
 import Foundation
 
 extension PQAppWelcome {
@@ -36,18 +35,6 @@ extension PQAppWelcome {
 			agentData: .mock(),
 			groupId: groupId,
 			keyMaterial: keyMaterial
-		)
-	}
-}
-
-extension PQEstablishmentKeyMaterial {
-	static public func mock() -> PQEstablishmentKeyMaterial {
-		.init(
-			keyPackageData: SymmetricKey(size: .bits256).rawRepresentation,
-			bootstrapKpCommitment: .init(
-				prefix: .sha256,
-				over: SymmetricKey(size: .bits256).rawRepresentation
-			)
 		)
 	}
 }
