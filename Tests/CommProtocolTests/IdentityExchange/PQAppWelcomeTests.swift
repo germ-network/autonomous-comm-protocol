@@ -48,7 +48,8 @@ struct PQAppWelcomeTests {
 	@Test func testClassicalAppWelcomeIsNotAPQAppWelcome() throws {
 		//domain separation: a classical AppWelcome's bytes must never survive
 		//the PQ parse+validate chain (dies at parse — the classical fifth
-		//element's bytes cannot decode as the PQ key-material pair)
+		//element's key-package length prefix is never 0x00, so it can never
+		//satisfy the PQ key material's reserved discriminator byte)
 		let myAgent = AgentPrivateKey()
 		let classicalWelcome = try AppWelcome.mock(
 			remoteAgentKey: myAgent.publicKey,
@@ -61,10 +62,36 @@ struct PQAppWelcomeTests {
 		}
 	}
 
+	@Test func testCraftedClassicalKeyPackageIsNotAPQAppWelcome() throws {
+		//regression for the fifth-element discriminator. A classical key
+		//package of exactly 128 bytes has OptionalData length prefix 0x80; a
+		//mid-range discriminator (0x80) let that byte pass the PQ check, and
+		//with kp[0]=0x5E and kp[95]=0x01 the element round-tripped
+		//byte-identically, so the classical agent signature also validated as
+		//PQ — a cross-route confusion. 0x00 is the one length prefix
+		//OptionalData never emits for a non-empty body, so no classical key
+		//package of ANY length can be reframed as PQ key material: this dies at
+		//parse.
+		let myAgent = AgentPrivateKey()
+		var kp = Data(repeating: 0xAB, count: 128)
+		kp[kp.startIndex] = 0x5E  //would-be PQ keyPackageData length
+		kp[kp.startIndex + 95] = 0x01  //would-be sha256 digest prefix
+		let classicalWelcome = try AppWelcome.mock(
+			remoteAgentKey: myAgent.publicKey,
+			keyPackageData: kp
+		)
+
+		#expect(throws: (any Error).self) {
+			_ = try PQAppWelcome.finalParse(classicalWelcome.wireFormat)
+				.validated(myAgent: myAgent.publicKey)
+		}
+	}
+
 	@Test func testPQAppWelcomeIsNotAClassicalAppWelcome() throws {
 		//the reverse direction: a PQ welcome's bytes must not survive the
-		//CLASSICAL parse+validate chain either (the PQ fifth element leaves
-		//the commitment bytes trailing a classical parse)
+		//CLASSICAL parse+validate chain either — a classical Data parse of the
+		//fifth element reads the 0x00 discriminator as the OptionalData
+		//none-marker and throws requiredValueMissing
 		let myAgent = AgentPrivateKey()
 		let pqWelcome = try PQAppWelcome.mock(
 			remoteAgentKey: myAgent.publicKey,

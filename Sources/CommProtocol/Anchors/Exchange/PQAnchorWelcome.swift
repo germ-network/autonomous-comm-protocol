@@ -19,7 +19,9 @@ import Foundation
 ///
 ///Signature bodies use fresh discriminators ("PQAnchorReply.*"), so a signature
 ///over a classical `AnchorWelcome` can never validate as a `PQAnchorWelcome`,
-///or vice versa.
+///or vice versa. As a second, independent defense, the key material leads with
+///a checked reserved byte (`PQEstablishmentKeyMaterial.discriminator`, `0x00`)
+///that diverges the Welcome layout from the classical one at parse.
 ///
 ///Same pattern as AnchorHello/AnchorWelcome:
 ///- Inner content that we are transmitting
