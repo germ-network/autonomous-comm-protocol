@@ -25,6 +25,28 @@ import Foundation
 ///violation HERE — an immediate, local decode error — not a deep opaque
 ///failure at the A.4 side-band after establishment already succeeded.
 public struct PQEstablishmentKeyMaterial: Equatable, Sendable {
+	///Reserved wire tag leading the encoding; the parse init rejects anything
+	///else. This byte — not enum raw values — is what makes the classical and
+	///PQ welcome layouts mutually unparseable at their divergence point, where
+	///a classical welcome carries a bare key-package `Data`. It MUST be `0x00`,
+	///the one byte a classical `Data` length prefix can never be: `OptionalData`
+	///encodes a non-empty body with a length prefix of `0x01…0xFE` (or `0xFF`
+	///wide-form), and an empty body is rejected upstream — so a leading `0x00`
+	///can only mean PQ key material, never a classical key package. Both
+	///cross-parse directions then reject deterministically, with no reliance on
+	///the signature check:
+	/// - classical bytes read as PQ: the leading byte is the classical length
+	///   prefix (never `0x00`), so this guard fails with `invalidPrefix`;
+	/// - PQ bytes read as classical: a classical `Data` parse reads this `0x00`
+	///   as the `OptionalData` none-marker and throws `requiredValueMissing`.
+	///
+	///A nonzero value would collide: a key package of exactly that length has
+	///that length prefix, so the element round-trips byte-identically through
+	///the PQ parse and the classical agent signature validates as PQ — a
+	///cross-route confusion the signature check does NOT catch. Frozen: changing
+	///it breaks every signed PQ welcome.
+	public static let discriminator: UInt8 = 0x00
+
 	public let keyPackageData: Data
 	public let bootstrapKpCommitment: TypedDigest
 
@@ -55,22 +77,26 @@ public struct PQEstablishmentKeyMaterial: Equatable, Sendable {
 	}
 }
 
-extension PQEstablishmentKeyMaterial: LinearEncodedPair {
-	public var first: Data { keyPackageData }
-	public var second: TypedDigest { bootstrapKpCommitment }
+extension PQEstablishmentKeyMaterial: LinearEncodedTriple {
+	public var first: UInt8 { Self.discriminator }
+	public var second: Data { keyPackageData }
+	public var third: TypedDigest { bootstrapKpCommitment }
 
-	public init(first: Data, second: TypedDigest) throws {
+	public init(first: UInt8, second: Data, third: TypedDigest) throws {
+		guard first == Self.discriminator else {
+			throw LinearEncodingError.invalidPrefix
+		}
 		//pin the commitment's digest type on the wire: today .sha256 is the
 		//only DigestTypes case, so this cannot fire — it exists for the day
 		//the enum grows for some unrelated feature, keeping a non-SHA-256
 		//commitment a decode error here rather than a signed, established
 		//welcome that strands at A.4
-		guard second.type == .sha256 else {
+		guard third.type == .sha256 else {
 			throw LinearEncodingError.invalidPrefix
 		}
 		self.init(
-			keyPackageData: first,
-			bootstrapKpCommitment: second
+			keyPackageData: second,
+			bootstrapKpCommitment: third
 		)
 	}
 }

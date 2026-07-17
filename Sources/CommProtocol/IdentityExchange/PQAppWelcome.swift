@@ -16,9 +16,13 @@ import Foundation
 ///welcome issued in response to a key package; the difference is the signed
 ///content carries `PQEstablishmentKeyMaterial` (the CLASSICAL return key
 ///package plus the commitment to the A.4 bootstrap PQ key package) instead of
-///a bare key-package blob. The layouts also diverge structurally at the fifth
-///content element (nested pair vs Data), so the signed wire bytes of one never
-///parse as the other.
+///a bare key-package blob. The layouts also diverge at the fifth content
+///element, where the key material leads with a checked reserved byte
+///(`PQEstablishmentKeyMaterial.discriminator`, `0x00`) sitting where a
+///classical welcome carries its key-package `Data` length prefix — a byte a
+///classical length prefix can never be — so the signed wire bytes of one
+///route die at parse on the other, deterministically in both directions (see
+///the discriminator's doc).
 public struct PQAppWelcome: Equatable, Sendable {
 	public let introduction: IdentityIntroduction
 	public let signedContent: SignedObject<Content>

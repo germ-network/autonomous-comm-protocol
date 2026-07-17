@@ -190,16 +190,22 @@ struct PQAnchorWelcomeTests {
 }
 
 struct PQEstablishmentKeyMaterialWireTests {
-	//The commitment's wire contract: prefix byte 0x01 (sha256) + exactly 32
-	//bytes, frozen independent of how DigestTypes evolves. Today the 0x02 case
-	//is rejected by TypedDigest's own unknown-prefix parse; once DigestTypes
-	//grows a second case for any unrelated feature, the .sha256 pin in
-	//PQEstablishmentKeyMaterial's parse init is what keeps this red — the
-	//session layer accepts exactly SHA-256/32, so any other digest must die
-	//at decode, not deep in the A.4 side-band.
-	private func encoded(prefix: UInt8, digestBytes: Int) throws -> Data {
+	//The key material's wire contract: reserved discriminator byte 0x00, then
+	//the key package, then the commitment as prefix byte 0x01 (sha256) +
+	//exactly 32 bytes — all frozen independent of how the prefix enums evolve.
+	//Today the 0x02 case is rejected by TypedDigest's own unknown-prefix
+	//parse; once DigestTypes grows a second case for any unrelated feature,
+	//the .sha256 pin in PQEstablishmentKeyMaterial's parse init is what keeps
+	//this red — the session layer accepts exactly SHA-256/32, so any other
+	//digest must die at decode, not deep in the A.4 side-band.
+	private func encoded(
+		discriminator: UInt8 = PQEstablishmentKeyMaterial.discriminator,
+		prefix: UInt8,
+		digestBytes: Int
+	) throws -> Data {
 		let kp = SymmetricKey(size: .bits256).rawRepresentation
 		var bytes = Data()
+		bytes.append(discriminator)
 		bytes.append(UInt8(kp.count))  //OptionalData short-form length prefix
 		bytes.append(kp)
 		bytes.append(prefix)
@@ -211,6 +217,17 @@ struct PQEstablishmentKeyMaterialWireTests {
 		let material = try PQEstablishmentKeyMaterial.mock()
 		let received = try PQEstablishmentKeyMaterial.finalParse(material.wireFormat)
 		#expect(received == material)
+	}
+
+	@Test func testWrongDiscriminatorFailsParse() throws {
+		//the reserved leading byte is checked, not just skipped: any nonzero
+		//value — including 0x80, which a 128-byte classical key package's
+		//length prefix could take — must die at decode
+		#expect(throws: LinearEncodingError.invalidPrefix) {
+			_ = try PQEstablishmentKeyMaterial.finalParse(
+				try encoded(discriminator: 0x80, prefix: 0x01, digestBytes: 32)
+			)
+		}
 	}
 
 	@Test func testUnknownDigestPrefixFailsParse() throws {
