@@ -43,13 +43,13 @@ extension PQAnchorWelcome {
 		//deliberately kept for template parity with AnchorWelcome (ruling
 		//2026-07-17): an unauthenticated sender assertion no consumer reads
 		//today — do not trust it for anything without adding validation
-		public let sentTime: Date
+		public let sentTime: WireDate
 		public let keyMaterial: PQEstablishmentKeyMaterial
 
 		public init(
 			agentUpdate: AgentUpdate,
 			seqNo: UInt32,
-			sentTime: Date,
+			sentTime: WireDate,
 			keyMaterial: PQEstablishmentKeyMaterial
 		) {
 			self.agentUpdate = agentUpdate
@@ -145,13 +145,13 @@ extension PQAnchorWelcome {
 extension PQAnchorWelcome.Welcome: LinearEncodedQuad {
 	public var first: AgentUpdate { agentUpdate }
 	public var second: UInt32 { seqNo }
-	public var third: Date { sentTime }
+	public var third: WireDate { sentTime }
 	public var fourth: PQEstablishmentKeyMaterial { keyMaterial }
 
 	public init(
 		first: AgentUpdate,
 		second: UInt32,
-		third: Date,
+		third: WireDate,
 		fourth: PQEstablishmentKeyMaterial
 	) throws {
 		self.init(
@@ -202,7 +202,7 @@ extension PrivateActiveAnchor {
 			welcome: .init(
 				agentUpdate: agentUpdate,
 				seqNo: newSeqNo,
-				sentTime: .now.wireNormalized,
+				sentTime: .now,
 				keyMaterial: keyMaterial
 			),
 			mlsWelcomeData: mlsWelcomeMessage

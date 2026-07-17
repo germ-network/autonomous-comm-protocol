@@ -27,7 +27,7 @@ public struct AgentHelloReply: Sendable {
 		public let groupIdSeed: DataIdentifier
 		public let agentSignatureWelcome: TypedSignature
 		public let seqNo: UInt32  //sets the initial seqNo
-		public let sentTime: Date  //just as messages assert local send time
+		public let sentTime: WireDate  //just as messages assert local send time
 	}
 }
 
@@ -49,13 +49,13 @@ extension AgentHelloReply.Content: LinearEncodedQuad {
 	public var first: DataIdentifier { groupIdSeed }
 	public var second: TypedSignature { agentSignatureWelcome }
 	public var third: UInt32 { seqNo }
-	public var fourth: Date { sentTime }
+	public var fourth: WireDate { sentTime }
 
 	public init(
 		first: DataIdentifier,
 		second: TypedSignature,
 		third: UInt32,
-		fourth: Date
+		fourth: WireDate
 	) throws {
 		self.init(
 			groupIdSeed: first,

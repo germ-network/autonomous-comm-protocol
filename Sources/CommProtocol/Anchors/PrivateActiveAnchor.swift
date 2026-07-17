@@ -67,7 +67,7 @@ public struct PrivateActiveAnchor: Sendable {
 						predecessor: publicKey.archive,
 						signature: signature
 					),
-					second: .now.wireNormalized
+					second: .now
 				)
 			]
 		)
@@ -167,7 +167,7 @@ extension PrivateActiveAnchor {
 		}
 
 		let filteredHistory = helloInputs.proofHistory
-			.filter { historyFilter($0.second) }
+			.filter { historyFilter($0.second.date) }
 			.map { $0.first }
 
 		let content = AnchorHello.Content(
@@ -220,7 +220,7 @@ extension PrivateActiveAnchor {
 			third: .init(
 				first: agentUpdate,
 				second: newSeqNo,
-				third: .now.wireNormalized,
+				third: .now,
 				fourth: keyPackageData
 			),
 			fourth: mlsWelcomeMessage

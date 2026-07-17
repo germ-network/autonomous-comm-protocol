@@ -30,7 +30,7 @@ public struct PQAppWelcome: Equatable, Sendable {
 		//just as messages assert local send time; kept for template parity
 		//with AppWelcome (ruling 2026-07-17) — an unauthenticated sender
 		//assertion no consumer reads today
-		public let sentTime: Date
+		public let sentTime: WireDate
 		public let keyMaterial: PQEstablishmentKeyMaterial
 	}
 
@@ -62,14 +62,14 @@ extension PQAppWelcome.Content: LinearEncodedQuintuple {
 	public var first: DataIdentifier { groupId }
 	public var second: AgentUpdate { agentData }
 	public var third: UInt32 { seqNo }
-	public var fourth: Date { sentTime }
+	public var fourth: WireDate { sentTime }
 	public var fifth: PQEstablishmentKeyMaterial { keyMaterial }
 
 	public init(
 		first: DataIdentifier,
 		second: AgentUpdate,
 		third: UInt32,
-		fourth: Date,
+		fourth: WireDate,
 		fifth: PQEstablishmentKeyMaterial
 	) throws {
 		self.init(
@@ -144,7 +144,7 @@ extension AgentPrivateKey {
 			groupId: groupId,
 			agentData: agentData,
 			seqNo: .random(in: .min...(.max)),
-			sentTime: .now.wireNormalized,
+			sentTime: .now,
 			keyMaterial: keyMaterial
 		)
 

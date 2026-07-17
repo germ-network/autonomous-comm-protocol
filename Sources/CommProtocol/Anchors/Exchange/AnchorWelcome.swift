@@ -32,13 +32,13 @@ extension AnchorWelcome {
 	public struct Welcome: LinearEncodedQuad, Sendable {
 		public let first: AgentUpdate
 		public let second: UInt32  //seqNo
-		public let third: Date
+		public let third: WireDate
 		public let fourth: Data  //keyPackage
 
 		public init(
 			first: AgentUpdate,
 			second: UInt32,
-			third: Date,
+			third: WireDate,
 			fourth: Data
 		) {
 			self.first = first

@@ -39,7 +39,7 @@ struct PQAppWelcomeTests {
 		#expect(
 			validated.introContents == mockWelcome.introduction.signedContents.content)
 		//whole-struct equality holds across the wire round trip because
-		//createPQAppWelcome stamps sentTime `.now.wireNormalized`
+		//sentTime is a WireDate, so whole-struct equality is exact across round trips
 		#expect(validated.welcomeContent == mockWelcome.signedContent.content)
 		//the establishment key material survives the round trip intact
 		#expect(validated.welcomeContent.keyMaterial == keyMaterial)

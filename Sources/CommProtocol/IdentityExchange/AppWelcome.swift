@@ -25,7 +25,7 @@ public struct AppWelcome: Equatable {
 		public let groupId: DataIdentifier
 		public let agentData: AgentUpdate
 		public let seqNo: UInt32  //sets the initial seqNo
-		public let sentTime: Date  //just as messages assert local send time
+		public let sentTime: WireDate  //just as messages assert local send time
 		public let keyPackageData: Data
 	}
 
@@ -57,14 +57,14 @@ extension AppWelcome.Content: LinearEncodedQuintuple {
 	public var first: DataIdentifier { groupId }
 	public var second: AgentUpdate { agentData }
 	public var third: UInt32 { seqNo }
-	public var fourth: Date { sentTime }
+	public var fourth: WireDate { sentTime }
 	public var fifth: Data { keyPackageData }
 
 	public init(
 		first: DataIdentifier,
 		second: AgentUpdate,
 		third: UInt32,
-		fourth: Date,
+		fourth: WireDate,
 		fifth: Data
 	) throws {
 		self.init(

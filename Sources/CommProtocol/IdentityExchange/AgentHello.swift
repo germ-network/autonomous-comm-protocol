@@ -19,7 +19,7 @@ public struct AgentHello: Sendable {
 		//prepend the identity key when signing
 		public let agentUpdate: AgentUpdate
 		public let keyChoices: SessionIntroductionChoices
-		public let expiration: Date
+		public let expiration: WireDate
 
 		public init(
 			agentUpdate: AgentUpdate,
@@ -28,9 +28,7 @@ public struct AgentHello: Sendable {
 		) {
 			self.agentUpdate = agentUpdate
 			self.keyChoices = keyChoices
-			//pre-round to the wire grid so a wire round trip preserves ==
-			//(see the note on `Date: LinearEncodable`)
-			self.expiration = expiration.wireNormalized
+			self.expiration = .init(date: expiration)
 		}
 
 		//fold in the identity key when we sign it
@@ -111,17 +109,17 @@ extension AgentHello: LinearEncodedPair {
 extension AgentHello.NewAgentData: LinearEncodedTriple {
 	public var first: AgentUpdate { agentUpdate }
 	public var second: SessionIntroductionChoices { keyChoices }
-	public var third: Date { expiration }
+	public var third: WireDate { expiration }
 
 	public init(
 		first: AgentUpdate,
 		second: SessionIntroductionChoices,
-		third: Date
+		third: WireDate
 	) throws {
 		self.init(
 			agentUpdate: first,
 			keyChoices: second,
-			expiration: third
+			expiration: third.date
 		)
 	}
 }
