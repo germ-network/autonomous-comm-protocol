@@ -1,5 +1,46 @@
 # @germ-network/autonomous-comm-protocol
 
+## 1.6.0
+
+### Minor Changes
+
+- [#30](https://github.com/germ-network/autonomous-comm-protocol/pull/30) [`baeb158`](https://github.com/germ-network/autonomous-comm-protocol/commit/baeb158c7e24765889e106cb47d65892a3753e1d) Thanks [@germ-mark](https://github.com/germ-mark)! - Make wire-bound Dates round-trip to exact equality. The wire format stores
+  `timeIntervalSince1970.bitPattern`, but `Date` equates on
+  `timeIntervalSinceReferenceDate`, and the epoch conversion in Double rounds
+  away the low mantissa bit for ~half of current-era clock values — so
+  `parse(wireFormat) == original` was a coin flip for any Date stamped `.now`,
+  and whole-struct equality across a wire round trip flaked per-run (bit
+  PQAppWelcomeTests on PR [#29](https://github.com/germ-network/autonomous-comm-protocol/issues/29)).
+
+  Adds `WireDate` — a Date pre-rounded to the wire grid at construction
+  (moving the instant by at most 2⁻²³ s ≈ 120 ns) — as the field type of
+  every Date-carrying wire struct (`sentTime`, succession proof dates,
+  `NewAgentData.expiration`), and removes `Date`'s own LinearEncodable
+  conformance, so a raw-Date wire field no longer compiles. Wire bytes are
+  unchanged and round trips are exact by construction; only in-memory sub-µs
+  noise is removed. Source-breaking for field readers: take `.date` off a
+  `WireDate` (Date-taking convenience inits are unchanged, e.g.
+  `NewAgentData`'s). `Date.wireNormalized` exposes the same rounding for
+  comparing a caller-held Date against a round-tripped `.date`.
+
+- [#29](https://github.com/germ-network/autonomous-comm-protocol/pull/29) [`19f73c3`](https://github.com/germ-network/autonomous-comm-protocol/commit/19f73c3bafe4c40f53cb6e4acf5042858ce136f8) Thanks [@germ-mark](https://github.com/germ-mark)! - Add `PQAnchorWelcome` / `PQAppWelcome`: parallel establishment-reply structs for
+  the PQ (TwoMLSPQ v20) path. The classical `AnchorWelcome` / `AppWelcome` stay
+  live unchanged — routing discriminates (the PQ reply only ever answers a PQ
+  hello), so there is no version field.
+
+  Both carry the new `PQEstablishmentKeyMaterial` pair inside the signed body:
+  the replier's CLASSICAL return key package plus a `TypedDigest` commitment
+  (SHA-256) to the A.4 bootstrap PQ key package, binding the deferred PQ key
+  material to the sender's identity root. New signature discriminators
+  ("PQAnchorReply.\*") domain-separate the anchor arm from the classical welcome;
+  the card arm's content layout diverges structurally at the fifth element.
+
+  New API: `PrivateActiveAnchor.createPQAnchorWelcome`,
+  `AnchorPublicKey.verify(pqReply:recipient:)`,
+  `AgentPrivateKey.createPQAppWelcome`, `PQAppWelcome.validated(myAgent:)`,
+  plus `PQAppWelcome.mock` / `PQEstablishmentKeyMaterial.mock` in
+  CommProtocolMocks.
+
 ## 1.5.0
 
 ### Minor Changes
