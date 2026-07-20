@@ -197,6 +197,44 @@ public struct AgentPrivateKey: Sendable {
 		)
 	}
 
+	///The card arm's born-dedicated establishment delegation (TwoMLSPQ
+	///contract 26): the same two-isolation-domain flow as
+	///`completeAgentHandoff` — the IdentityPrivateKey minted the delegate
+	///(`createAgentDelegate(for:context:)` with
+	///`PQEstablishmentBinding.context(welcome:)`), and the NEW dedicated agent
+	///completes it here — but the artifact rides the establishment staple
+	///instead of a proposal, with the context filled from the welcome and the
+	///update-message slot EMPTY (at establishment the welcome IS the
+	///credential-carrying MLS artifact and is already signed via the context;
+	///see `PQEstablishmentBinding`). Called AFTER the session layer's `receive`
+	///produced the return welcome and BEFORE the session may emit.
+	public func completePQCardEstablishment(
+		input: AgentHandoff.Input,
+		agentData: AgentUpdate,
+		welcome: Data
+	) throws -> PQCardEstablishmentHandoff {
+		//an empty welcome can never be joined; reject locally before signing
+		guard !welcome.isEmpty else {
+			throw LinearEncodingError.requiredValueMissing
+		}
+		let newAgentSignatureOver = try AgentHandoff.NewAgentTBS(
+			knownAgentKey: input.establishedAgent,
+			newAgentIdentity: input.existingIdentity,
+			context: PQEstablishmentBinding.context(welcome: welcome),
+			updateMessage: Data(),
+			agentData: agentData
+		).formatForSigning
+		let newAgentSignature = try sign(input: newAgentSignatureOver)
+
+		return .init(
+			identityDelegate: input.identityDelegate,
+			agentHandoff: .init(
+				agentData: agentData,
+				newAgentSignature: newAgentSignature
+			)
+		)
+	}
+
 	public func completeIdentityHandoff(
 		identityHandoff: IdentityHandoff,
 		establishedAgent: AgentPublicKey,
