@@ -126,6 +126,32 @@ extension AnchorHandoff {
 }
 
 //signature bodies
+//
+// HISTORICAL LABEL SWAP — FROZEN FOR WIRE COMPATIBILITY. Do not "correct".
+//
+// Two of the three discriminator strings below are swapped relative to the
+// struct they name:
+//   • ActiveAgentBody  (Quintuple) signs the string "AnchorHandoff.RetiredAgentBody"
+//   • RetiredAgentBody (Quad)      signs the string "AnchorHandoff.ActiveAgentBody"
+// (ActiveAnchorBody is correctly labeled.)
+//
+// Each discriminator is prefixed into the to-be-signed bytes of its signature,
+// so the string is part of the wire contract. CLASSICAL anchor handoffs are in
+// production and verify against these exact strings; renaming a string to match
+// its struct would change every AnchorHandoff signature and invalidate every
+// already-minted handoff. The labels are therefore frozen as-is, and
+// AnchorHandoffDiscriminatorTests pins them so this can't be undone silently.
+//
+// This is a labeling mismatch only, not a security issue: all three strings are
+// distinct ("ActiveAnchorBody" / "RetiredAgentBody" / "ActiveAgentBody") and
+// back structurally different bodies (Quad vs Quintuple), so the three signer
+// roles stay fully domain-separated.
+//
+// The classical→PQ transition is the clean fix, not a breaking change here: a
+// future PQAnchorHandoff gets its own "PQAnchorHandoff.*" discriminator
+// namespace (exactly as PQAnchorWelcome uses "PQAnchorReply.*" beside classical
+// "AnchorReply.*"), and MUST use correctly-matching labels there — the PQ path
+// is unshipped, so it carries no wire-compat debt.
 extension AnchorHandoff {
 	struct ActiveAnchorBody: LinearEncodedQuad {
 		static let discriminator = "AnchorHandoff.ActiveAnchorBody"
@@ -136,6 +162,8 @@ extension AnchorHandoff {
 	}
 
 	struct ActiveAgentBody: LinearEncodedQuintuple {
+		//FROZEN: label swapped vs struct name (see extension header). This body
+		//signs "AnchorHandoff.RetiredAgentBody"; do not rename to match the struct.
 		static let discriminator = "AnchorHandoff.RetiredAgentBody"
 		let first: String
 		let second: Content
@@ -145,6 +173,8 @@ extension AnchorHandoff {
 	}
 
 	struct RetiredAgentBody: LinearEncodedQuad {
+		//FROZEN: label swapped vs struct name (see extension header). This body
+		//signs "AnchorHandoff.ActiveAgentBody"; do not rename to match the struct.
 		static let discriminator = "AnchorHandoff.ActiveAgentBody"
 		let first: String
 		let second: Data  //Package.wireformat
