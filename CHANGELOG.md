@@ -1,5 +1,11 @@
 # @germ-network/autonomous-comm-protocol
 
+## 1.7.0
+
+### Minor Changes
+
+- [#34](https://github.com/germ-network/autonomous-comm-protocol/pull/34) [`4df47c9`](https://github.com/germ-network/autonomous-comm-protocol/commit/4df47c92cc9886508ed8943a7bb70b2f4dfaafe7) Thanks [@germ-mark](https://github.com/germ-mark)! - Add the born-dedicated establishment delegation (TwoMLSPQ contract 26): `PQCardEstablishmentHandoff` and `PQAnchorEstablishmentHandoff` carry the identity-signed handoff artifact on the establishment staple, next to the unmodified spec-conformant return welcome, with every to-be-signed slot derived from the welcome bytes (`PQEstablishmentBinding`) so the delegation binds the exact group being joined and cannot cross-validate as a steady-state rotation handoff. Create via `AgentPrivateKey.completePQCardEstablishment` / `PrivateActiveAnchor.createPQAnchorEstablishmentHandoff`.
+
 ## 1.6.1
 
 ### Patch Changes
