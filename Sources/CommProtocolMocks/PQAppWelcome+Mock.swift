@@ -17,23 +17,19 @@ extension PQAppWelcome {
 			try Mocks
 			.mockIdentity()
 
-		let groupId = DataIdentifier(width: .bits256)
-
 		let (agentKey, introduction) =
 			try identityKey
 			.createNewDelegate(
 				signedIdentity: signedIdentity,
 				identityMutable: .mock(),
-				agentType: .welcome(
-					remoteAgentId: remoteAgentKey,
-					groupId: groupId
+				agentType: .pqCardEstablishment(
+					remoteAgentId: remoteAgentKey
 				)
 			)
 
 		return try agentKey.createPQAppWelcome(
 			introduction: introduction,
 			agentData: .mock(),
-			groupId: groupId,
 			keyMaterial: keyMaterial
 		)
 	}
