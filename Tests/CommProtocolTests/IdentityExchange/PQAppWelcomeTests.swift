@@ -119,11 +119,10 @@ struct PQAppWelcomeTests {
 		var flipped = original.keyMaterial.bootstrapKpCommitment.digest
 		flipped[flipped.startIndex] ^= 0x01
 		let tamperedContent = try PQAppWelcome.Content(
-			first: original.groupId,
-			second: original.agentData,
-			third: original.seqNo,
-			fourth: original.sentTime,
-			fifth: try PQEstablishmentKeyMaterial(
+			first: original.agentData,
+			second: original.seqNo,
+			third: original.sentTime,
+			fourth: try PQEstablishmentKeyMaterial(
 				keyPackageData: original.keyMaterial.keyPackageData,
 				bootstrapKpCommitment: flipped
 			)

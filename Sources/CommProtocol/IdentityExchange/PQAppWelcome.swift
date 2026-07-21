@@ -28,7 +28,11 @@ public struct PQAppWelcome: Equatable, Sendable {
 	public let signedContent: SignedObject<Content>
 
 	public struct Content: Equatable, Sendable {
-		public let groupId: DataIdentifier
+		//No `groupId`: unlike classical `AppWelcome`, a PQ card session's identity is
+		//the crate's LOCAL send-group id (each endpoint keys its own), not a shared,
+		//initiator-chosen id carried on the wire. The session↔welcome↔identity weld is
+		//the born-dedicated establishment handoff over `sha256(welcome)`, so no shared
+		//session-id field is needed here (2026-07-21).
 		public let agentData: AgentUpdate
 		public let seqNo: UInt32  //sets the initial seqNo
 		//just as messages assert local send time; kept for template parity
@@ -62,26 +66,23 @@ extension PQAppWelcome: LinearEncodedPair {
 	}
 }
 
-extension PQAppWelcome.Content: LinearEncodedQuintuple {
-	public var first: DataIdentifier { groupId }
-	public var second: AgentUpdate { agentData }
-	public var third: UInt32 { seqNo }
-	public var fourth: WireDate { sentTime }
-	public var fifth: PQEstablishmentKeyMaterial { keyMaterial }
+extension PQAppWelcome.Content: LinearEncodedQuad {
+	public var first: AgentUpdate { agentData }
+	public var second: UInt32 { seqNo }
+	public var third: WireDate { sentTime }
+	public var fourth: PQEstablishmentKeyMaterial { keyMaterial }
 
 	public init(
-		first: DataIdentifier,
-		second: AgentUpdate,
-		third: UInt32,
-		fourth: WireDate,
-		fifth: PQEstablishmentKeyMaterial
+		first: AgentUpdate,
+		second: UInt32,
+		third: WireDate,
+		fourth: PQEstablishmentKeyMaterial
 	) throws {
 		self.init(
-			groupId: first,
-			agentData: second,
-			seqNo: third,
-			sentTime: fourth,
-			keyMaterial: fifth
+			agentData: first,
+			seqNo: second,
+			sentTime: third,
+			keyMaterial: fourth
 		)
 	}
 }
@@ -110,10 +111,11 @@ extension PQAppWelcome {
 	}
 
 	public func validated(myAgent: AgentPublicKey) throws -> Validated {
-		let agentType = AgentTypes.welcome(
-			remoteAgentId: myAgent,
-			groupId: signedContent.content.groupId
-		)
+		//Seedless PQ establishment context: binds the acceptor's own agent
+		//(`myAgent`, the peer the replier answered) and, via `generateContext`,
+		//the replier's delegated agent — no session seed (the identity↔welcome
+		//weld is the establishment handoff over the welcome digest).
+		let agentType = AgentTypes.pqCardEstablishment(remoteAgentId: myAgent)
 
 		guard
 			let context = try agentType.generateContext(
@@ -141,11 +143,9 @@ extension AgentPrivateKey {
 	public func createPQAppWelcome(
 		introduction: IdentityIntroduction,
 		agentData: AgentUpdate,
-		groupId: DataIdentifier,
 		keyMaterial: PQEstablishmentKeyMaterial
 	) throws -> PQAppWelcome {
 		let content = PQAppWelcome.Content(
-			groupId: groupId,
 			agentData: agentData,
 			seqNo: .random(in: .min...(.max)),
 			sentTime: .now,
