@@ -1,5 +1,11 @@
 # @germ-network/autonomous-comm-protocol
 
+## 1.11.0
+
+### Minor Changes
+
+- [#42](https://github.com/germ-network/autonomous-comm-protocol/pull/42) [`28b7337`](https://github.com/germ-network/autonomous-comm-protocol/commit/28b733762b12d598d80f2d4df6631d818e4892a3) Thanks [@germ-mark](https://github.com/germ-mark)! - Add read capability for a `jpeg = 2` case on `ImageType`, plus `ImageType.detect(from:)` magic-byte classification (JXL codestream, JXL container, JPEG). No writer emits `.jpeg` yet: senders without a JPEG XL encoder (the App Clip) keep labeling JPEG bytes `.jpegXL` so that deployed clients — which fail the whole signed `CoreIdentity` parse on an unknown discriminant — are unaffected. Consumers should classify by bytes via `detect(from:)`, not the wire label.
+
 ## 1.10.0
 
 ### Minor Changes
