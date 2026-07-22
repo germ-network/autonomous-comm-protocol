@@ -70,6 +70,34 @@ extension AnchorHandoff {
 				fifth: knownAgent.id
 			)
 		}
+
+		// MARK: v2 — opaque digest bodies
+
+		func activeAnchorBodyV2(
+			groupContext: Data,
+			knownAgent: AgentPublicKey,
+		) throws -> ActiveAnchorBodyV2 {
+			.init(
+				first: ActiveAnchorBodyV2.discriminator,
+				second: self,
+				third: groupContext,
+				fourth: knownAgent.id
+			)
+		}
+
+		func activeAgentBodyV2(
+			groupContext: Data,
+			mlsUpdateDigest: Data,
+			knownAgent: AgentPublicKey,
+		) throws -> ActiveAgentBodyV2 {
+			.init(
+				first: ActiveAgentBodyV2.discriminator,
+				second: self,
+				third: groupContext,
+				fourth: mlsUpdateDigest,
+				fifth: knownAgent.id
+			)
+		}
 	}
 
 	public struct Package: LinearEncodedTriple {
@@ -127,6 +155,17 @@ extension AnchorHandoff {
 
 //signature bodies
 extension AnchorHandoff {
+	// The v1 bodies. Their digest fields are `TypedDigest`, so this package must be able to
+	// NAME the hash a peer used — which is why v2 exists (see below).
+	//
+	// KNOWN-SWAPPED DISCRIMINATORS, DELIBERATELY FROZEN. `ActiveAgentBody` carries the string
+	// "AnchorHandoff.RetiredAgentBody" and vice versa. This is a labeling bug, not a security
+	// one: domain separation needs the committed strings to be DISTINCT, not correctly named,
+	// and they are distinct — so no signature can be replayed across contexts even when one key
+	// signs both body types across successive rotations. DO NOT "fix" these in place: live
+	// relationships have signatures committed over them, and renaming would silently fail every
+	// verification. They retire with the v1 bodies. The v2 bodies below carry the corrected
+	// names.
 	struct ActiveAnchorBody: LinearEncodedQuad {
 		static let discriminator = "AnchorHandoff.ActiveAnchorBody"
 		let first: String
@@ -166,6 +205,74 @@ extension AnchorHandoff {
 		init(
 			encodedPackage: Data,
 			mlsUpdateDigest: TypedDigest,
+			knownAgent: AgentPublicKey
+		) {
+			self.first = Self.discriminator
+			self.second = encodedPackage
+			self.third = mlsUpdateDigest
+			self.fourth = knownAgent.id
+		}
+	}
+
+	// MARK: - v2 bodies: opaque digests
+	//
+	// Identical in shape to v1, with the digest fields as length-framed `Data`. The point is
+	// ownership: a digest's algorithm is a facet of the MLS backend's cipher suite, so naming it
+	// here (`DigestTypes`) meant a backend could not adopt a new suite until this package
+	// released a matching case. These bodies commit to whatever bytes the caller supplies and
+	// never interpret them — the caller's own self-describing encoding travels INSIDE the value,
+	// so cross-era signatures stay unambiguous without this package knowing the eras.
+	//
+	// This is safe because a verifier never parses a digest off the wire: it rebuilds the body
+	// from a locally derived reference digest and checks the signature against that. Agreement on
+	// the algorithm is enforced where the session is established, not here.
+	//
+	// DISCRIMINATORS: corrected names, `.v2`-suffixed. The suffix is not decoration — the plain
+	// corrected strings are UNAVAILABLE, because v1 has them live on each other's structs (see
+	// the frozen-swap note above). Reusing one would put two different structures under one
+	// committed string across the union of live body types, which is exactly the distinctness
+	// that domain separation rests on. `ActiveAnchorBodyV2` takes the suffix too, though its name
+	// was never swapped: its ENCODING differs from v1's, and keeping discriminator↔encoding 1:1
+	// is what stops this bug class from recurring.
+	struct ActiveAnchorBodyV2: LinearEncodedQuad {
+		static let discriminator = "AnchorHandoff.ActiveAnchorBody.v2"
+		let first: String
+		let second: Content
+		let third: Data  //group context, opaque
+		let fourth: TypedKeyMaterial  //knownAgent
+	}
+
+	struct ActiveAgentBodyV2: LinearEncodedQuintuple {
+		static let discriminator = "AnchorHandoff.ActiveAgentBody.v2"
+		let first: String
+		let second: Content
+		let third: Data  //group context, opaque
+		let fourth: Data  //mls update digest, opaque
+		let fifth: TypedKeyMaterial  //knownAgent
+	}
+
+	struct RetiredAgentBodyV2: LinearEncodedQuad {
+		static let discriminator = "AnchorHandoff.RetiredAgentBody.v2"
+		let first: String
+		let second: Data  //Package.wireformat
+		let third: Data  //mls update digest, opaque
+		let fourth: TypedKeyMaterial  //knownAgent
+
+		init(
+			first: String,
+			second: Data,
+			third: Data,
+			fourth: TypedKeyMaterial
+		) {
+			self.first = first
+			self.second = second
+			self.third = third
+			self.fourth = fourth
+		}
+
+		init(
+			encodedPackage: Data,
+			mlsUpdateDigest: Data,
 			knownAgent: AgentPublicKey
 		) {
 			self.first = Self.discriminator

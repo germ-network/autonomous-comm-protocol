@@ -151,6 +151,96 @@ extension PublicAnchorAgent {
 		)
 	}
 
+	/// Verify a handoff minted by the OPAQUE overload of `createNewAgentHandoff` (v2 bodies).
+	///
+	/// `context` and `mlsUpdateDigest` are the verifier's OWN locally derived reference values —
+	/// they are never read out of the handoff, which carries no digests at all. Supply the bytes
+	/// this side's MLS backend produced (TwoMLSPQ: the receiver's
+	/// `QueuedRemoteProposal.context`/`.digest`); the signature check does the comparison, so
+	/// wrong bytes simply fail to verify. This is why the bodies can commit to an algorithm this
+	/// package cannot name.
+	public func verify(
+		anchorHandoff: AnchorHandoff,
+		context: Data,
+		mlsUpdateDigest: Data
+	) throws -> AnchorHandoff.Verified {
+		// Mirror of the mint-side guard: an empty reference digest could only ever
+		// match a handoff minted with the same integration bug, and that pair would
+		// verify with the MLS binding silently absent.
+		guard !context.isEmpty, !mlsUpdateDigest.isEmpty else {
+			throw ProtocolError.unexpected("empty digest bytes in opaque handoff body")
+		}
+		let verifiedPackage = try verifyPackageV2(
+			handoff: anchorHandoff,
+			mlsUpdateDigest: mlsUpdateDigest
+		)
+
+		let content = verifiedPackage.first
+		let newAnchor = try verify(newAnchor: content.second)
+		let activeAnchor = newAnchor?.publicKey ?? anchor.publicKey
+
+		guard
+			activeAnchor
+				.verifier(
+					verifiedPackage.second,
+					try content.activeAnchorBodyV2(
+						groupContext: context,
+						knownAgent: agentKey
+					).wireFormat
+				)
+		else {
+			throw ProtocolError.authenticationError
+		}
+
+		let newAgentKey = try AgentPublicKey(
+			archive: content.first.first
+		)
+		guard
+			newAgentKey.verifier(
+				verifiedPackage.third,
+				try content
+					.activeAgentBodyV2(
+						groupContext: context,
+						mlsUpdateDigest: mlsUpdateDigest,
+						knownAgent: agentKey
+					).wireFormat
+			)
+		else {
+			throw ProtocolError.authenticationError
+		}
+
+		return .init(
+			newAnchor: newAnchor != nil,
+			agent: .init(
+				anchor: newAnchor ?? anchor,
+				agentKey: newAgentKey
+			),
+			newAgentUpdate: content.first.second
+		)
+	}
+
+	private func verifyPackageV2(
+		handoff: AnchorHandoff,
+		mlsUpdateDigest: Data
+	) throws -> AnchorHandoff.Package {
+		guard
+			agentKey.verifier(
+				handoff.first,
+				try AnchorHandoff
+					.RetiredAgentBodyV2(
+						encodedPackage: handoff.second,
+						mlsUpdateDigest: mlsUpdateDigest,
+						knownAgent: agentKey
+					)
+					.wireFormat
+			)
+		else {
+			throw ProtocolError.authenticationError
+		}
+
+		return try .finalParse(handoff.second)
+	}
+
 	private func verifyPackage(
 		handoff: AnchorHandoff,
 		mlsUpdateDigest: TypedDigest

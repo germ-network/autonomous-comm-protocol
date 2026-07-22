@@ -318,6 +318,79 @@ extension PrivateActiveAnchor {
 			second: encodedPackage
 		)
 	}
+
+	/// Mint a handoff whose digests are OPAQUE bytes (v2 bodies).
+	///
+	/// Same flow and same wire structure as the typed overload — only the signature bodies
+	/// differ, so `AnchorHandoff` itself is unchanged and the digests never travel in it. Pass
+	/// the MLS backend's own values verbatim (TwoMLSPQ: `proposalContext` and `proposalHash`,
+	/// or a digest from `PQDigest.over(_:)`). They are committed, never parsed, so this package
+	/// no longer needs a case for the backend's hash — the backend can change suites without a
+	/// release here.
+	///
+	/// Verify with `PublicAnchorAgent.verify(anchorHandoff:context:mlsUpdateDigest:)`'s matching
+	/// opaque overload: the two are a pair, and a handoff minted here will NOT verify against
+	/// the typed one (different discriminators, by design).
+	public func createNewAgentHandoff(
+		agentUpdate: AgentUpdate,
+		newAgent: AgentPrivateKey,
+		from retiredAgent: PrivateAnchorAgent,
+		groupContext: Data,
+		mlsUpdateDigest: Data,
+	) throws -> AnchorHandoff {
+		// The typed overload guaranteed a well-formed digest structurally; opaque bytes
+		// move that to runtime. Empty is the one unambiguously degenerate value — a
+		// handoff committing to nothing for a slot — and if BOTH ends plumbed empty
+		// (a default-value integration bug), verification would succeed with the MLS
+		// binding silently absent. Refuse at mint so the bug is loud at its source.
+		guard !groupContext.isEmpty, !mlsUpdateDigest.isEmpty else {
+			throw ProtocolError.unexpected("empty digest bytes in opaque handoff body")
+		}
+		let handoffContent = AnchorHandoff.Content(
+			first: .init(
+				publicKey: newAgent.publicKey,
+				agentUpdate: agentUpdate
+			),
+			second: nil
+		)
+
+		let activeAnchorSignature = try privateKey.signer(
+			try handoffContent
+				.activeAnchorBodyV2(
+					groupContext: groupContext,
+					knownAgent: retiredAgent.publicKey
+				).wireFormat
+		)
+
+		let newAgentSignature = try newAgent.signer(
+			try handoffContent
+				.activeAgentBodyV2(
+					groupContext: groupContext,
+					mlsUpdateDigest: mlsUpdateDigest,
+					knownAgent: retiredAgent.publicKey
+				).wireFormat
+		)
+
+		let package = AnchorHandoff.Package(
+			first: handoffContent,
+			second: activeAnchorSignature,  //active anchor
+			third: newAgentSignature  //new agent
+		)
+
+		let encodedPackage = try package.wireFormat
+		let retiredAgentSignature = try retiredAgent.signer(
+			try AnchorHandoff.RetiredAgentBodyV2(
+				encodedPackage: encodedPackage,
+				mlsUpdateDigest: mlsUpdateDigest,
+				knownAgent: retiredAgent.publicKey
+			).wireFormat
+		)
+
+		return .init(
+			first: retiredAgentSignature,
+			second: encodedPackage
+		)
+	}
 }
 
 extension PrivateActiveAnchor {
