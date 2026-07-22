@@ -67,6 +67,27 @@ extension CoreIdentity: LinearEncodedQuintuple {
 
 public enum ImageType: UInt8, Sendable {
 	case jpegXL = 1
+	case jpeg = 2
+
+	///Classify image bytes by magic number, independent of the declared wire label.
+	///Senders without a JPEG XL encoder (the App Clip) label their JPEG images
+	///`.jpegXL` for backward compatibility, so consumers should trust the bytes,
+	///not the label.
+	public static func detect(from data: Data) -> ImageType? {
+		//JXL raw codestream: FF 0A
+		if data.starts(with: [0xFF, 0x0A]) {
+			return .jpegXL
+		}
+		//JXL ISOBMFF container: 00 00 00 0C 4A 58 4C 20 0D 0A 87 0A
+		if data.starts(with: [0, 0, 0, 0x0C, 0x4A, 0x58, 0x4C, 0x20, 0x0D, 0x0A, 0x87, 0x0A]) {
+			return .jpegXL
+		}
+		//JPEG: FF D8 FF
+		if data.starts(with: [0xFF, 0xD8, 0xFF]) {
+			return .jpeg
+		}
+		return nil
+	}
 }
 
 public struct DescribedImage: Equatable, Sendable {
