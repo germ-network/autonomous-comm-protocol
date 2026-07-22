@@ -338,6 +338,14 @@ extension PrivateActiveAnchor {
 		groupContext: Data,
 		mlsUpdateDigest: Data,
 	) throws -> AnchorHandoff {
+		// The typed overload guaranteed a well-formed digest structurally; opaque bytes
+		// move that to runtime. Empty is the one unambiguously degenerate value — a
+		// handoff committing to nothing for a slot — and if BOTH ends plumbed empty
+		// (a default-value integration bug), verification would succeed with the MLS
+		// binding silently absent. Refuse at mint so the bug is loud at its source.
+		guard !groupContext.isEmpty, !mlsUpdateDigest.isEmpty else {
+			throw ProtocolError.unexpected("empty digest bytes in opaque handoff body")
+		}
 		let handoffContent = AnchorHandoff.Content(
 			first: .init(
 				publicKey: newAgent.publicKey,

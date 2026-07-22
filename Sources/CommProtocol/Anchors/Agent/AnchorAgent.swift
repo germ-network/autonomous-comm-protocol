@@ -164,6 +164,12 @@ extension PublicAnchorAgent {
 		context: Data,
 		mlsUpdateDigest: Data
 	) throws -> AnchorHandoff.Verified {
+		// Mirror of the mint-side guard: an empty reference digest could only ever
+		// match a handoff minted with the same integration bug, and that pair would
+		// verify with the MLS binding silently absent.
+		guard !context.isEmpty, !mlsUpdateDigest.isEmpty else {
+			throw ProtocolError.unexpected("empty digest bytes in opaque handoff body")
+		}
 		let verifiedPackage = try verifyPackageV2(
 			handoff: anchorHandoff,
 			mlsUpdateDigest: mlsUpdateDigest

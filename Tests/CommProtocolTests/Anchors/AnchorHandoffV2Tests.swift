@@ -163,6 +163,57 @@ struct AnchorHandoffV2Tests {
 		}
 	}
 
+	/// The typed overload guaranteed digest well-formedness structurally; the opaque
+	/// one moves that to runtime, and empty is the one degenerate value both ends
+	/// could plumb symmetrically (a default-value bug) — which would verify with the
+	/// MLS binding silently absent. Both doors refuse it.
+	@Test func emptyDigestBytesAreRefused() throws {
+		let (alexAgent, verified) = try exchange()
+		let newAgent = AgentPrivateKey()
+		let real = opaqueDigest(0xA1)
+
+		#expect(throws: ProtocolError.unexpected("empty digest bytes in opaque handoff body")) {
+			_ = try self.alexPrivateAnchor.createNewAgentHandoff(
+				agentUpdate: .mock(),
+				newAgent: newAgent,
+				from: alexAgent,
+				groupContext: Data(),
+				mlsUpdateDigest: real
+			)
+		}
+		#expect(throws: ProtocolError.unexpected("empty digest bytes in opaque handoff body")) {
+			_ = try self.alexPrivateAnchor.createNewAgentHandoff(
+				agentUpdate: .mock(),
+				newAgent: newAgent,
+				from: alexAgent,
+				groupContext: real,
+				mlsUpdateDigest: Data()
+			)
+		}
+
+		let handoff = try alexPrivateAnchor.createNewAgentHandoff(
+			agentUpdate: .mock(),
+			newAgent: newAgent,
+			from: alexAgent,
+			groupContext: real,
+			mlsUpdateDigest: real
+		)
+		#expect(throws: ProtocolError.unexpected("empty digest bytes in opaque handoff body")) {
+			_ = try verified.agent.verify(
+				anchorHandoff: handoff,
+				context: Data(),
+				mlsUpdateDigest: real
+			)
+		}
+		#expect(throws: ProtocolError.unexpected("empty digest bytes in opaque handoff body")) {
+			_ = try verified.agent.verify(
+				anchorHandoff: handoff,
+				context: real,
+				mlsUpdateDigest: Data()
+			)
+		}
+	}
+
 	/// The regression guard for the reason `.v2` is suffixed at all.
 	///
 	/// v1's `ActiveAgentBody` and `RetiredAgentBody` carry each OTHER's names — a
