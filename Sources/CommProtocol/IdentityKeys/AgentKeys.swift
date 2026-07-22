@@ -167,6 +167,32 @@ public struct AgentPrivateKey: Sendable {
 		)
 	}
 
+	///In-band classical->PQ card upgrade offer/welcome/decline. Signed by the
+	///established agent over the same `updateMessage + context` binding as
+	///``proposeLeafNode(leafNodeUpdate:agentUpdate:signedIdentityMutable:context:)``,
+	///so the carrier is bound to the MLS proposal it rides.
+	public func proposePQCardUpgrade(
+		agentUpdate: AgentUpdate,
+		payload: PQCardUpgrade.Payload,
+		leafNodeUpdate: Data,
+		context: TypedDigest
+	) throws -> CommProposal {
+		let upgrade = PQCardUpgrade(agentUpdate: agentUpdate, payload: payload)
+		let signature = try sign(
+			input: upgrade.formatForSigning(
+				updateMessage: leafNodeUpdate,
+				context: context
+			)
+		)
+
+		return .pqCardUpgrade(
+			.init(
+				content: upgrade,
+				signature: signature
+			)
+		)
+	}
+
 	///Agent handoffs cross 2 isolation domains
 	/// 1. start in IdentityPrivateKey creating a new agent
 	/// 3. the new Agent completes it
@@ -370,6 +396,25 @@ public struct AgentPublicKey: Sendable {
 			throw ProtocolError.authenticationError
 		}
 		return signedAgentUpdate.content
+	}
+
+	func validate(
+		signedUpgrade: SignedObject<PQCardUpgrade>,
+		for updateMessage: Data,
+		context: TypedDigest
+	) throws -> PQCardUpgrade {
+		let signatureBody = try signedUpgrade.content.formatForSigning(
+			updateMessage: updateMessage,
+			context: context
+		)
+		guard keyType == signedUpgrade.signature.signingAlgorithm,
+			publicKey.isValidSignature(
+				signedUpgrade.signature.signature,
+				for: signatureBody)
+		else {
+			throw ProtocolError.authenticationError
+		}
+		return signedUpgrade.content
 	}
 }
 

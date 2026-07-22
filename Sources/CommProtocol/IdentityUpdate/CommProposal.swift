@@ -47,12 +47,17 @@ public enum CommProposal: LinearEncodable, Equatable, Sendable {
 	//Identity Handoff includes an IdentityMutable data
 	case newIdentity(IdentityHandoff, AgentHandoff)
 	case anchorHandOff(AnchorHandoff)
+	//in-band classical->PQ card upgrade carrier — see PQCardUpgrade.swift.
+	//Emitted ONLY to a confirmed PQ-capable peer (unknown tag drops the message
+	//on a legacy peer).
+	case pqCardUpgrade(SignedObject<PQCardUpgrade>)
 
 	enum ProposalType: UInt8, LinearEnum {
 		case sameAgent = 1
 		case sameIdentity
 		case newIdentity
 		case anchorHandOff
+		case pqCardUpgrade
 	}
 
 	public enum ValidatedForCard: Sendable {
@@ -60,6 +65,7 @@ public enum CommProposal: LinearEncodable, Equatable, Sendable {
 		case sameIdentity(AgentHandoff.Validated, IdentityMutableData?)
 		case newIdentity(
 			SignedObject<CoreIdentity>, IdentityMutableData, AgentHandoff.Validated)
+		case pqCardUpgrade(PQCardUpgrade)
 	}
 
 	public func validate(
@@ -100,6 +106,14 @@ public enum CommProposal: LinearEncodable, Equatable, Sendable {
 			)
 		case .anchorHandOff:
 			throw ProtocolError.unsupported
+		case .pqCardUpgrade(let signedUpgrade):
+			.pqCardUpgrade(
+				try knownAgent.validate(
+					signedUpgrade: signedUpgrade,
+					for: updateMessage,
+					context: context
+				)
+			)
 		}
 	}
 
@@ -122,6 +136,10 @@ public enum CommProposal: LinearEncodable, Equatable, Sendable {
 		case .anchorHandOff:
 			let (anchorHandoff, consumed) = try AnchorHandoff.parse(remainder)
 			return (anchorHandOff(anchorHandoff), consumed + 1)
+		case .pqCardUpgrade:
+			let (signedUpgrade, consumed) =
+				try SignedObject<PQCardUpgrade>.parse(remainder)
+			return (.pqCardUpgrade(signedUpgrade), consumed + 1)
 		}
 
 	}
@@ -146,6 +164,9 @@ public enum CommProposal: LinearEncodable, Equatable, Sendable {
 			case .anchorHandOff(let anchorHandoff):
 				try [ProposalType.anchorHandOff.rawValue]
 					+ anchorHandoff.wireFormat
+			case .pqCardUpgrade(let signedUpgrade):
+				try [ProposalType.pqCardUpgrade.rawValue]
+					+ signedUpgrade.wireFormat
 			}
 		}
 	}
