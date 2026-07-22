@@ -1,5 +1,5 @@
 ---
-"@germ-network/comm-protocol": minor
+"@germ-network/autonomous-comm-protocol": minor
 ---
 
 Add opaque-digest handoff bodies (v2), with corrected discriminators.
