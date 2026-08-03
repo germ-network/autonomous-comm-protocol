@@ -1,5 +1,5 @@
 {
-  "originHash" : "936655932fb4b96db50e6696efe5f8cc49511b4b87827b2908f8a6521980023d",
+  "originHash" : "5e61db99593c694326104c2b6d58bffd3fcc011a04b0c5024de8e4e151e8cf81",
   "pins" : [
     {
       "identity" : "atprototypes",
@@ -35,6 +35,14 @@
       "state" : {
         "revision" : "96615d4b582f9f6536d8278304ce2a64c8e5288a",
         "version" : "0.2.0"
+      }
+    },
+    {
+      "identity" : "swift-cbor",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/nnabeyang/swift-cbor.git",
+      "state" : {
+        "revision" : "8d9b9c25284c6a2f0a564f4c42c7dc3466d08472"
       }
     },
     {
