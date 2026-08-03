@@ -167,6 +167,32 @@ public struct AgentPrivateKey: Sendable {
 		)
 	}
 
+	///Gated successor to `proposeLeafNode` — only ever call this for a peer
+	///observed at or above `AgentUpdate.mailboxGrantVersion` (see
+	///`CommProposal.agentUpdateV2`'s doc comment); the gate itself lives in
+	///the app.
+	public func proposeAgentUpdateV2(
+		leafNodeUpdate: Data,
+		agentUpdate: AgentUpdateV2,
+		signedIdentityMutable: SignedObject<IdentityMutableData>?,
+		context: TypedDigest
+	) throws -> CommProposal {
+		let signature = try sign(
+			input: agentUpdate.formatForSigning(
+				updateMessage: leafNodeUpdate,
+				context: context
+			)
+		)
+
+		return .agentUpdateV2(
+			.init(
+				content: agentUpdate,
+				signature: signature
+			),
+			signedIdentityMutable
+		)
+	}
+
 	///In-band classical->PQ card upgrade offer/welcome/decline. Signed by the
 	///established agent over the same `updateMessage + context` binding as
 	///``proposeLeafNode(leafNodeUpdate:agentUpdate:signedIdentityMutable:context:)``,
@@ -415,6 +441,25 @@ public struct AgentPublicKey: Sendable {
 			throw ProtocolError.authenticationError
 		}
 		return signedUpgrade.content
+	}
+
+	func validate(
+		signedAgentUpdateV2: SignedObject<AgentUpdateV2>,
+		for updateMessage: Data,
+		context: TypedDigest
+	) throws -> AgentUpdateV2 {
+		let signatureBody = try signedAgentUpdateV2.content.formatForSigning(
+			updateMessage: updateMessage,
+			context: context
+		)
+		guard keyType == signedAgentUpdateV2.signature.signingAlgorithm,
+			publicKey.isValidSignature(
+				signedAgentUpdateV2.signature.signature,
+				for: signatureBody)
+		else {
+			throw ProtocolError.authenticationError
+		}
+		return signedAgentUpdateV2.content
 	}
 }
 

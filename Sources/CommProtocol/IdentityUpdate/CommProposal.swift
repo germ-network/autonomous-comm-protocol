@@ -51,6 +51,10 @@ public enum CommProposal: LinearEncodable, Equatable, Sendable {
 	//Emitted ONLY to a confirmed PQ-capable peer (unknown tag drops the message
 	//on a legacy peer).
 	case pqCardUpgrade(SignedObject<PQCardUpgrade>)
+	//gated successor to .sameAgent — see AgentUpdateV2.swift. Emitted ONLY to
+	//a peer observed >= AgentUpdate.mailboxGrantVersion (unknown tag drops
+	//the message on a peer below the gate).
+	case agentUpdateV2(SignedObject<AgentUpdateV2>, SignedObject<IdentityMutableData>?)
 
 	enum ProposalType: UInt8, LinearEnum {
 		case sameAgent = 1
@@ -58,6 +62,7 @@ public enum CommProposal: LinearEncodable, Equatable, Sendable {
 		case newIdentity
 		case anchorHandOff
 		case pqCardUpgrade
+		case agentUpdateV2
 	}
 
 	public enum ValidatedForCard: Sendable {
@@ -66,6 +71,7 @@ public enum CommProposal: LinearEncodable, Equatable, Sendable {
 		case newIdentity(
 			SignedObject<CoreIdentity>, IdentityMutableData, AgentHandoff.Validated)
 		case pqCardUpgrade(PQCardUpgrade)
+		case agentUpdateV2(AgentUpdateV2, IdentityMutableData?)
 	}
 
 	public func validate(
@@ -114,6 +120,15 @@ public enum CommProposal: LinearEncodable, Equatable, Sendable {
 					context: context
 				)
 			)
+		case .agentUpdateV2(let signedAgentUpdateV2, let signedIdentityMutable):
+			.agentUpdateV2(
+				try knownAgent.validate(
+					signedAgentUpdateV2: signedAgentUpdateV2,
+					for: updateMessage,
+					context: context
+				),
+				try knownIdentity.validate(maybeSignedObject: signedIdentityMutable)
+			)
 		}
 	}
 
@@ -140,6 +155,15 @@ public enum CommProposal: LinearEncodable, Equatable, Sendable {
 			let (signedUpgrade, consumed) =
 				try SignedObject<PQCardUpgrade>.parse(remainder)
 			return (.pqCardUpgrade(signedUpgrade), consumed + 1)
+		case .agentUpdateV2:
+			let (signedAgentUpdateV2, signedIdentityMutable, consumed) =
+				try LinearEncoder
+				.decode(
+					SignedObject<AgentUpdateV2>.self,
+					(SignedObject<IdentityMutableData>?).self,
+					input: remainder
+				)
+			return (.agentUpdateV2(signedAgentUpdateV2, signedIdentityMutable), consumed + 1)
 		}
 
 	}
@@ -167,6 +191,10 @@ public enum CommProposal: LinearEncodable, Equatable, Sendable {
 			case .pqCardUpgrade(let signedUpgrade):
 				try [ProposalType.pqCardUpgrade.rawValue]
 					+ signedUpgrade.wireFormat
+			case .agentUpdateV2(let signedAgentUpdateV2, let signedIdentityMutable):
+				try [ProposalType.agentUpdateV2.rawValue]
+					+ signedAgentUpdateV2.wireFormat
+					+ signedIdentityMutable.wireFormat
 			}
 		}
 	}
