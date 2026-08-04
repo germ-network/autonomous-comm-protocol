@@ -42,9 +42,15 @@ extension DefinedWidthBinary {
 		guard wireFormat.count == prefixType.contentByteSize + 1 else {
 			throw .incorrectDataLength
 		}
+		//Re-based, not a suffix view: `suffix(from:)` would hand the conforming
+		//type a Data whose startIndex tracks the caller's buffer, so anything
+		//that later indexed `checkedData` absolutely would read the wrong
+		//window or trap. `parse(wireFormat:)` below has always re-based; these
+		//two construction paths must agree, since callers pick between them
+		//freely and nothing in the type signals which one produced a value.
 		try self.init(
 			prefix: prefixType,
-			checkedData: wireFormat.suffix(from: wireFormat.startIndex + 1)
+			checkedData: Data(wireFormat.suffix(from: wireFormat.startIndex + 1))
 		)
 	}
 
