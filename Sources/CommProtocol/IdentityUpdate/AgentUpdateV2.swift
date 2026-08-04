@@ -28,14 +28,25 @@ public struct AgentUpdateV2: Sendable, Equatable {
         self.grants = grants
     }
 
+    ///The signing-body case discriminator. A `CommProposal`'s tag byte is not
+    ///covered by its payload's signature — for tags 1–5 (shipped, preimages
+    ///frozen) the cases are kept apart only by structural parse
+    ///incompatibility, the same property `AnchorHandoff`'s V2 bodies fixed
+    ///with fresh discriminator strings. This case has never shipped, so it
+    ///gets the discriminator from birth: a signature over an `AgentUpdateV2`
+    ///can never verify as any other case's content, independent of how the
+    ///byte shapes evolve. Cases from tag 6 onward should do the same.
+    static let signingDiscriminator = Data("CommProposal.agentUpdateV2".utf8)
+
     ///Mirrors `AgentUpdate.formatForSigning(updateMessage:context:)` — the
     ///signature binds the update to the MLS proposal (`updateMessage`) and
-    ///the session `context`.
+    ///the session `context` — prefixed with ``signingDiscriminator`` to bind
+    ///it to this `CommProposal` case as well.
     func formatForSigning(
         updateMessage: Data,
         context: TypedDigest
     ) throws -> Data {
-        try wireFormat + updateMessage + context.wireFormat
+        try Self.signingDiscriminator + wireFormat + updateMessage + context.wireFormat
     }
 }
 

@@ -224,6 +224,31 @@ struct AgentUpdateV2Tests {
         }
     }
 
+    // MARK: - Signing-body case discriminator
+
+    /// The tag byte of a `CommProposal` is not covered by its payload's
+    /// signature, so `.agentUpdateV2` domain-separates its signing body with a
+    /// case discriminator (unlike tags 1–5, whose preimages shipped frozen).
+    /// Pins the exact preimage layout: discriminator ‖ wireFormat ‖
+    /// updateMessage ‖ context — removing or reordering any element must fail
+    /// here, not in production signature mismatches.
+    @Test func testFormatForSigningCarriesCaseDiscriminator() throws {
+        let update = AgentUpdateV2.mock()
+        let message = Data([0x0A, 0x0B])
+        let context = try TypedDigest.mock()
+
+        let preimage = try update.formatForSigning(
+            updateMessage: message,
+            context: context
+        )
+        let expected =
+            try Data("CommProposal.agentUpdateV2".utf8)
+            + update.wireFormat
+            + message
+            + context.wireFormat
+        #expect(preimage == expected)
+    }
+
     // MARK: - ValidatedForAnchor.agentUpdateV2 (Part 0: PersistedRatchet/AppSession
     // is the anchor path — .sameAgent's card-side sibling had no anchor-side
     // handling at all before this, tag 6 fell into `default: throw unsupported`)
