@@ -29,6 +29,25 @@ extension ProtocolAddress {
 	}
 }
 
+extension MailboxGrant {
+	public static func mock() -> Self {
+		try! .init(
+			authKey: .init(
+				algorithm: .hmacSha256,
+				symmetricKey: SymmetricKey(size: .bits256)
+			),
+			serviceHost: UUID().uuidString,
+			expiration: .distantFuture
+		)
+	}
+}
+
+extension AgentUpdateV2 {
+	public static func mock() -> Self {
+		.init(version: .mock(), isAppClip: true, grants: [.mock()])
+	}
+}
+
 public struct Mocks {
 	public static func mockMessage() -> Data {
 		SymmetricKey(size: .bits256).rawRepresentation

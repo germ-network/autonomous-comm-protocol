@@ -75,6 +75,30 @@ extension AgentUpdate {
 	var domainSeparatesHandoff: Bool {
 		version >= Self.pqDomainSeparationVersion
 	}
+
+	///The agent version at (and above) which an agent is emitted `.agentUpdateV2`
+	///`CommProposal`s carrying ``MailboxGrant``s instead of legacy
+	///``ProtocolAddress``es — next in line after ``pqCapableVersion`` = 2.3.0
+	///(docs/attachment-mailbox-delivery.md, "Wire types").
+	///
+	///Below this, an agent keeps receiving the classic triple — a legacy
+	///``ProtocolAddress`` list — byte-for-byte unchanged; nothing about its
+	///wire shape moves. `public` so the app imports the same constant as the
+	///single source of truth for the emission gate, which lives there (see
+	///``supportsMailboxGrants``).
+	public static let mailboxGrantVersion = SemanticVersion(
+		major: 2,
+		minor: 4,
+		patch: 0
+	)
+
+	///Whether this agent is emitted `.agentUpdateV2` proposals, per
+	///``mailboxGrantVersion``. Tracking *which* peer has been observed at or
+	///above this threshold — and so deciding when to actually emit one — is
+	///an app-layer concern, the same split as ``isPQCapable``.
+	public var supportsMailboxGrants: Bool {
+		version >= Self.mailboxGrantVersion
+	}
 }
 
 extension AgentUpdate: LinearEncodedTriple {
