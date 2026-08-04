@@ -306,6 +306,7 @@ extension CommProposal {
 	public enum ValidatedForAnchor: Sendable {
 		case sameAgent(AgentUpdate, IdentityMutableData?)
 		case agentHandoff(AnchorHandoff.Verified)
+		case agentUpdateV2(AgentUpdateV2, IdentityMutableData?)
 	}
 
 	public func validate(
@@ -337,6 +338,22 @@ extension CommProposal {
 					context: context,
 					mlsUpdateDigest: mlsUpdateDigest
 				)
+			)
+		case .agentUpdateV2(let signedAgentUpdateV2, let signedMutable):
+			let verifiedMutable: IdentityMutableData? = try {
+				guard let signedMutable else { return nil }
+				return try knownAnchor.anchor.publicKey
+					.verify(signedMutable: signedMutable)
+			}()
+
+			return .agentUpdateV2(
+				try knownAnchor.agentKey
+					.validate(
+						signedAgentUpdateV2: signedAgentUpdateV2,
+						for: mlsUpdateDigest.wireFormat,
+						context: context
+					),
+				verifiedMutable
 			)
 		default:
 			throw ProtocolError.unsupported
