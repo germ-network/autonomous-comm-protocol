@@ -1,5 +1,36 @@
 # @germ-network/autonomous-comm-protocol
 
+## 1.12.0
+
+### Minor Changes
+
+- [#47](https://github.com/germ-network/autonomous-comm-protocol/pull/47) [`95c4250`](https://github.com/germ-network/autonomous-comm-protocol/commit/95c4250ff2710a6d8d0bf0125fd135389db0064b) Thanks [@germ-mark](https://github.com/germ-mark)! - `ValidatedForAnchor` gains an `.agentUpdateV2` case (`CommProposal`'s tag 6 was
+  previously unhandled on the anchor path — `default: throw .unsupported`), mirroring
+  the existing card-side validation. `mailboxGrantVersion` moves `2.4.0` → `3.1.0`:
+  the original threshold assumed nothing had ever stamped a version at or above it
+  (the property that made `pqCapableVersion` = 2.3.0 sound), but
+  `pqDomainSeparationVersion` = 3.0.0 is already stamped by every PQ connection, so a
+  2.4.0 gate would have let an old PQ build believe it could parse tag 6 and then drop
+  the message. 3.1.0 clears every currently-stamped tier.
+
+  `AgentUpdateV2.formatForSigning` now leads with a case discriminator
+  (`"CommProposal.agentUpdateV2"`): a proposal's tag byte is not covered by its
+  payload's signature, and while tags 1–5 shipped with frozen preimages (kept apart
+  by structural parse incompatibility alone), tag 6 has never shipped — so it gets
+  cryptographic case binding from birth, free. Wire bytes are unchanged; only the
+  signed preimage moves.
+
+- [#45](https://github.com/germ-network/autonomous-comm-protocol/pull/45) [`9d58f1c`](https://github.com/germ-network/autonomous-comm-protocol/commit/9d58f1c91d713713be3bf548e6a3c55d803c9a2c) Thanks [@germ-mark](https://github.com/germ-mark)! - Add mailbox-v2 wire types (GER-1965/1966/1967): `swift-cbor` pinned at the same
+  revision as CoreAppLogic, a `DeterministicCbor` seam, and `MailboxGrant`
+  (`{authKey, serviceHost, expiration}`) with `address`/`putTag` HMAC-SHA256
+  derivation, cross-validated against germ-service's test vectors. A
+  `ProtocolAddress <-> MailboxGrant` bridge lets a grant ride the existing
+  `identifier` field on the wire-frozen PQ establishment surfaces (an authKey's
+  32 decoded bytes never collide with a legacy `crypto.randomUUID()` address's 27) with zero arity change. `AgentUpdateV2` (grants only) rides a new
+  `CommProposal` tag, emitted only to peers observed >= `mailboxGrantVersion`
+  (2.4.0) — existing proposal tags and the classical `AgentUpdate`/
+  `ProtocolAddress` wire format are unchanged (fixture-pinned).
+
 ## 1.11.0
 
 ### Minor Changes
