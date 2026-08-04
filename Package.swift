@@ -26,10 +26,14 @@ let package = Package(
 		),
 		.package(url: "https://github.com/swift-libp2p/swift-bases.git", from: "0.2.0"),
 		.package(
-			// pinned by revision: `Options.deterministicCbor` (RFC 8949 §4.2.1)
-			// is on main and not in any released tag. Same pin as CoreAppLogic.
+			// swift-cbor 0.1.0 includes `Options.deterministicCbor` (RFC 8949
+			// §4.2.1) — confirmed the previously-pinned revision
+			// (8d9b9c2, "feature/deterministic-cbor-option") is an ancestor of
+			// 0.1.0's tagged commit. A stable-tagged package (this one, since
+			// PR #46) cannot depend on a revision-pinned one — SwiftPM refuses
+			// to resolve it — so this must track a real tag, not a revision.
 			url: "https://github.com/nnabeyang/swift-cbor.git",
-			revision: "8d9b9c25284c6a2f0a564f4c42c7dc3466d08472"
+			from: "0.1.0"
 		),
 	],
 	targets: [
