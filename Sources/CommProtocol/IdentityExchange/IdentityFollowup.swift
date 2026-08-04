@@ -78,24 +78,41 @@ extension AgentUpdate {
 
 	///The agent version at (and above) which an agent is emitted `.agentUpdateV2`
 	///`CommProposal`s carrying ``MailboxGrant``s instead of legacy
-	///``ProtocolAddress``es — next in line after ``pqCapableVersion`` = 2.3.0
-	///(docs/attachment-mailbox-delivery.md, "Wire types").
+	///``ProtocolAddress``es.
+	///
+	///**Corrected from an original 2.4.0** (docs/attachment-mailbox-delivery.md,
+	///"Wire types" — "next in line after `pqCapableVersion` = 2.3.0"). That
+	///reasoning held for 2.3.0 because nothing had ever stamped a version at or
+	///above it; it does not hold here, because ``pqDomainSeparationVersion`` = 3.0.0
+	///is *already stamped* by every PQ connection. A capability tier only proves
+	///"the peer's CommProtocol has the parser" if it exceeds every version any
+	///shipped build has ever advertised — so the tier must clear the highest
+	///existing stamp, not just the previous tier. 3.1.0 clears
+	///``pqDomainSeparationVersion`` with room, and gating stays PQ-only (see
+	///``supportsMailboxGrants``) so no classical connection ever needs to cross
+	///``pqCapableVersion``/``pqDomainSeparationVersion`` to reach it.
 	///
 	///Below this, an agent keeps receiving the classic triple — a legacy
 	///``ProtocolAddress`` list — byte-for-byte unchanged; nothing about its
-	///wire shape moves. `public` so the app imports the same constant as the
-	///single source of truth for the emission gate, which lives there (see
-	///``supportsMailboxGrants``).
+	///wire shape moves. A ``MailboxGrant`` can still ride that triple today via
+	///the ``ProtocolAddress/mailboxGrant`` bridge, ungated — this constant only
+	///gates the first-class `.agentUpdateV2` carriage. `public` so the app
+	///imports the same constant as the single source of truth for the emission
+	///gate, which lives there (see ``supportsMailboxGrants``).
 	public static let mailboxGrantVersion = SemanticVersion(
-		major: 2,
-		minor: 4,
+		major: 3,
+		minor: 1,
 		patch: 0
 	)
 
 	///Whether this agent is emitted `.agentUpdateV2` proposals, per
-	///``mailboxGrantVersion``. Tracking *which* peer has been observed at or
-	///above this threshold — and so deciding when to actually emit one — is
-	///an app-layer concern, the same split as ``isPQCapable``.
+	///``mailboxGrantVersion``. Because the threshold sits above
+	///``pqDomainSeparationVersion``, this is only ever true on a PQ connection —
+	///the app scopes emission to PQ sessions accordingly. Tracking *which* peer
+	///has been observed at or above this threshold (a ratcheted per-agent
+	///maximum, since a later message must not un-observe an earlier one) — and
+	///so deciding when to actually emit one — is an app-layer concern, the same
+	///split as ``isPQCapable``.
 	public var supportsMailboxGrants: Bool {
 		version >= Self.mailboxGrantVersion
 	}

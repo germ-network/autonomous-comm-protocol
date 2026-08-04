@@ -3,6 +3,8 @@
 //  CommProtocol
 //
 
+import AtprotoTypes
+import AtprotoTypesMocks
 import CommProtocolMocks
 import CryptoKit
 import Foundation
@@ -222,11 +224,88 @@ struct AgentUpdateV2Tests {
         }
     }
 
+    // MARK: - ValidatedForAnchor.agentUpdateV2 (Part 0: PersistedRatchet/AppSession
+    // is the anchor path — .sameAgent's card-side sibling had no anchor-side
+    // handling at all before this, tag 6 fell into `default: throw unsupported`)
+
+    @Test func testAgentUpdateV2ProposalAnchorValidate() throws {
+        let acceptorAnchor = PrivateActiveAnchor.create(for: Atproto.DID.mock())
+        let invitationAgent = acceptorAnchor.createHelloAgent()
+        let knownAnchor = PublicAnchorAgent(
+            anchor: acceptorAnchor.publicAnchor,
+            agentKey: invitationAgent.publicKey
+        )
+        let mlsUpdateDigest = try TypedDigest.mock()
+        let mockContext = try TypedDigest.mock()
+
+        // signedIdentityMutable: nil — the anchor-side signer for
+        // IdentityMutableData is orthogonal to what this test covers (the new
+        // tag-6 branch's AgentUpdateV2 signature verification against the
+        // agent key) and has no established construction pattern in this
+        // test suite; the non-nil arm is exercised card-side already
+        // (testAgentUpdateV2Proposal).
+        let proposal = try invitationAgent.privateKey.proposeAgentUpdateV2(
+            leafNodeUpdate: mlsUpdateDigest.wireFormat,
+            agentUpdate: .mock(),
+            signedIdentityMutable: nil,
+            context: mockContext
+        )
+        let wireProposal = try proposal.wireFormat
+
+        let validated = try CommProposal.finalParse(wireProposal)
+            .validate(
+                knownAnchor: knownAnchor,
+                context: mockContext,
+                mlsUpdateDigest: mlsUpdateDigest
+            )
+
+        guard case .agentUpdateV2(let agentUpdate, let mutableData) = validated else {
+            Issue.record("expected .agentUpdateV2")
+            return
+        }
+        #expect(!agentUpdate.grants.isEmpty)
+        #expect(mutableData == nil)
+    }
+
+    @Test func testAgentUpdateV2ProposalAnchorValidateRejectsWrongKey() throws {
+        let acceptorAnchor = PrivateActiveAnchor.create(for: Atproto.DID.mock())
+        let invitationAgent = acceptorAnchor.createHelloAgent()
+        let wrongAgent = AgentPrivateKey()
+        let knownAnchor = PublicAnchorAgent(
+            anchor: acceptorAnchor.publicAnchor,
+            // validate against a key the proposal was NOT signed by
+            agentKey: wrongAgent.publicKey
+        )
+        let mlsUpdateDigest = try TypedDigest.mock()
+        let mockContext = try TypedDigest.mock()
+
+        let proposal = try invitationAgent.privateKey.proposeAgentUpdateV2(
+            leafNodeUpdate: mlsUpdateDigest.wireFormat,
+            agentUpdate: .mock(),
+            signedIdentityMutable: nil,
+            context: mockContext
+        )
+        let wireProposal = try proposal.wireFormat
+
+        #expect(throws: ProtocolError.authenticationError) {
+            let _ = try CommProposal.finalParse(wireProposal)
+                .validate(
+                    knownAnchor: knownAnchor,
+                    context: mockContext,
+                    mlsUpdateDigest: mlsUpdateDigest
+                )
+        }
+    }
+
     // MARK: - mailboxGrantVersion gate
 
     @Test func testSupportsMailboxGrantsBoundary() {
+        // Just below the threshold — deliberately still above
+        // pqDomainSeparationVersion (3.0.0), the case the original 2.4.0
+        // threshold got wrong: a version already stamped by every PQ
+        // connection must NOT pass this gate.
         let below = AgentUpdate(
-            version: SemanticVersion(major: 2, minor: 3, patch: 9999),
+            version: SemanticVersion(major: 3, minor: 0, patch: 9999),
             isAppClip: false,
             addresses: []
         )
@@ -236,7 +315,7 @@ struct AgentUpdateV2Tests {
             addresses: []
         )
         let above = AgentUpdate(
-            version: SemanticVersion(major: 2, minor: 4, patch: 1),
+            version: SemanticVersion(major: 3, minor: 1, patch: 1),
             isAppClip: false,
             addresses: []
         )
@@ -245,9 +324,15 @@ struct AgentUpdateV2Tests {
         #expect(above.supportsMailboxGrants)
     }
 
-    @Test func testMailboxGrantVersionOrdering() {
-        // Sits between the two existing PQ thresholds, per the design doc.
+    /// The soundness property `mailboxGrantVersion`'s doc comment states:
+    /// a capability tier only proves "the peer's CommProtocol has the parser"
+    /// if it exceeds every version any shipped build has ever stamped. This
+    /// is the corrected replacement for a test that once asserted the
+    /// original (unsound) 2.4.0 sat *between* pqCapableVersion and
+    /// pqDomainSeparationVersion — which put it below a version PQ
+    /// connections already stamp.
+    @Test func testMailboxGrantVersionExceedsAllStampedTiers() {
         #expect(AgentUpdate.pqCapableVersion < AgentUpdate.mailboxGrantVersion)
-        #expect(AgentUpdate.mailboxGrantVersion < AgentUpdate.pqDomainSeparationVersion)
+        #expect(AgentUpdate.pqDomainSeparationVersion < AgentUpdate.mailboxGrantVersion)
     }
 }
