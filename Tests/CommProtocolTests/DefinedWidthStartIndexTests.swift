@@ -45,6 +45,30 @@ struct DefinedWidthStartIndexTests {
 		#expect(decoded.identifier[0] == original.identifier[0])
 	}
 
+	///The framing layer's other slice factory: a `Data` field parsed out of a
+	///linear frame. These feed header-decrypt call sites that index absolutely.
+	@Test func linearEncodedDataParsesZeroBased() throws {
+		for payload in [Data(0..<24), Data(repeating: 0x11, count: 400)] {
+			let frame = try payload.wireFormat
+			let (parsed, _) = try Data.parse(frame)
+
+			#expect(parsed.startIndex == 0)
+			#expect(parsed == payload)
+			#expect(parsed[0] == payload[0])
+		}
+	}
+
+	///Parsed out of a frame that is itself mid-buffer — the realistic case,
+	///since linear frames are consumed as a running remainder.
+	@Test func linearEncodedDataIsZeroBasedFromAnOffsetFrame() throws {
+		let payload = Data(0..<24)
+		let padded = Data(repeating: 0xEE, count: 5) + (try payload.wireFormat)
+
+		let (parsed, _) = try Data.parse(padded.suffix(from: 5))
+		#expect(parsed.startIndex == 0)
+		#expect(parsed == payload)
+	}
+
 	///Same guarantee for the other widely-used conformer, whose payload feeds
 	///key material rather than an identifier.
 	@Test func typedKeyMaterialIsZeroBasedFromASlice() throws {

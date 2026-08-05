@@ -33,7 +33,9 @@ struct OptionalData: LinearEncodable {
 				throw .unexpectedEOF
 			}
 			let width = Int(UInt8(prefix))
-			let data = slice.prefix(width)
+			//re-based: `prefix` of a suffix keeps the caller's indices, and a
+			//parsed field is handed to consumers that cannot know that
+			let data = Data(slice.prefix(width))
 			return (.init(data: data), width + 1)
 		}
 	}

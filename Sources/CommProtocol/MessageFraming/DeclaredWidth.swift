@@ -76,8 +76,11 @@ extension DeclaredWidthData: LinearEncodable {
 			input
 			.suffix(from: input.startIndex + MemoryLayout<UInt16>.size)
 
+		//re-based for the same reason as DefinedWidthBinary.init(wireFormat:):
+		//a parsed body outlives this call, and nothing downstream can tell it
+		//was carved out of the caller's buffer
 		let result = try DeclaredWidthData(
-			body: bodySlice.prefix(bodyWidth)
+			body: Data(bodySlice.prefix(bodyWidth))
 		)
 		return (result, consumeWidth)
 	}
