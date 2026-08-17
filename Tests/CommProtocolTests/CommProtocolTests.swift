@@ -54,7 +54,7 @@ struct APITests {
 		#expect(resourceURL?.path() == "/api/card/fetch/" + resource.identifier)
 
 		let keyFragment = try #require(resourceURL?.fragment())
-		let keyData = try #require(Data(base64URLEncoded: keyFragment))
+		let keyData = try #require(try? Data(base64URLEncoded: keyFragment))
 		#expect(SymmetricKey(data: keyData) == resource.symmetricKey)
 	}
 
