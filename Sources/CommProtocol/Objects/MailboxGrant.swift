@@ -151,7 +151,7 @@ extension ProtocolAddress {
     /// a grant-bearing `ProtocolAddress`; nothing else should hand-construct
     /// one with a base64url identifier.
     public var mailboxGrant: MailboxGrant? {
-        guard let keyData = Data(base64URLEncoded: identifier),
+        guard let keyData = try? Data(base64URLEncoded: identifier),
             keyData.count == TypedKeyMaterial.Algorithms.hmacSha256.contentByteSize,
             let authKey = try? TypedKeyMaterial(
                 algorithm: .hmacSha256,
