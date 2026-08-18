@@ -1,17 +1,15 @@
-name: CI
+name: Apple
 
 on:
   push:
-    # branches:
-    #   - main
+    branches:
+      - main
     paths-ignore:
       - 'README.md'
       - 'CODE_OF_CONDUCT.md'
       - '.editorconfig'
       - '.spi.yml'
   pull_request:
-    branches:
-      - main
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.head_ref || github.ref }}

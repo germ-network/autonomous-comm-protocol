@@ -1,4 +1,7 @@
 # Communicator Protocol
+[![Apple](https://github.com/germ-network/autonomous-comm-protocol/actions/workflows/ci-apple.yml/badge.svg)](https://github.com/germ-network/autonomous-comm-protocol/actions/workflows/ci-apple.yml)
+[![Linux](https://github.com/germ-network/autonomous-comm-protocol/actions/workflows/ci-linux.yml/badge.svg)](https://github.com/germ-network/autonomous-comm-protocol/actions/workflows/ci-linux.yml)
+[![Android](https://github.com/germ-network/autonomous-comm-protocol/actions/workflows/ci-android.yml/badge.svg)](https://github.com/germ-network/autonomous-comm-protocol/actions/workflows/ci-android.yml)
 A protocol for creating and exchanging identities to create dynamic end to end encrypted channels between user-defined identities
 
 Learn more in the [explainer](https://www.germnetwork.com/blog/autonomous-communicator-ac-protocol)
