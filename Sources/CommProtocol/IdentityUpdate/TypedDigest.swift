@@ -5,7 +5,7 @@
 //  Created by Mark Xue on 7/26/24.
 //
 
-import CryptoKit
+import Crypto
 import Foundation
 
 public struct TypedDigest: DefinedWidthBinary, Sendable, Hashable, Equatable {

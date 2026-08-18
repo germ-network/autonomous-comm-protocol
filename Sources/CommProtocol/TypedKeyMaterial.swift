@@ -5,7 +5,7 @@
 //  Created by Mark Xue on 6/23/24.
 //
 
-import CryptoKit
+import Crypto
 import Foundation
 
 ///Binary encoding of key data that prepends a byte enum of the algo type.

@@ -10,7 +10,7 @@
 import AtprotoTypes
 import AtprotoTypesMocks
 import CommProtocol
-import CryptoKit
+import Crypto
 import Testing
 
 struct AnchorSuccessionTests {

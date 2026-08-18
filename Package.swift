@@ -17,8 +17,9 @@ let package = Package(
 	],
 	dependencies: [
 		.package(
+			//0.5.0 is the first release that builds for Linux and Android
 			url: "https://github.com/germ-network/AtprotoTypes.git",
-			from: "0.4.5"
+			from: "0.5.0"
 		),
 		.package(
 			url: "https://github.com/germ-network/GermConvenience.git",
@@ -28,6 +29,9 @@ let package = Package(
 		//MailboxGrant is written against that. Consumers ignore this package's
 		//Package.resolved, so the floor has to be stated here.
 		.package(url: "https://github.com/swift-libp2p/swift-bases.git", from: "0.3.0"),
+		.package(
+			url: "https://github.com/apple/swift-crypto.git",
+			.upToNextMajor(from: "4.2.0")),
 		.package(
 			// swift-cbor 0.1.0 includes `Options.deterministicCbor` (RFC 8949
 			// §4.2.1) — confirmed the previously-pinned revision
@@ -48,17 +52,25 @@ let package = Package(
 				.product(name: "AtprotoTypes", package: "AtprotoTypes"),
 				.product(name: "AtprotoTypesMocks", package: "AtprotoTypes"),
 				.product(name: "Base64", package: "swift-bases"),
+				.product(name: "Crypto", package: "swift-crypto"),
 				"GermConvenience",
 				.product(name: "SwiftCbor", package: "swift-cbor"),
 			]
 		),
 		.target(
 			name: "CommProtocolMocks",
-			dependencies: ["CommProtocol"]
+			dependencies: [
+				"CommProtocol",
+				.product(name: "Crypto", package: "swift-crypto"),
+			]
 		),
 		.testTarget(
 			name: "CommProtocolTests",
-			dependencies: ["CommProtocol", "CommProtocolMocks"]
+			dependencies: [
+				"CommProtocol",
+				"CommProtocolMocks",
+				.product(name: "Crypto", package: "swift-crypto"),
+			]
 		),
 	]
 )

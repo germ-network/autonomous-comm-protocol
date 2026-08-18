@@ -6,7 +6,7 @@
 //
 
 import AtprotoTypes
-import CryptoKit
+import Crypto
 import Foundation
 
 public protocol AnchorTo: Sendable {

@@ -5,7 +5,7 @@
 //  Created by Mark @ Germ on 9/14/24.
 //
 
-import CryptoKit
+import Crypto
 import Foundation
 
 extension IdentityPrivateKey {

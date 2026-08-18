@@ -6,7 +6,7 @@
 //
 
 import CommProtocolMocks
-import CryptoKit
+import Crypto
 import Testing
 
 @testable import CommProtocol

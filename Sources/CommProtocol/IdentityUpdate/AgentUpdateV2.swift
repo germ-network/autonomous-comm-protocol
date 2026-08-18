@@ -18,99 +18,99 @@
 import Foundation
 
 public struct AgentUpdateV2: Sendable, Equatable {
-    public let version: SemanticVersion
-    public let isAppClip: Bool
-    public let grants: [MailboxGrant]
+	public let version: SemanticVersion
+	public let isAppClip: Bool
+	public let grants: [MailboxGrant]
 
-    public init(version: SemanticVersion, isAppClip: Bool, grants: [MailboxGrant]) {
-        self.version = version
-        self.isAppClip = isAppClip
-        self.grants = grants
-    }
+	public init(version: SemanticVersion, isAppClip: Bool, grants: [MailboxGrant]) {
+		self.version = version
+		self.isAppClip = isAppClip
+		self.grants = grants
+	}
 
-    ///The signing-body case discriminator. A `CommProposal`'s tag byte is not
-    ///covered by its payload's signature — for tags 1–5 (shipped, preimages
-    ///frozen) the cases are kept apart only by structural parse
-    ///incompatibility, the same property `AnchorHandoff`'s V2 bodies fixed
-    ///with fresh discriminator strings. This case has never shipped, so it
-    ///gets the discriminator from birth: a signature over an `AgentUpdateV2`
-    ///can never verify as any other case's content, independent of how the
-    ///byte shapes evolve. Cases from tag 6 onward should do the same.
-    static let signingDiscriminator = Data("CommProposal.agentUpdateV2".utf8)
+	///The signing-body case discriminator. A `CommProposal`'s tag byte is not
+	///covered by its payload's signature — for tags 1–5 (shipped, preimages
+	///frozen) the cases are kept apart only by structural parse
+	///incompatibility, the same property `AnchorHandoff`'s V2 bodies fixed
+	///with fresh discriminator strings. This case has never shipped, so it
+	///gets the discriminator from birth: a signature over an `AgentUpdateV2`
+	///can never verify as any other case's content, independent of how the
+	///byte shapes evolve. Cases from tag 6 onward should do the same.
+	static let signingDiscriminator = Data("CommProposal.agentUpdateV2".utf8)
 
-    ///Mirrors `AgentUpdate.formatForSigning(updateMessage:context:)` — the
-    ///signature binds the update to the MLS proposal (`updateMessage`) and
-    ///the session `context` — prefixed with ``signingDiscriminator`` to bind
-    ///it to this `CommProposal` case as well.
-    func formatForSigning(
-        updateMessage: Data,
-        context: TypedDigest
-    ) throws -> Data {
-        try Self.signingDiscriminator + wireFormat + updateMessage + context.wireFormat
-    }
+	///Mirrors `AgentUpdate.formatForSigning(updateMessage:context:)` — the
+	///signature binds the update to the MLS proposal (`updateMessage`) and
+	///the session `context` — prefixed with ``signingDiscriminator`` to bind
+	///it to this `CommProposal` case as well.
+	func formatForSigning(
+		updateMessage: Data,
+		context: TypedDigest
+	) throws -> Data {
+		try Self.signingDiscriminator + wireFormat + updateMessage + context.wireFormat
+	}
 }
 
 // MARK: - Wire format
 
 extension AgentUpdateV2 {
-    private struct VersionArchive: Codable {
-        let major: UInt32
-        let minor: UInt32
-        let patch: UInt32
-        let preReleaseSuffix: String?
+	private struct VersionArchive: Codable {
+		let major: UInt32
+		let minor: UInt32
+		let patch: UInt32
+		let preReleaseSuffix: String?
 
-        //WIRE-FROZEN: never change a raw value once shipped.
-        enum CodingKeys: String, CodingKey {
-            case major = "j"
-            case minor = "n"
-            case patch = "p"
-            case preReleaseSuffix = "r"
-        }
-    }
+		//WIRE-FROZEN: never change a raw value once shipped.
+		enum CodingKeys: String, CodingKey {
+			case major = "j"
+			case minor = "n"
+			case patch = "p"
+			case preReleaseSuffix = "r"
+		}
+	}
 
-    private struct Archive: Codable {
-        let version: VersionArchive
-        let isAppClip: Bool
-        let grants: [Data]  // each entry a MailboxGrant.wireFormat
+	private struct Archive: Codable {
+		let version: VersionArchive
+		let isAppClip: Bool
+		let grants: [Data]  // each entry a MailboxGrant.wireFormat
 
-        //WIRE-FROZEN: never change a raw value once shipped.
-        enum CodingKeys: String, CodingKey {
-            case version = "v"
-            case isAppClip = "c"
-            case grants = "g"
-        }
-    }
+		//WIRE-FROZEN: never change a raw value once shipped.
+		enum CodingKeys: String, CodingKey {
+			case version = "v"
+			case isAppClip = "c"
+			case grants = "g"
+		}
+	}
 
-    private var cborEncoded: Data {
-        get throws {
-            try DeterministicCbor.encode(
-                Archive(
-                    version: VersionArchive(
-                        major: version.major,
-                        minor: version.minor,
-                        patch: version.patch,
-                        preReleaseSuffix: version.preReleaseSuffix
-                    ),
-                    isAppClip: isAppClip,
-                    grants: try grants.map { try $0.wireFormat }
-                )
-            )
-        }
-    }
+	private var cborEncoded: Data {
+		get throws {
+			try DeterministicCbor.encode(
+				Archive(
+					version: VersionArchive(
+						major: version.major,
+						minor: version.minor,
+						patch: version.patch,
+						preReleaseSuffix: version.preReleaseSuffix
+					),
+					isAppClip: isAppClip,
+					grants: try grants.map { try $0.wireFormat }
+				)
+			)
+		}
+	}
 
-    private init(cborEncoded: Data) throws {
-        let archive = try DeterministicCbor.decode(Archive.self, from: cborEncoded)
-        self.init(
-            version: SemanticVersion(
-                major: archive.version.major,
-                minor: archive.version.minor,
-                patch: archive.version.patch,
-                preReleaseSuffix: archive.version.preReleaseSuffix
-            ),
-            isAppClip: archive.isAppClip,
-            grants: try archive.grants.map { try MailboxGrant(wireFormat: $0) }
-        )
-    }
+	private init(cborEncoded: Data) throws {
+		let archive = try DeterministicCbor.decode(Archive.self, from: cborEncoded)
+		self.init(
+			version: SemanticVersion(
+				major: archive.version.major,
+				minor: archive.version.minor,
+				patch: archive.version.patch,
+				preReleaseSuffix: archive.version.preReleaseSuffix
+			),
+			isAppClip: archive.isAppClip,
+			grants: try archive.grants.map { try MailboxGrant(wireFormat: $0) }
+		)
+	}
 }
 
 // A CBOR value is self-delimiting to its own decoder, but `swift-cbor`'s
@@ -119,12 +119,12 @@ extension AgentUpdateV2 {
 // opaque `Data` field: `Data: LinearEncodable` supplies the length prefix and
 // the consumed-byte accounting that `SignedObject`/`CommProposal` need.
 extension AgentUpdateV2: LinearEncodable {
-    public static func parse(_ input: Data) throws -> (AgentUpdateV2, Int) {
-        let (cbor, consumed) = try Data.parse(input)
-        return (try AgentUpdateV2(cborEncoded: cbor), consumed)
-    }
+	public static func parse(_ input: Data) throws -> (AgentUpdateV2, Int) {
+		let (cbor, consumed) = try Data.parse(input)
+		return (try AgentUpdateV2(cborEncoded: cbor), consumed)
+	}
 
-    public var wireFormat: Data {
-        get throws { try cborEncoded.wireFormat }
-    }
+	public var wireFormat: Data {
+		get throws { try cborEncoded.wireFormat }
+	}
 }

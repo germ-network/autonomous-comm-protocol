@@ -8,7 +8,7 @@
 //  byte-identical to the plain concatenation.
 //
 
-import CryptoKit
+import Crypto
 import Foundation
 import Testing
 

@@ -5,7 +5,7 @@
 //  Created by Mark @ Germ on 2/9/25.
 //
 
-import CryptoKit
+import Crypto
 import Foundation
 
 ///This is the accompanying Application-level data to an MLS welcome, issued in response

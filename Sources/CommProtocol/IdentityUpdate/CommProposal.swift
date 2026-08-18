@@ -163,7 +163,10 @@ public enum CommProposal: LinearEncodable, Equatable, Sendable {
 					(SignedObject<IdentityMutableData>?).self,
 					input: remainder
 				)
-			return (.agentUpdateV2(signedAgentUpdateV2, signedIdentityMutable), consumed + 1)
+			return (
+				.agentUpdateV2(signedAgentUpdateV2, signedIdentityMutable),
+				consumed + 1
+			)
 		}
 
 	}

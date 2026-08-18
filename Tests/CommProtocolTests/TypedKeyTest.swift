@@ -5,7 +5,7 @@
 //  Created by Mark @ Germ on 6/21/24.
 //
 
-import CryptoKit
+import Crypto
 import Foundation
 import Testing
 

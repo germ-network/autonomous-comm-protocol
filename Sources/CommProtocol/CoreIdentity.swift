@@ -5,7 +5,7 @@
 //  Created by Mark @ Germ on 6/15/24.
 //
 
-import CryptoKit
+import Crypto
 import Foundation
 
 ///CoreIdentity is an identity key that asserts a user-facing representation:
@@ -79,7 +79,9 @@ public enum ImageType: UInt8, Sendable {
 			return .jpegXL
 		}
 		//JXL ISOBMFF container: 00 00 00 0C 4A 58 4C 20 0D 0A 87 0A
-		if data.starts(with: [0, 0, 0, 0x0C, 0x4A, 0x58, 0x4C, 0x20, 0x0D, 0x0A, 0x87, 0x0A]) {
+		if data.starts(with: [
+			0, 0, 0, 0x0C, 0x4A, 0x58, 0x4C, 0x20, 0x0D, 0x0A, 0x87, 0x0A,
+		]) {
 			return .jpegXL
 		}
 		//JPEG: FF D8 FF
