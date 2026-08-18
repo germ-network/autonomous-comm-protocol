@@ -6,7 +6,7 @@
 //
 
 import CommProtocol
-import CryptoKit
+import Crypto
 import Foundation
 
 extension AgentUpdate {

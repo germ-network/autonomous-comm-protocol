@@ -13,7 +13,7 @@
 import AtprotoTypes
 import AtprotoTypesMocks
 import CommProtocolMocks
-import CryptoKit
+import Crypto
 import Foundation
 import Testing
 

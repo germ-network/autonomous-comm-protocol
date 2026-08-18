@@ -5,13 +5,13 @@
 //  Created by Mark Xue on 6/12/24.
 //
 
-import CryptoKit
+import Crypto
 import Foundation
 
 ///# Key Abstractions
-///We introduce type abstractions atop the basic CryptoKit primitive so we have type-enforced domain separation
+///We introduce type abstractions atop the basic Crypto primitive so we have type-enforced domain separation
 ///and introduce cryptographic agility by abstracting the typed object into a protocol
-///- Bare CryptoKit Key
+///- Bare Crypto Key
 /// - Can be archived in string format (typically rawRepresentable -> Base64 encoded
 /// - pseudo-stable (modulo padding)
 ///- RoledSigningKey

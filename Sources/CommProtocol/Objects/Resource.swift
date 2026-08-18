@@ -6,7 +6,7 @@
 //
 
 import Base64
-@preconcurrency import CryptoKit
+@preconcurrency import Crypto
 import Foundation
 import GermConvenience
 

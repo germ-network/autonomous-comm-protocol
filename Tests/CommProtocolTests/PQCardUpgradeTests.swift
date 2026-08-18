@@ -6,7 +6,7 @@
 //
 
 import CommProtocolMocks
-import CryptoKit
+import Crypto
 import Foundation
 import Testing
 
@@ -70,8 +70,9 @@ struct PQCardUpgradeTests {
 			context: context
 		)
 
-		guard case .pqCardUpgrade(let validated) = try validate(
-			proposal, context: context, message: message)
+		guard
+			case .pqCardUpgrade(let validated) = try validate(
+				proposal, context: context, message: message)
 		else {
 			#expect(Bool(false), "expected pqCardUpgrade")
 			return
@@ -92,8 +93,9 @@ struct PQCardUpgradeTests {
 			context: context
 		)
 
-		guard case .pqCardUpgrade(let validated) = try validate(
-			proposal, context: context, message: message)
+		guard
+			case .pqCardUpgrade(let validated) = try validate(
+				proposal, context: context, message: message)
 		else {
 			#expect(Bool(false), "expected pqCardUpgrade")
 			return
@@ -112,8 +114,9 @@ struct PQCardUpgradeTests {
 			context: context
 		)
 
-		guard case .pqCardUpgrade(let validated) = try validate(
-			proposal, context: context, message: message)
+		guard
+			case .pqCardUpgrade(let validated) = try validate(
+				proposal, context: context, message: message)
 		else {
 			#expect(Bool(false), "expected pqCardUpgrade")
 			return

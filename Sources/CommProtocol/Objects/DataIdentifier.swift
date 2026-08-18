@@ -8,7 +8,7 @@
 ///Squint and this looks like a TypedDigest. This is a defined width series of bits we use as a nonce, seed, or
 ///as an identifier where we would otherwise use a UUID
 
-import CryptoKit
+import Crypto
 import Foundation
 
 public struct DataIdentifier: DefinedWidthBinary, Sendable, Equatable, Hashable {

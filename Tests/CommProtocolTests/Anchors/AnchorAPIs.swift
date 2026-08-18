@@ -9,7 +9,7 @@ import AtprotoTypes
 import AtprotoTypesMocks
 import CommProtocol
 import CommProtocolMocks
-import CryptoKit
+import Crypto
 import Testing
 
 struct AnchorAPITests {

@@ -5,7 +5,7 @@
 //  Created by Mark Xue on 8/14/24.
 //
 
-import CryptoKit
+import Crypto
 import Foundation
 
 //only using this for the exchange, not subsequent proposals

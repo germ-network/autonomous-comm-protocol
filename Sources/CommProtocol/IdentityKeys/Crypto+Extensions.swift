@@ -1,12 +1,12 @@
 //
-//  CryptoKit+Extensions.swift
+//  Crypto+Extensions.swift
 //
 //
 //  Created by Mark Xue on 6/12/24.
 //
 
-import CryptoKit
-///Protocol conformance for the bare CryptoKit key types
+import Crypto
+///Protocol conformance for the bare Crypto key types
 import Foundation
 
 public protocol RawRepresentableKey {

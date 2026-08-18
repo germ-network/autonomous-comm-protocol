@@ -5,7 +5,7 @@
 //  Created by Mark @ Germ on 7/22/26.
 //
 
-import CryptoKit
+import Crypto
 import Foundation
 import Testing
 
@@ -58,7 +58,10 @@ struct DescribedImageTests {
 
 	@Test func testDetectRejectsOther() {
 		//PNG magic
-		#expect(ImageType.detect(from: Data([0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A])) == nil)
+		#expect(
+			ImageType.detect(
+				from: Data([0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A])) == nil
+		)
 		#expect(ImageType.detect(from: Data()) == nil)
 		#expect(ImageType.detect(from: Data([0xFF])) == nil)
 	}

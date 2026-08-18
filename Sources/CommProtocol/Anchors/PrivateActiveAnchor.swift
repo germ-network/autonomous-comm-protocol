@@ -5,7 +5,7 @@
 //  Created by Mark @ Germ on 4/24/25.
 //
 
-import CryptoKit
+import Crypto
 import Foundation
 
 public struct PrivateActiveAnchor: Sendable {

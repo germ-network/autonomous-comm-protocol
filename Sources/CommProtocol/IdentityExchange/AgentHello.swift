@@ -5,7 +5,7 @@
 //  Created by Mark @ Germ on 7/2/24.
 //
 
-import CryptoKit
+import Crypto
 import Foundation
 
 ///Format for a card that gets symmetrically encrypted and exchanged

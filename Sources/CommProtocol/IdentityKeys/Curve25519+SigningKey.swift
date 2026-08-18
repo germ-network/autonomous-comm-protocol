@@ -5,7 +5,7 @@
 //  Created by Mark @ Germ on 6/15/24.
 //
 
-import CryptoKit
+import Crypto
 import Foundation
 
 extension Curve25519.Signing.PrivateKey: PrivateSigningKey {

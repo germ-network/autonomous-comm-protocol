@@ -6,7 +6,7 @@
 //
 
 import CommProtocol
-import CryptoKit
+import Crypto
 
 extension IdentityPrivateKey {
 	public static func mock() throws -> Self {

@@ -15,7 +15,7 @@
 import AtprotoTypes
 import AtprotoTypesMocks
 import CommProtocolMocks
-import CryptoKit
+import Crypto
 import Foundation
 import Testing
 
@@ -172,7 +172,10 @@ struct AnchorHandoffV2Tests {
 		let newAgent = AgentPrivateKey()
 		let real = opaqueDigest(0xA1)
 
-		#expect(throws: ProtocolError.unexpected("empty digest bytes in opaque handoff body")) {
+		#expect(
+			throws: ProtocolError.unexpected(
+				"empty digest bytes in opaque handoff body")
+		) {
 			_ = try self.alexPrivateAnchor.createNewAgentHandoff(
 				agentUpdate: .mock(),
 				newAgent: newAgent,
@@ -181,7 +184,10 @@ struct AnchorHandoffV2Tests {
 				mlsUpdateDigest: real
 			)
 		}
-		#expect(throws: ProtocolError.unexpected("empty digest bytes in opaque handoff body")) {
+		#expect(
+			throws: ProtocolError.unexpected(
+				"empty digest bytes in opaque handoff body")
+		) {
 			_ = try self.alexPrivateAnchor.createNewAgentHandoff(
 				agentUpdate: .mock(),
 				newAgent: newAgent,
@@ -198,14 +204,20 @@ struct AnchorHandoffV2Tests {
 			groupContext: real,
 			mlsUpdateDigest: real
 		)
-		#expect(throws: ProtocolError.unexpected("empty digest bytes in opaque handoff body")) {
+		#expect(
+			throws: ProtocolError.unexpected(
+				"empty digest bytes in opaque handoff body")
+		) {
 			_ = try verified.agent.verify(
 				anchorHandoff: handoff,
 				context: Data(),
 				mlsUpdateDigest: real
 			)
 		}
-		#expect(throws: ProtocolError.unexpected("empty digest bytes in opaque handoff body")) {
+		#expect(
+			throws: ProtocolError.unexpected(
+				"empty digest bytes in opaque handoff body")
+		) {
 			_ = try verified.agent.verify(
 				anchorHandoff: handoff,
 				context: real,
@@ -231,20 +243,29 @@ struct AnchorHandoffV2Tests {
 			AnchorHandoff.ActiveAgentBodyV2.discriminator,
 			AnchorHandoff.RetiredAgentBodyV2.discriminator,
 		]
-		#expect(Set(all).count == all.count, "handoff discriminators must be pairwise distinct")
+		#expect(
+			Set(all).count == all.count,
+			"handoff discriminators must be pairwise distinct")
 	}
 
 	/// Pins the frozen swap so nobody "corrects" it in place and silently breaks
 	/// every live relationship's handoff verification.
 	@Test func v1SwapStaysFrozenAndV2IsCorrect() {
-		#expect(AnchorHandoff.ActiveAgentBody.discriminator == "AnchorHandoff.RetiredAgentBody")
-		#expect(AnchorHandoff.RetiredAgentBody.discriminator == "AnchorHandoff.ActiveAgentBody")
+		#expect(
+			AnchorHandoff.ActiveAgentBody.discriminator
+				== "AnchorHandoff.RetiredAgentBody")
+		#expect(
+			AnchorHandoff.RetiredAgentBody.discriminator
+				== "AnchorHandoff.ActiveAgentBody")
 
 		#expect(
-			AnchorHandoff.ActiveAnchorBodyV2.discriminator == "AnchorHandoff.ActiveAnchorBody.v2")
+			AnchorHandoff.ActiveAnchorBodyV2.discriminator
+				== "AnchorHandoff.ActiveAnchorBody.v2")
 		#expect(
-			AnchorHandoff.ActiveAgentBodyV2.discriminator == "AnchorHandoff.ActiveAgentBody.v2")
+			AnchorHandoff.ActiveAgentBodyV2.discriminator
+				== "AnchorHandoff.ActiveAgentBody.v2")
 		#expect(
-			AnchorHandoff.RetiredAgentBodyV2.discriminator == "AnchorHandoff.RetiredAgentBody.v2")
+			AnchorHandoff.RetiredAgentBodyV2.discriminator
+				== "AnchorHandoff.RetiredAgentBody.v2")
 	}
 }
