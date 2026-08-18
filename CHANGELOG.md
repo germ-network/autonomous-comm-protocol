@@ -1,5 +1,18 @@
 # @germ-network/autonomous-comm-protocol
 
+## 1.12.3
+
+### Patch Changes
+
+- [#56](https://github.com/germ-network/autonomous-comm-protocol/pull/56) [`c72d48c`](https://github.com/germ-network/autonomous-comm-protocol/commit/c72d48c5ba78ad2653f01abe772b67aa93006262) Thanks [@germ-mark](https://github.com/germ-mark)! - Depend on swift-crypto and import Crypto instead of CryptoKit, so the package
+  builds on Linux and Android. On Apple platforms swift-crypto delegates to
+  CryptoKit, so behavior is unchanged. Raises the AtprotoTypes floor to 0.5.0,
+  the first release that builds on those platforms.
+
+- [#55](https://github.com/germ-network/autonomous-comm-protocol/pull/55) [`06c3fa9`](https://github.com/germ-network/autonomous-comm-protocol/commit/06c3fa9e2f55ffdcf26392a6ca11ad6ecfaef2e1) Thanks [@germ-mark](https://github.com/germ-mark)! - Require swift-bases 0.3.0 in the manifest. `MailboxGrant` is written against 0.3.0's throwing `Data(base64URLEncoded:)`, but `Package.swift` still permitted 0.2.x — and consumers resolve from the manifest, not this package's `Package.resolved`, so the previous change expressed the adoption only locally.
+
+- [#53](https://github.com/germ-network/autonomous-comm-protocol/pull/53) [`e5de983`](https://github.com/germ-network/autonomous-comm-protocol/commit/e5de9834caf36d58b54e8aed48bd7f1a37eb570c) Thanks [@germ-mark](https://github.com/germ-mark)! - Adopt swift-bases 0.3.0's throwing `Data(base64URLEncoded:)` in `MailboxGrant.mailboxGrant`. No behavior change — a decode failure still yields `nil` from that computed property — but this was a source break for anyone whose resolved dependency graph floats past swift-bases 0.2.1.
+
 ## 1.12.2
 
 ### Patch Changes
