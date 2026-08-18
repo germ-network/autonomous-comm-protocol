@@ -1,5 +1,5 @@
 {
-  "originHash" : "3c891703c1ba60dcaedcec1f444b357e8c22789e1e07c801e767ff8a532721d5",
+  "originHash" : "3f35c2f7e67b8815793342e45cf4229ec6dddc8cb5c25fde954c8f959d9cf2cc",
   "pins" : [
     {
       "identity" : "atprototypes",
@@ -33,8 +33,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/swift-libp2p/swift-bases.git",
       "state" : {
-        "revision" : "96615d4b582f9f6536d8278304ce2a64c8e5288a",
-        "version" : "0.2.0"
+        "revision" : "f6f3ddc88aef6fd39494a35a7e95cd93c1a63e79",
+        "version" : "0.3.0"
       }
     },
     {

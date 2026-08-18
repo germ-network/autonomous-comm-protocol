@@ -24,7 +24,10 @@ let package = Package(
 			url: "https://github.com/germ-network/GermConvenience.git",
 			from: "0.2.2"
 		),
-		.package(url: "https://github.com/swift-libp2p/swift-bases.git", from: "0.2.0"),
+		//0.3.0 made Data(base64URLEncoded:) throwing rather than failable, and
+		//MailboxGrant is written against that. Consumers ignore this package's
+		//Package.resolved, so the floor has to be stated here.
+		.package(url: "https://github.com/swift-libp2p/swift-bases.git", from: "0.3.0"),
 		.package(
 			// swift-cbor 0.1.0 includes `Options.deterministicCbor` (RFC 8949
 			// §4.2.1) — confirmed the previously-pinned revision
