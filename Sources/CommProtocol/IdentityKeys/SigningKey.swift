@@ -30,7 +30,12 @@ protocol PrivateSigningKey: TypedKeyMaterialInput, Sendable {
 	func signature<D>(for data: D) throws -> Data where D: DataProtocol
 }
 
-public protocol PublicSigningKey: TypedKeyMaterialInput, Hashable, Sendable {
+// Deliberately not Hashable: nothing in this package or any known consumer
+// hashes/compares a PublicSigningKey directly (AgentPublicKey, IdentityPublicKey,
+// and AnchorPublicKey all derive their own Hashable/Equatable from a wireformat-
+// backed id instead), and requiring it forced a @retroactive Curve25519.Signing.PublicKey
+// conformance that swift-format's AvoidRetroactiveConformances rule flags.
+public protocol PublicSigningKey: TypedKeyMaterialInput, Sendable {
 	static var signingAlgorithm: SigningKeyAlgorithm { get }
 
 	init<D>(rawRepresentation data: D) throws where D: ContiguousBytes
