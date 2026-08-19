@@ -127,7 +127,8 @@ struct MailboxGrantTests {
 		let encoded = try original.wireFormat
 		let decoded = try MailboxGrant(wireFormat: encoded)
 		#expect(decoded == original)
-		#expect(decoded.expiration == original.expiration)  // Equatable ignores this — check directly
+		// Equatable ignores this — check directly
+		#expect(decoded.expiration == original.expiration)
 	}
 
 	// MARK: - Wire-pinning
