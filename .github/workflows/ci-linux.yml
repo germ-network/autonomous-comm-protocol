@@ -16,6 +16,18 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  lint:
+    name: Lint
+    runs-on: ubuntu-latest
+    container:
+      image: swift:6.2
+    timeout-minutes: 30
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+      - name: Lint
+        run: swift format lint --recursive --configuration .swift-format --strict Sources Tests
+
   linux_test:
     name: Test Linux
     runs-on: ubuntu-latest

@@ -17,16 +17,3 @@ extension Curve25519.Signing.PrivateKey: PrivateSigningKey {
 extension Curve25519.Signing.PublicKey: PublicSigningKey {
 	public static let signingAlgorithm: SigningKeyAlgorithm = .curve25519
 }
-
-extension Curve25519.Signing.PublicKey: @retroactive Equatable {
-	public static func == (lhs: Curve25519.Signing.PublicKey, rhs: Curve25519.Signing.PublicKey)
-		-> Bool
-	{
-		return lhs.rawRepresentation == rhs.rawRepresentation
-	}
-}
-extension Curve25519.Signing.PublicKey: @retroactive Hashable {
-	public func hash(into hasher: inout Hasher) {
-		hasher.combine(rawRepresentation)
-	}
-}
