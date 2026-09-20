@@ -21,7 +21,7 @@ let package = Package(
 			// (germ-network/AtprotoTypes#69); replace with the released version
 			// once it cuts.
 			url: "https://github.com/germ-network/AtprotoTypes.git",
-			revision: "e4cd0028639cb44b8ea24117f51d876954859493"
+			from: "0.7.0"
 		),
 		.package(
 			url: "https://github.com/germ-network/GermConvenience.git",
