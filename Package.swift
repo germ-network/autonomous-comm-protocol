@@ -24,10 +24,9 @@ let package = Package(
 			revision: "8e00dd81013fef864de2b0f3dde7ad7fcbdc119b"
 		),
 		.package(
-			// Temporary revision pin to GermConvenience main (org-wide swift-crypto
-			// 5 move); released line still caps swift-crypto at ..<5.0.0.
 			url: "https://github.com/germ-network/GermConvenience.git",
-			revision: "f907c9018dd4c2f0110ab5f1f37c7c53fa0ae6ca"
+			// 0.10.0 is its swift-crypto-5 release — the revision pin drops.
+			from: "0.10.0"
 		),
 		//0.3.0 made Data(base64URLEncoded:) throwing rather than failable, and
 		//MailboxGrant is written against that. Consumers ignore this package's

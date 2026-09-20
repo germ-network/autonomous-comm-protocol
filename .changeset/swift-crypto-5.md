@@ -5,10 +5,10 @@
 Widen the `swift-crypto` dependency to `from: "5.0.0"` as part of the org-wide
 swift-crypto 5 migration.
 
-`AtprotoTypes` and `GermConvenience` are revision-pinned to their swift-crypto-5
-commits (germ-network/AtprotoTypes#69, and GermConvenience main) until each
-cuts a release, because both released lines still cap swift-crypto at
-`..<5.0.0`.
+`GermConvenience` moves to its released 0.10.0 (the swift-crypto-5 release).
+`AtprotoTypes` is revision-pinned to its swift-crypto-5 commit
+(germ-network/AtprotoTypes#69) until it cuts a release, because its released
+line still caps swift-crypto at `..<5.0.0`.
 
 No source changes were required.
 
