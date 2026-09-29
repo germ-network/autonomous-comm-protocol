@@ -53,7 +53,6 @@ let package = Package(
 			name: "CommProtocol",
 			dependencies: [
 				.product(name: "AtprotoTypes", package: "AtprotoTypes"),
-				.product(name: "AtprotoTypesMocks", package: "AtprotoTypes"),
 				.product(name: "Base64", package: "swift-bases"),
 				.product(name: "Crypto", package: "swift-crypto"),
 				"GermConvenience",
@@ -72,6 +71,7 @@ let package = Package(
 			dependencies: [
 				"CommProtocol",
 				"CommProtocolMocks",
+				.product(name: "AtprotoTypesMocks", package: "AtprotoTypes"),
 				.product(name: "Crypto", package: "swift-crypto"),
 			]
 		),
