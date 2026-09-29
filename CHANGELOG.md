@@ -1,5 +1,16 @@
 # @germ-network/autonomous-comm-protocol
 
+## 1.13.1
+
+### Patch Changes
+
+- [#61](https://github.com/germ-network/autonomous-comm-protocol/pull/61) [`ff75d24`](https://github.com/germ-network/autonomous-comm-protocol/commit/ff75d2442a078ed0fd6efa36fa6b113b6a977d46) Thanks [@germ-mark](https://github.com/germ-mark)! - Remove the unused `AtprotoTypesMocks` dependency from the `CommProtocol` target.
+
+  No source in `CommProtocol` imports it — only `CommProtocolTests` does, so the
+  dependency moves to the test target. `CommProtocol` previously pulled
+  `AtprotoTypesMocks` (and its `Mockable` dependency) into every consumer's link
+  closure, including the CoreAppLogic Android release `.so`.
+
 ## 1.13.0
 
 ### Minor Changes
