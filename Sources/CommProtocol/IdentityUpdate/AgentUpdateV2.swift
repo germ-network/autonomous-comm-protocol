@@ -20,20 +20,47 @@ import Foundation
 public struct AgentUpdateV2: Sendable, Equatable {
 	public let version: SemanticVersion
 	public let isAppClip: Bool
+	/// On parse, only the grants this build can read: an entry that fails to
+	/// decode (a scheme version newer than this build, or a malformed grant)
+	/// is skipped rather than failing the update, so a list that is skipped
+	/// entirely yields an empty array.
 	public let grants: [MailboxGrant]
 
+	/// The CBOR a parsed update arrived as. Its signature covers those bytes,
+	/// including any grant skipped above, so `wireFormat` returns them rather
+	/// than re-encoding `grants`; they are not re-checked for canonical form.
+	private let receivedEncoding: Data?
+
 	public init(version: SemanticVersion, isAppClip: Bool, grants: [MailboxGrant]) {
+		self.init(
+			version: version, isAppClip: isAppClip, grants: grants,
+			receivedEncoding: nil)
+	}
+
+	private init(
+		version: SemanticVersion,
+		isAppClip: Bool,
+		grants: [MailboxGrant],
+		receivedEncoding: Data?
+	) {
 		self.version = version
 		self.isAppClip = isAppClip
 		self.grants = grants
+		self.receivedEncoding = receivedEncoding
+	}
+
+	// The received encoding is transport detail, not part of the value.
+	public static func == (lhs: AgentUpdateV2, rhs: AgentUpdateV2) -> Bool {
+		lhs.version == rhs.version && lhs.isAppClip == rhs.isAppClip
+			&& lhs.grants == rhs.grants
 	}
 
 	///The signing-body case discriminator. A `CommProposal`'s tag byte is not
 	///covered by its payload's signature — for tags 1–5 (shipped, preimages
 	///frozen) the cases are kept apart only by structural parse
 	///incompatibility, the same property `AnchorHandoff`'s V2 bodies fixed
-	///with fresh discriminator strings. This case has never shipped, so it
-	///gets the discriminator from birth: a signature over an `AgentUpdateV2`
+	///with fresh discriminator strings. This case has shipped (app 3.1.0) with
+	///the discriminator from birth: a signature over an `AgentUpdateV2`
 	///can never verify as any other case's content, independent of how the
 	///byte shapes evolve. Cases from tag 6 onward should do the same.
 	static let signingDiscriminator = Data("CommProposal.agentUpdateV2".utf8)
@@ -83,7 +110,8 @@ extension AgentUpdateV2 {
 
 	private var cborEncoded: Data {
 		get throws {
-			try DeterministicCbor.encode(
+			if let receivedEncoding { return receivedEncoding }
+			return try DeterministicCbor.encode(
 				Archive(
 					version: VersionArchive(
 						major: version.major,
@@ -108,7 +136,8 @@ extension AgentUpdateV2 {
 				preReleaseSuffix: archive.version.preReleaseSuffix
 			),
 			isAppClip: archive.isAppClip,
-			grants: try archive.grants.map { try MailboxGrant(wireFormat: $0) }
+			grants: archive.grants.compactMap { try? MailboxGrant(wireFormat: $0) },
+			receivedEncoding: cborEncoded
 		)
 	}
 }

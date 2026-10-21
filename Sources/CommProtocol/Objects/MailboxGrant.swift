@@ -23,23 +23,53 @@ public struct MailboxGrant: Sendable {
 	public let authKey: TypedKeyMaterial  // .hmacSha256, 32B
 	public let serviceHost: String
 	public let expiration: RoundedDate
+	public let version: Version
+
+	/// The put scheme a grant belongs to, carried as the optional `"v"` key
+	/// so a sender never has to infer it from `serviceHost`.
+	public enum Version: UInt64, Sendable, CaseIterable {
+		/// germ-service's v2 mailbox: `germ-addr:v1`/`germ-put:v1`, put to
+		/// `/api/v2` on `serviceHost`. Carried by omitting `"v"`, so a legacy
+		/// grant's bytes are those of every release before the key existed.
+		case legacy = 1
+		/// A Germ PMR grant: `germ-pmr:grant-addr:v1`/`germ-pmr:grant-put:v1`
+		/// (the Germ PMR spec's "Grant address and put-tag derivation"), put to `/pmr/v1` on `serviceHost`.
+		case germPMR = 2
+
+		/// Reads the carried `"v"`: absent or an explicit 1 is legacy;
+		/// anything this build doesn't know is an error, so the caller can
+		/// skip the grant rather than guess its scheme.
+		init(wireValue: UInt64?) throws {
+			guard let wireValue else {
+				self = .legacy
+				return
+			}
+			guard let version = Version(rawValue: wireValue) else {
+				throw LinearEncodingError.unexpectedData
+			}
+			self = version
+		}
+	}
 
 	public init(
 		authKey: TypedKeyMaterial,
 		serviceHost: String,
-		expiration: Date
+		expiration: Date,
+		version: Version = .legacy
 	) throws(LinearEncodingError) {
 		try self.init(
 			authKey: authKey,
 			serviceHost: serviceHost,
-			expiration: RoundedDate(date: expiration)
+			expiration: RoundedDate(date: expiration),
+			version: version
 		)
 	}
 
 	init(
 		authKey: TypedKeyMaterial,
 		serviceHost: String,
-		expiration: RoundedDate
+		expiration: RoundedDate,
+		version: Version = .legacy
 	) throws(LinearEncodingError) {
 		guard authKey.algorithm == .hmacSha256 else {
 			throw .mismatchedAlgorithms(expected: .hmacSha256, found: authKey.algorithm)
@@ -47,46 +77,64 @@ public struct MailboxGrant: Sendable {
 		self.authKey = authKey
 		self.serviceHost = serviceHost
 		self.expiration = expiration
+		self.version = version
 	}
 }
 
-// A grant is identified by its key and host, not its expiration — matching
-// `ProtocolAddress`'s precedent (the type it succeeds).
+// A grant is identified by its key, host and scheme, not its expiration —
+// matching `ProtocolAddress`'s precedent (the type it succeeds). The scheme
+// counts because one key and host derive a different address under each.
 extension MailboxGrant: Equatable {
 	public static func == (lhs: MailboxGrant, rhs: MailboxGrant) -> Bool {
 		lhs.authKey == rhs.authKey && lhs.serviceHost == rhs.serviceHost
+			&& lhs.version == rhs.version
 	}
 }
 
 // MARK: - Derivation
 
 extension MailboxGrant {
-	private static let addressLabel = Data("germ-addr:v1".utf8)
-	private static let putLabel = Data("germ-put:v1".utf8)
+	private var addressLabel: Data {
+		switch version {
+		case .legacy: Data("germ-addr:v1".utf8)
+		case .germPMR: Data("germ-pmr:grant-addr:v1".utf8)
+		}
+	}
+
+	private var putLabel: Data {
+		switch version {
+		case .legacy: Data("germ-put:v1".utf8)
+		case .germPMR: Data("germ-pmr:grant-put:v1".utf8)
+		}
+	}
 
 	/// The address a sender messages to reach this grant's holder — derived,
-	/// never transmitted. `base64url(HMAC-SHA256(authKey, "germ-addr:v1" ‖
-	/// serviceHost))`, unpadded.
+	/// never transmitted. `base64url(HMAC-SHA256(authKey, label ‖
+	/// serviceHost))`, unpadded, where `label` is `germ-addr:v1` for a
+	/// `.legacy` grant and `germ-pmr:grant-addr:v1` for `.germPMR`.
 	public var address: String {
 		let key = SymmetricKey(data: authKey.keyData)
-		let message = Self.addressLabel + Data(serviceHost.utf8)
+		let message = addressLabel + Data(serviceHost.utf8)
 		let mac = HMAC<SHA256>.authenticationCode(for: message, using: key)
 		return Data(mac).base64URLEncoded(padded: false)
 	}
 
 	/// The tag a put's `Authorization` header carries, authenticating a body
 	/// whose digest is `bodyDigest` against this grant's `nonce`-bound
-	/// challenge. `HMAC-SHA256(authKey, "germ-put:v1" ‖ address ‖ nonce ‖
-	/// bodyDigest)`.
+	/// challenge. `HMAC-SHA256(authKey, label ‖ address ‖ nonce ‖
+	/// bodyDigest)`, where `label` is `germ-put:v1` for a `.legacy` grant and
+	/// `germ-pmr:grant-put:v1` for `.germPMR`.
 	///
 	/// Byte representations are fixed, matching the server's contract
 	/// (`mailbox-hmac.ts`'s header comment): `address` is the UTF-8 bytes of
-	/// its base64url *string* form (43 bytes), `nonce` is the raw bytes
-	/// returned by the put-challenge (not re-encoded), and `bodyDigest` is
-	/// the raw 32-byte SHA-256 output over the exact request body bytes.
+	/// its base64url *string* form (43 bytes), and `bodyDigest` is the raw
+	/// 32-byte SHA-256 output over the exact request body bytes. `nonce`
+	/// differs by scheme: for `.legacy` it is the raw bytes returned by the
+	/// put-challenge (not re-encoded); for `.germPMR` it is the UTF-8 bytes of
+	/// the challenge *string*.
 	public func putTag(nonce: Data, bodyDigest: Data) -> Data {
 		let key = SymmetricKey(data: authKey.keyData)
-		let message = Self.putLabel + Data(address.utf8) + nonce + bodyDigest
+		let message = putLabel + Data(address.utf8) + nonce + bodyDigest
 		let mac = HMAC<SHA256>.authenticationCode(for: message, using: key)
 		return Data(mac)
 	}
@@ -102,12 +150,14 @@ extension MailboxGrant {
 		let authKey: Data  // TypedKeyMaterial.wireFormat: 1 algorithm byte + 32 key bytes
 		let serviceHost: String
 		let expiration: UInt32  // RoundedDate.hoursSinceEpoch
+		let version: UInt64?  // absent means `Version.legacy`
 
 		//WIRE-FROZEN: never change a raw value once shipped.
 		enum CodingKeys: String, CodingKey {
 			case authKey = "k"
 			case serviceHost = "h"
 			case expiration = "e"
+			case version = "v"
 		}
 	}
 
@@ -117,7 +167,8 @@ extension MailboxGrant {
 				Archive(
 					authKey: authKey.wireFormat,
 					serviceHost: serviceHost,
-					expiration: expiration.hoursSinceEpoch
+					expiration: expiration.hoursSinceEpoch,
+					version: version == .legacy ? nil : version.rawValue
 				)
 			)
 		}
@@ -128,7 +179,8 @@ extension MailboxGrant {
 		try self.init(
 			authKey: TypedKeyMaterial(wireFormat: archive.authKey),
 			serviceHost: archive.serviceHost,
-			expiration: RoundedDate(hoursSinceEpoch: archive.expiration)
+			expiration: RoundedDate(hoursSinceEpoch: archive.expiration),
+			version: Version(wireValue: archive.version)
 		)
 	}
 }
@@ -150,6 +202,10 @@ extension ProtocolAddress {
 	/// key. `init(mailboxGrant:)`, below, is the only sanctioned way to build
 	/// a grant-bearing `ProtocolAddress`; nothing else should hand-construct
 	/// one with a base64url identifier.
+	///
+	/// The bridge has no field for a put-scheme version, so it carries and
+	/// yields only `.legacy` grants; a grant of any other version must travel
+	/// as a `MailboxGrant`, never through a `ProtocolAddress`.
 	public var mailboxGrant: MailboxGrant? {
 		guard let keyData = try? Data(base64URLEncoded: identifier),
 			keyData.count == TypedKeyMaterial.Algorithms.hmacSha256.contentByteSize,

@@ -55,9 +55,127 @@ struct AgentUpdateV2Tests {
 		// address list — the whole point of the gated cutover
 		// (docs/attachment-mailbox-delivery.md, "Wire types"). If this ever
 		// fails to compile, `AgentUpdateV2` grew an `addresses` field.
+		// `receivedEncoding` is the bytes a parsed update arrived as, kept so
+		// its signature still verifies — not a field of the update.
 		let update = AgentUpdateV2.mock()
 		let mirror = Mirror(reflecting: update)
-		#expect(mirror.children.map { $0.label } == ["version", "isAppClip", "grants"])
+		#expect(
+			mirror.children.map { $0.label }
+				== ["version", "isAppClip", "grants", "receivedEncoding"])
+	}
+
+	// MARK: - Grants this build can't read
+
+	/// A hand-built update, so a decoder can be fed grant entries no encoder
+	/// here would write.
+	private struct RawUpdate: Codable {
+		struct Version: Codable {
+			let j: UInt32
+			let n: UInt32
+			let p: UInt32
+		}
+		let v: Version
+		let c: Bool
+		let g: [Data]
+	}
+
+	private struct RawGrant: Codable {
+		let k: Data
+		let h: String
+		let e: UInt32
+		let v: UInt64?
+	}
+
+	private static let legacyGrant = try! MailboxGrant(
+		authKey: TypedKeyMaterial(
+			algorithm: .hmacSha256, symmetricKey: SymmetricKey(data: Data(count: 32))),
+		serviceHost: "ger.mx",
+		expiration: RoundedDate(hoursSinceEpoch: 471442)
+	)
+
+	private static func unknownVersionGrant() throws -> Data {
+		try DeterministicCbor.encode(
+			RawGrant(
+				k: legacyGrant.authKey.wireFormat, h: "pmr.ger.mx", e: 471442, v: 3)
+		)
+	}
+
+	/// The update as a newer sender would put it on the wire (length-prefixed).
+	private static func rawUpdate(grants: [Data]) throws -> Data {
+		try DeterministicCbor.encode(
+			RawUpdate(v: .init(j: 3, n: 2, p: 0), c: false, g: grants)
+		).wireFormat
+	}
+
+	@Test func testDecodeSkipsGrantWithUnknownVersion() throws {
+		let raw = try Self.rawUpdate(
+			grants: [Self.legacyGrant.wireFormat, Self.unknownVersionGrant()])
+		let (decoded, consumed) = try AgentUpdateV2.parse(raw)
+		#expect(consumed == raw.count)
+		#expect(decoded.grants == [Self.legacyGrant])
+	}
+
+	@Test func testDecodeSkipsMalformedGrant() throws {
+		let raw = try Self.rawUpdate(grants: [Data([0xA0]), Self.legacyGrant.wireFormat])
+		let (decoded, _) = try AgentUpdateV2.parse(raw)
+		#expect(decoded.grants == [Self.legacyGrant])
+	}
+
+	/// Signature validation re-encodes the parsed update, so a parsed update
+	/// must re-encode to exactly the bytes it arrived as, skipped grants
+	/// included.
+	@Test func testReencodeReproducesReceivedBytes() throws {
+		let raw = try Self.rawUpdate(
+			grants: [Self.unknownVersionGrant(), Self.legacyGrant.wireFormat])
+		let (decoded, _) = try AgentUpdateV2.parse(raw)
+		#expect(try decoded.wireFormat == raw)
+	}
+
+	/// A newer sender's update, carrying a grant this build can't read, still
+	/// validates; the receiver gets the grants it can use.
+	@Test func testSignatureValidatesWithSkippedGrant() throws {
+		let message = Mocks.mockMessage()
+		let context = try TypedDigest.mock()
+		let raw = try Self.rawUpdate(
+			grants: [Self.legacyGrant.wireFormat, Self.unknownVersionGrant()])
+		let (senderUpdate, _) = try AgentUpdateV2.parse(raw)
+
+		let proposal = try knownAgent.proposeAgentUpdateV2(
+			leafNodeUpdate: message,
+			agentUpdate: senderUpdate,
+			signedIdentityMutable: nil,
+			context: context
+		)
+		let validated = try CommProposal.finalParse(try proposal.wireFormat)
+			.validate(
+				knownIdentity: knownSignedIdentity.content.id,
+				knownAgent: knownAgent.publicKey,
+				context: context,
+				updateMessage: message
+			)
+		guard case .agentUpdateV2(let update, _) = validated else {
+			Issue.record("expected .agentUpdateV2")
+			return
+		}
+		#expect(update.grants == [Self.legacyGrant])
+		#expect(try update.wireFormat == raw)
+	}
+
+	@Test func testMixedSchemeGrantsRoundTrip() throws {
+		let pmr = try MailboxGrant(
+			authKey: Self.legacyGrant.authKey,
+			serviceHost: "pmr.ger.mx",
+			expiration: RoundedDate(hoursSinceEpoch: 471442),
+			version: .germPMR
+		)
+		let original = AgentUpdateV2(
+			version: SemanticVersion(major: 3, minor: 2, patch: 0),
+			isAppClip: false,
+			grants: [Self.legacyGrant, pmr]
+		)
+		let (decoded, _) = try AgentUpdateV2.parse(try original.wireFormat)
+		#expect(decoded == original)
+		#expect(decoded.grants.map(\.version) == [.legacy, .germPMR])
 	}
 
 	// MARK: - Wire-pinning
