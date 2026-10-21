@@ -1,5 +1,11 @@
 # @germ-network/autonomous-comm-protocol
 
+## 1.14.0
+
+### Minor Changes
+
+- [#63](https://github.com/germ-network/autonomous-comm-protocol/pull/63) [`1f7de00`](https://github.com/germ-network/autonomous-comm-protocol/commit/1f7de001ec8812a2c2d4474e5003f27213a80326) Thanks [@germ-mark](https://github.com/germ-mark)! - `MailboxGrant` carries an optional `"v"` put-scheme version (absent = legacy, 2 = Germ PMR) and derives its address and put tag per scheme. `AgentUpdateV2` skips a grant it can't read instead of failing, and its signature still verifies.
+
 ## 1.13.1
 
 ### Patch Changes
