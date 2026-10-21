@@ -190,4 +190,154 @@ struct MailboxGrantTests {
 		)
 		#expect(garbage.mailboxGrant == nil)
 	}
+
+	/// The bridge has no room for a version, so whatever rides it is legacy.
+	@Test func testBridgeYieldsLegacyGrant() throws {
+		let grant = try MailboxGrant(
+			authKey: Self.zeroKey, serviceHost: "ger.mx", expiration: Date(),
+			version: .germPMR)
+		#expect(ProtocolAddress(mailboxGrant: grant).mailboxGrant?.version == .legacy)
+	}
+
+	// MARK: - Version key
+
+	private static func grant(_ version: MailboxGrant.Version) throws -> MailboxGrant {
+		try MailboxGrant(
+			authKey: zeroKey,
+			serviceHost: "ger.mx",
+			expiration: RoundedDate(hoursSinceEpoch: 471442),
+			version: version
+		)
+	}
+
+	/// A hand-built carriage, so a decoder can be fed a `v` no encoder here
+	/// would write.
+	private struct RawArchive: Codable {
+		let k: Data
+		let h: String
+		let e: UInt32
+		let v: UInt64?
+	}
+
+	private static func rawGrant(v: UInt64?) throws -> Data {
+		try DeterministicCbor.encode(
+			RawArchive(k: zeroKey.wireFormat, h: "ger.mx", e: 471442, v: v)
+		)
+	}
+
+	/// A legacy grant's bytes are those every release before the `"v"` key
+	/// wrote, so peers on 1.13.1 and earlier read it unchanged.
+	@Test func testLegacyGrantOmitsVersionKey() throws {
+		#expect(try Self.grant(.legacy).wireFormat == Self.rawGrant(v: nil))
+		#expect(try MailboxGrant(wireFormat: Self.rawGrant(v: nil)).version == .legacy)
+	}
+
+	@Test func testGermPMRCborWireFormatGolden() throws {
+		// The legacy golden's map grown to four pairs (a4), with `61 76 02`
+		// ("v": 2) last in RFC 8949 bytewise key order ("e" < "h" < "k" < "v").
+		#expect(
+			try Self.grant(.germPMR).wireFormat
+				== Data(
+					hexString:
+						"a461651a000731926168666765722e6d78616b5821050000000000000000000000000000000000000000000000000000000000000000617602"
+				)
+		)
+	}
+
+	@Test func testGermPMRCborRoundTrip() throws {
+		let original = try Self.grant(.germPMR)
+		let decoded = try MailboxGrant(wireFormat: original.wireFormat)
+		#expect(decoded == original)
+		#expect(decoded.version == .germPMR)
+	}
+
+	@Test func testDecodeRejectsUnknownVersion() throws {
+		let unknown = try Self.rawGrant(v: 3)
+		#expect(throws: (any Error).self) {
+			try MailboxGrant(wireFormat: unknown)
+		}
+	}
+
+	/// "Absent means 1": an explicit 1 reads as legacy, and re-encodes
+	/// without the key.
+	@Test func testDecodeAcceptsExplicitLegacyVersion() throws {
+		let decoded = try MailboxGrant(wireFormat: Self.rawGrant(v: 1))
+		#expect(decoded.version == .legacy)
+		#expect(try decoded.wireFormat == Self.rawGrant(v: nil))
+	}
+
+	@Test func testInequalityByVersion() throws {
+		#expect(try Self.grant(.legacy) != Self.grant(.germPMR))
+	}
+
+	// MARK: - Germ PMR KATs, from the Germ PMR spec's reference vectors
+
+	@Test func testGermPMRAddressKnownAnswer() throws {
+		// hmac.new(bytes(32), b"germ-pmr:grant-addr:v1" + b"ger.mx",
+		// sha256) == 957a006045548cb182426117a79e6c633727878e8151ee7e7938026fb2cacf6f
+		#expect(
+			try Self.grant(.germPMR).address
+				== "lXoAYEVUjLGCQmEXp55sYzcnh46BUe5-eTgCb7LKz28")
+	}
+
+	@Test func testGermPMRAddressKnownAnswerOtherHost() throws {
+		let grant = try MailboxGrant(
+			authKey: Self.zeroKey, serviceHost: "other.example", expiration: .now,
+			version: .germPMR)
+		// The spec's vector, 8f3ec8cacb66ad9e…, as base64url.
+		#expect(grant.address == "jz7IystmrZ66fqKVVKVH0NgnG0TtCv8otY2K51nU6rg")
+	}
+
+	@Test func testGermPMRAddressKnownAnswerOtherKey() throws {
+		let key = try TypedKeyMaterial(
+			algorithm: .hmacSha256,
+			symmetricKey: SymmetricKey(data: Data(repeating: 1, count: 32))
+		)
+		let grant = try MailboxGrant(
+			authKey: key, serviceHost: "ger.mx", expiration: .now, version: .germPMR)
+		// The spec's vector, 5fabab601a24b20b…, as base64url.
+		#expect(grant.address == "X6urYBoksgvnajSyND4KX8MF5CtAooP7_BN4yKJ0VO8")
+	}
+
+	@Test func testGermPMRPutTagKnownAnswer() throws {
+		// hmac.new(bytes(32), b"germ-pmr:grant-put:v1" + address.encode()
+		// + bytes(range(32)) + bytes(range(32, 64)), sha256)
+		let tag = try Self.grant(.germPMR).putTag(
+			nonce: rangeBytes(0..<32), bodyDigest: rangeBytes(32..<64))
+		#expect(
+			tag
+				== Data(
+					hexString:
+						"21691c49aeb4dd1cde5600ae404e554874f1c5383b6a7d7f4b3ec52aea914933"
+				)
+		)
+	}
+
+	/// The host PMR grants are actually issued on — computed independently
+	/// the same way as the spec's vectors, which use `ger.mx`.
+	@Test func testGermPMRAddressAtPMRHostKnownAnswer() throws {
+		let grant = try MailboxGrant(
+			authKey: Self.zeroKey, serviceHost: "pmr.ger.mx", expiration: .now,
+			version: .germPMR)
+		#expect(grant.address == "xcbrhhcR-vkag3lDpsth0YgPrt-0A08WymlqCUUMrPM")
+		#expect(
+			grant.putTag(nonce: rangeBytes(0..<32), bodyDigest: rangeBytes(32..<64))
+				== Data(
+					hexString:
+						"404cbc981243a2a5117d8989d56998ade7a9f0aaf9f4bedd6ce598390c833ce3"
+				)
+		)
+	}
+
+	/// The same key under the two schemes must never validate against both.
+	@Test func testSchemesDeriveDifferentAddresses() throws {
+		let legacy = try Self.grant(.legacy)
+		let pmr = try Self.grant(.germPMR)
+		#expect(legacy.address != pmr.address)
+		let nonce = rangeBytes(0..<32)
+		let digest = rangeBytes(32..<64)
+		#expect(
+			legacy.putTag(nonce: nonce, bodyDigest: digest)
+				!= pmr.putTag(nonce: nonce, bodyDigest: digest))
+	}
 }
